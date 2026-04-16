@@ -5,6 +5,7 @@ import { useProjectStore } from "@/store/projectStore";
 import VideoCreator from "./VideoCreator";
 import VideoSidebar from "./VideoSidebar";
 import { api, VideoTask } from "@/lib/api";
+import { resolveModelId } from "@/lib/modelCatalog";
 
 export default function VideoGenerator() {
     const currentProject = useProjectStore((state) => state.currentProject);
@@ -15,7 +16,11 @@ export default function VideoGenerator() {
     const [remixData, setRemixData] = useState<Partial<VideoTask> | null>(null);
 
     // Get default model from project settings
-    const defaultI2vModel = currentProject?.model_settings?.i2v_model || "wan2.5-i2v-preview";
+    const defaultI2vModel = resolveModelId(
+        'i2v',
+        currentProject?.model_settings?.i2v_model,
+        'video_sidebar',
+    );
 
     // Generation Params (Lifted State)
     const [params, setParams] = useState({
@@ -44,9 +49,14 @@ export default function VideoGenerator() {
 
     // Sync model from project settings when project changes
     useEffect(() => {
-        if (currentProject?.model_settings?.i2v_model) {
-            setParams(p => ({ ...p, model: currentProject.model_settings!.i2v_model }));
-        }
+        setParams((p) => ({
+            ...p,
+            model: resolveModelId(
+                'i2v',
+                currentProject?.model_settings?.i2v_model,
+                'video_sidebar',
+            ),
+        }));
     }, [currentProject?.model_settings?.i2v_model]);
 
     // Sync tasks from project

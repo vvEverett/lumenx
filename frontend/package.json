@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node ./scripts/run-next-dev.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "node ./scripts/typecheck.mjs",
     "test": "node ./scripts/run-vitest.mjs",
     "test:ui": "node ./scripts/run-vitest.mjs --config vitest.ui.config.mts",
     "test:all": "npm run test && npm run test:ui"

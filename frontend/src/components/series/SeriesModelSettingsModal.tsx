@@ -3,7 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Image, Video, Layout, Check, User, Building, Box, Loader2 } from 'lucide-react';
-import { T2I_MODELS, I2I_MODELS, I2V_MODELS, ASPECT_RATIOS } from '@/store/projectStore';
+import { ASPECT_RATIOS } from '@/store/projectStore';
+import {
+    SERIES_I2I_MODELS,
+    SERIES_I2V_MODELS,
+    SERIES_T2I_MODELS,
+    resolveModelSettings,
+} from '@/lib/modelCatalog';
 import { api } from '@/lib/api';
 
 interface SeriesModelSettingsModalProps {
@@ -14,13 +20,14 @@ interface SeriesModelSettingsModalProps {
 }
 
 export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, onSaved }: SeriesModelSettingsModalProps) {
-    const [t2iModel, setT2iModel] = useState('wan2.5-t2i-preview');
-    const [i2iModel, setI2iModel] = useState('wan2.5-i2i-preview');
-    const [i2vModel, setI2vModel] = useState('wan2.5-i2v-preview');
-    const [characterAspectRatio, setCharacterAspectRatio] = useState('9:16');
-    const [sceneAspectRatio, setSceneAspectRatio] = useState('16:9');
-    const [propAspectRatio, setPropAspectRatio] = useState('1:1');
-    const [storyboardAspectRatio, setStoryboardAspectRatio] = useState('16:9');
+    const defaultSettings = resolveModelSettings(undefined, 'series_settings');
+    const [t2iModel, setT2iModel] = useState(defaultSettings.t2i_model);
+    const [i2iModel, setI2iModel] = useState(defaultSettings.i2i_model);
+    const [i2vModel, setI2vModel] = useState(defaultSettings.i2v_model);
+    const [characterAspectRatio, setCharacterAspectRatio] = useState(defaultSettings.character_aspect_ratio);
+    const [sceneAspectRatio, setSceneAspectRatio] = useState(defaultSettings.scene_aspect_ratio);
+    const [propAspectRatio, setPropAspectRatio] = useState(defaultSettings.prop_aspect_ratio);
+    const [storyboardAspectRatio, setStoryboardAspectRatio] = useState(defaultSettings.storyboard_aspect_ratio);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -31,15 +38,14 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
             setLoadError(null);
             api.getSeriesModelSettings(seriesId)
                 .then((data) => {
-                    if (data) {
-                        setT2iModel(data.t2i_model || 'wan2.5-t2i-preview');
-                        setI2iModel(data.i2i_model || 'wan2.5-i2i-preview');
-                        setI2vModel(data.i2v_model || 'wan2.5-i2v-preview');
-                        setCharacterAspectRatio(data.character_aspect_ratio || '9:16');
-                        setSceneAspectRatio(data.scene_aspect_ratio || '16:9');
-                        setPropAspectRatio(data.prop_aspect_ratio || '1:1');
-                        setStoryboardAspectRatio(data.storyboard_aspect_ratio || '16:9');
-                    }
+                    const resolvedSettings = resolveModelSettings(data, 'series_settings');
+                    setT2iModel(resolvedSettings.t2i_model);
+                    setI2iModel(resolvedSettings.i2i_model);
+                    setI2vModel(resolvedSettings.i2v_model);
+                    setCharacterAspectRatio(resolvedSettings.character_aspect_ratio);
+                    setSceneAspectRatio(resolvedSettings.scene_aspect_ratio);
+                    setPropAspectRatio(resolvedSettings.prop_aspect_ratio);
+                    setStoryboardAspectRatio(resolvedSettings.storyboard_aspect_ratio);
                 })
                 .catch((err) => {
                     console.error("Failed to load series model settings:", err);
@@ -128,7 +134,7 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                     <div className="space-y-2">
                                         <label className="text-xs text-gray-400">Model</label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {T2I_MODELS.map((model) => (
+                                            {SERIES_T2I_MODELS.map((model) => (
                                                 <button
                                                     key={model.id}
                                                     onClick={() => setT2iModel(model.id)}
@@ -191,7 +197,7 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                     <div className="space-y-2">
                                         <label className="text-xs text-gray-400">Model</label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {I2I_MODELS.map((model) => (
+                                            {SERIES_I2I_MODELS.map((model) => (
                                                 <button
                                                     key={model.id}
                                                     onClick={() => setI2iModel(model.id)}
@@ -245,7 +251,7 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                     <div className="space-y-2">
                                         <label className="text-xs text-gray-400">Model</label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {I2V_MODELS.map((model) => (
+                                            {SERIES_I2V_MODELS.map((model) => (
                                                 <button
                                                     key={model.id}
                                                     onClick={() => setI2vModel(model.id)}

@@ -5,7 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Settings2, List, RefreshCw, ChevronDown, ChevronUp, Mic, Music, VolumeX, Wand2 } from "lucide-react";
 import VideoQueue from "./VideoQueue";
 import { VideoTask, api } from "@/lib/api";
-import { I2V_MODELS, DurationConfig, ModelParamSupport, VideoParams, GRID_COLS_CLASS } from "@/store/projectStore";
+import { VideoParams, GRID_COLS_CLASS } from "@/store/projectStore";
+import {
+    DEFAULT_I2V_MODEL_ID,
+    type DurationConfig,
+    type ModelParamSupport,
+    R2V_SELECTION_MODEL_ID,
+    VIDEO_I2V_MODELS,
+} from "@/lib/modelCatalog";
 
 interface VideoSidebarProps {
     tasks: VideoTask[];
@@ -20,14 +27,20 @@ export default function VideoSidebar({ tasks, onRemix, params, setParams }: Vide
     const audioInputRef = useRef<HTMLInputElement>(null);
     const [showNegative, setShowNegative] = useState(false);
 
-    const currentModelConfig = I2V_MODELS.find(m => m.id === params.model);
+    const currentModelConfig =
+        VIDEO_I2V_MODELS.find(m => m.id === params.model) ??
+        VIDEO_I2V_MODELS.find(m => m.id === DEFAULT_I2V_MODEL_ID) ??
+        VIDEO_I2V_MODELS[0];
+    const r2vSelectionModelName =
+        VIDEO_I2V_MODELS.find((model) => model.id === R2V_SELECTION_MODEL_ID)?.name ??
+        "当前 R2V 模型";
     const modelParams: ModelParamSupport = currentModelConfig?.params ?? {};
 
     const updateParam = (key: string, value: any) => {
         const newParams = { ...params, [key]: value };
         // When model changes, clamp duration and reset model-specific params
         if (key === "model") {
-            const newModelConfig = I2V_MODELS.find(m => m.id === value);
+            const newModelConfig = VIDEO_I2V_MODELS.find(m => m.id === value);
             if (newModelConfig?.duration) {
                 const dc = newModelConfig.duration;
                 if (dc.type === 'fixed') {
@@ -152,20 +165,20 @@ export default function VideoSidebar({ tasks, onRemix, params, setParams }: Vide
                                     Basic Settings
                                 </h3>
 
-                                {/* Model Selection - R2V mode: only Wan 2.6 is selectable */}
+                                {/* Model Selection - R2V mode: only the current catalog-backed R2V model is selectable */}
                                 <div>
                                     <label className="block text-xs text-gray-400 mb-2">
                                         Model (模型)
                                         {params.generationMode === "r2v" && (
-                                            <span className="text-purple-400 ml-2">(R2V仅支持 Wan 2.6)</span>
+                                            <span className="text-purple-400 ml-2">(R2V仅支持 {r2vSelectionModelName})</span>
                                         )}
                                     </label>
                                     <div className="space-y-2">
-                                        {I2V_MODELS.map((model) => {
+                                        {VIDEO_I2V_MODELS.map((model) => {
                                             const isR2VMode = params.generationMode === "r2v";
-                                            const isWan26 = model.id === "wan2.6-i2v";
-                                            const isDisabled = isR2VMode && !isWan26;
-                                            const isSelected = isR2VMode ? isWan26 : params.model === model.id;
+                                            const isR2VModel = model.id === R2V_SELECTION_MODEL_ID;
+                                            const isDisabled = isR2VMode && !isR2VModel;
+                                            const isSelected = isR2VMode ? isR2VModel : params.model === model.id;
 
                                             return (
                                                 <button

@@ -1,0 +1,3509 @@
+{
+  "compat": {
+    "legacy_model_ids": {
+      "kling-v3": "kling/kling-v3#i2v",
+      "pixverse-v4-i2v": "pixverse/pixverse-v4-i2v#i2v",
+      "viduq3-pro": "vidu/viduq3-pro#i2v",
+      "viduq3-turbo": "vidu/viduq3-turbo#i2v",
+      "wan2.2-i2v-flash": "wan/wan2.2-i2v-flash#i2v",
+      "wan2.2-i2v-plus": "wan/wan2.2-i2v-plus#i2v",
+      "wan2.2-t2i-flash": "wan/wan2.2-t2i-flash#t2i",
+      "wan2.2-t2i-plus": "wan/wan2.2-t2i-plus#t2i",
+      "wan2.5-i2i-preview": "wan/wan2.5-i2i-preview#i2i",
+      "wan2.5-i2v-preview": "wan/wan2.5-i2v-preview#i2v",
+      "wan2.5-t2i-preview": "wan/wan2.5-t2i-preview#t2i",
+      "wan2.6-i2v": "wan/wan2.6-video#i2v",
+      "wan2.6-i2v-flash": "wan/wan2.6-i2v-flash#i2v",
+      "wan2.6-image": "wan/wan2.6-image#i2i",
+      "wan2.6-r2v": "wan/wan2.6-video#r2v",
+      "wan2.6-t2i": "wan/wan2.6-t2i#t2i"
+    }
+  },
+  "defaults": {
+    "canonical_model_settings": {
+      "i2i_model": "wan/wan2.6-image#i2i",
+      "i2v_model": "wan/wan2.6-video#i2v",
+      "t2i_model": "wan/wan2.6-t2i#t2i"
+    },
+    "model_settings": {
+      "i2i_model": "wan2.6-image",
+      "i2v_model": "wan2.6-i2v",
+      "t2i_model": "wan2.6-t2i"
+    }
+  },
+  "families": {
+    "kling": {
+      "backend_env_key": "KLING_PROVIDER_MODE",
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "KLING_ACCESS_KEY",
+          "KLING_SECRET_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "docs": {
+        "official_snapshot_ids": [
+          "kling/2026-04-03"
+        ]
+      },
+      "family": "kling",
+      "models": [
+        "kling-v3"
+      ],
+      "provider": "kling",
+      "routing_prefixes": [
+        "kling-"
+      ],
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "supported_modalities": [
+        "t2v",
+        "i2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "kling_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "kling_vendor_base64_image"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "kling_vendor_video_url"
+        }
+      }
+    },
+    "pixverse": {
+      "backend_env_key": "PIXVERSE_PROVIDER_MODE",
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "PIXVERSE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "docs": {
+        "official_snapshot_ids": [
+          "pixverse/2026-04-03"
+        ]
+      },
+      "family": "pixverse",
+      "models": [
+        "pixverse-v4-i2v"
+      ],
+      "provider": "pixverse",
+      "routing_prefixes": [
+        "pixverse-"
+      ],
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "supported_modalities": [
+        "t2v",
+        "i2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "pixverse_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "pixverse_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "pixverse_vendor_video_url"
+        }
+      }
+    },
+    "vidu": {
+      "backend_env_key": "VIDU_PROVIDER_MODE",
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "VIDU_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "docs": {
+        "official_snapshot_ids": [
+          "vidu/2026-04-03"
+        ]
+      },
+      "family": "vidu",
+      "models": [
+        "viduq3-pro",
+        "viduq3-turbo"
+      ],
+      "provider": "vidu",
+      "routing_prefixes": [
+        "vidu"
+      ],
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "supported_modalities": [
+        "t2v",
+        "i2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "vidu_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_video_url"
+        }
+      }
+    },
+    "wan": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "docs": {
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "models": [
+        "wan2.2-i2v-flash",
+        "wan2.2-i2v-plus",
+        "wan2.2-t2i-flash",
+        "wan2.2-t2i-plus",
+        "wan2.5-i2i-preview",
+        "wan2.5-i2v-preview",
+        "wan2.5-t2i-preview",
+        "wan2.6-i2v",
+        "wan2.6-i2v-flash",
+        "wan2.6-image",
+        "wan2.6-r2v",
+        "wan2.6-t2i"
+      ],
+      "provider": "aliyun",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    }
+  },
+  "model_lines": {
+    "kling/kling-v3": {
+      "backend_env_key": "KLING_PROVIDER_MODE",
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "KLING_ACCESS_KEY",
+          "KLING_SECRET_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Kling AI latest model",
+      "display_name": "Kling v3",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/bailian-kling-proxy",
+          "kling/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "kling/2026-04-03"
+        ]
+      },
+      "family": "kling",
+      "id": "kling/kling-v3",
+      "legacy_model_ids": [
+        "kling-v3"
+      ],
+      "modes": [
+        "kling/kling-v3#i2v"
+      ],
+      "provider": "kling",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "kling-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "supported_modalities": [
+        "t2v",
+        "i2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "kling_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "kling_vendor_base64_image"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "kling_vendor_video_url"
+        }
+      }
+    },
+    "pixverse/pixverse-v4-i2v": {
+      "backend_env_key": "PIXVERSE_PROVIDER_MODE",
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "PIXVERSE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Catalog-ready placeholder until runtime adapter exposure is finalized",
+      "display_name": "PixVerse V4 I2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "pixverse/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "pixverse/2026-04-03"
+        ]
+      },
+      "family": "pixverse",
+      "id": "pixverse/pixverse-v4-i2v",
+      "legacy_model_ids": [
+        "pixverse-v4-i2v"
+      ],
+      "modes": [
+        "pixverse/pixverse-v4-i2v#i2v"
+      ],
+      "provider": "pixverse",
+      "release_stage": "preview",
+      "routing_prefixes": [
+        "pixverse-"
+      ],
+      "runtime": {},
+      "status": "planned",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "supported_modalities": [
+        "t2v",
+        "i2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "pixverse_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "pixverse_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "pixverse_vendor_video_url"
+        }
+      }
+    },
+    "vidu/viduq3-pro": {
+      "backend_env_key": "VIDU_PROVIDER_MODE",
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "VIDU_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Vidu latest model",
+      "display_name": "Vidu Q3 Pro",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/bailian-vidu-proxy",
+          "vidu/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "vidu/2026-04-03"
+        ]
+      },
+      "family": "vidu",
+      "id": "vidu/viduq3-pro",
+      "legacy_model_ids": [
+        "viduq3-pro"
+      ],
+      "modes": [
+        "vidu/viduq3-pro#i2v"
+      ],
+      "provider": "vidu",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "vidu"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "supported_modalities": [
+        "t2v",
+        "i2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "vidu_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_video_url"
+        }
+      }
+    },
+    "vidu/viduq3-turbo": {
+      "backend_env_key": "VIDU_PROVIDER_MODE",
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "VIDU_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Vidu fast generation",
+      "display_name": "Vidu Q3 Turbo",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/bailian-vidu-proxy",
+          "vidu/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "vidu/2026-04-03"
+        ]
+      },
+      "family": "vidu",
+      "id": "vidu/viduq3-turbo",
+      "legacy_model_ids": [
+        "viduq3-turbo"
+      ],
+      "modes": [
+        "vidu/viduq3-turbo#i2v"
+      ],
+      "provider": "vidu",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "vidu"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "supported_modalities": [
+        "t2v",
+        "i2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "vidu_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_video_url"
+        }
+      }
+    },
+    "wan/wan2.2-i2v-flash": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Faster legacy I2V option",
+      "display_name": "Wan 2.2 I2V Flash",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.2-i2v-flash",
+      "legacy_model_ids": [
+        "wan2.2-i2v-flash"
+      ],
+      "modes": [
+        "wan/wan2.2-i2v-flash#i2v"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "wan/wan2.2-i2v-plus": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Higher quality legacy I2V option",
+      "display_name": "Wan 2.2 I2V Plus",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.2-i2v-plus",
+      "legacy_model_ids": [
+        "wan2.2-i2v-plus"
+      ],
+      "modes": [
+        "wan/wan2.2-i2v-plus#i2v"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "wan/wan2.2-t2i-flash": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Faster legacy T2I option",
+      "display_name": "Wan 2.2 T2I Flash",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.2-t2i-flash",
+      "legacy_model_ids": [
+        "wan2.2-t2i-flash"
+      ],
+      "modes": [
+        "wan/wan2.2-t2i-flash#t2i"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "wan/wan2.2-t2i-plus": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Higher quality legacy T2I option",
+      "display_name": "Wan 2.2 T2I Plus",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.2-t2i-plus",
+      "legacy_model_ids": [
+        "wan2.2-t2i-plus"
+      ],
+      "modes": [
+        "wan/wan2.2-t2i-plus#t2i"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "wan/wan2.5-i2i-preview": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Default legacy I2I option",
+      "display_name": "Wan 2.5 I2I Preview",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-image"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.5-i2i-preview",
+      "legacy_model_ids": [
+        "wan2.5-i2i-preview"
+      ],
+      "modes": [
+        "wan/wan2.5-i2i-preview#i2i"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "wan/wan2.5-i2v-preview": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Default legacy I2V option",
+      "display_name": "Wan 2.5 I2V Preview",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.5-i2v-preview",
+      "legacy_model_ids": [
+        "wan2.5-i2v-preview"
+      ],
+      "modes": [
+        "wan/wan2.5-i2v-preview#i2v"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "wan/wan2.5-t2i-preview": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Default legacy T2I option",
+      "display_name": "Wan 2.5 T2I Preview",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.5-t2i-preview",
+      "legacy_model_ids": [
+        "wan2.5-t2i-preview"
+      ],
+      "modes": [
+        "wan/wan2.5-t2i-preview#t2i"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "wan/wan2.6-i2v-flash": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Fast generation",
+      "display_name": "Wan 2.6 I2V Flash",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.6-i2v-flash",
+      "legacy_model_ids": [
+        "wan2.6-i2v-flash"
+      ],
+      "modes": [
+        "wan/wan2.6-i2v-flash#i2v"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "wan/wan2.6-image": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Latest I2I model",
+      "display_name": "Wan 2.6 Image",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-image"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.6-image",
+      "legacy_model_ids": [
+        "wan2.6-image"
+      ],
+      "modes": [
+        "wan/wan2.6-image#i2i"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "wan/wan2.6-t2i": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Latest T2I model",
+      "display_name": "Wan 2.6 T2I",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.6-t2i",
+      "legacy_model_ids": [
+        "wan2.6-t2i"
+      ],
+      "modes": [
+        "wan/wan2.6-t2i#t2i"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "wan/wan2.6-video": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Latest Wan 2.6 video line",
+      "display_name": "Wan 2.6 Video",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "family": "wan",
+      "id": "wan/wan2.6-video",
+      "legacy_model_ids": [
+        "wan2.6-i2v",
+        "wan2.6-r2v"
+      ],
+      "modes": [
+        "wan/wan2.6-video#i2v",
+        "wan/wan2.6-video#r2v"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {
+        "dashscope": {
+          "gateway": "dashscope"
+        }
+      },
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2i",
+        "i2i",
+        "i2v",
+        "r2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    }
+  },
+  "models": {
+    "kling-v3": {
+      "backend_env_key": "KLING_PROVIDER_MODE",
+      "capabilities": [
+        "t2v",
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "KLING_ACCESS_KEY",
+          "KLING_SECRET_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Kling AI latest model",
+      "display_name": "Kling v3",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/bailian-kling-proxy",
+          "kling/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "kling/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 15,
+        "min": 3,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "kling",
+      "id": "kling-v3",
+      "inputs": {},
+      "params": {
+        "cfgScale": {
+          "default": 0.5,
+          "max": 1,
+          "min": 0,
+          "step": 0.1
+        },
+        "mode": {
+          "default": "std",
+          "options": [
+            "std",
+            "pro"
+          ]
+        },
+        "negativePrompt": true,
+        "sound": true
+      },
+      "provider": "kling",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "kling-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "kling_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "kling_vendor_base64_image"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "kling_vendor_video_url"
+        }
+      },
+      "ui": {
+        "badges": [
+          "proxy-capable"
+        ],
+        "order": 60,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "pixverse-v4-i2v": {
+      "backend_env_key": "PIXVERSE_PROVIDER_MODE",
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "PIXVERSE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Catalog-ready placeholder until runtime adapter exposure is finalized",
+      "display_name": "PixVerse V4 I2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "pixverse/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "pixverse/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "pixverse",
+      "id": "pixverse-v4-i2v",
+      "inputs": {},
+      "params": {},
+      "provider": "pixverse",
+      "release_stage": "preview",
+      "routing_prefixes": [
+        "pixverse-"
+      ],
+      "status": "planned",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "pixverse_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "pixverse_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "pixverse_vendor_video_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 10,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": []
+      }
+    },
+    "viduq3-pro": {
+      "backend_env_key": "VIDU_PROVIDER_MODE",
+      "capabilities": [
+        "t2v",
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "VIDU_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Vidu latest model",
+      "display_name": "Vidu Q3 Pro",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/bailian-vidu-proxy",
+          "vidu/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "vidu/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 16,
+        "min": 1,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "vidu",
+      "id": "viduq3-pro",
+      "inputs": {},
+      "params": {
+        "movementAmplitude": {
+          "default": "auto",
+          "options": [
+            "auto",
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "540p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "viduAudio": true
+      },
+      "provider": "vidu",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "vidu"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "vidu_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_video_url"
+        }
+      },
+      "ui": {
+        "badges": [
+          "proxy-capable"
+        ],
+        "order": 50,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "viduq3-turbo": {
+      "backend_env_key": "VIDU_PROVIDER_MODE",
+      "capabilities": [
+        "t2v",
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "VIDU_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Vidu fast generation",
+      "display_name": "Vidu Q3 Turbo",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/bailian-vidu-proxy",
+          "vidu/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "vidu/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 16,
+        "min": 1,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "vidu",
+      "id": "viduq3-turbo",
+      "inputs": {},
+      "params": {
+        "movementAmplitude": {
+          "default": "auto",
+          "options": [
+            "auto",
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "540p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "viduAudio": true
+      },
+      "provider": "vidu",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "vidu"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "vidu_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_video_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 45,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.2-i2v-flash": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Faster legacy I2V option",
+      "display_name": "Wan 2.2 I2V Flash",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": {
+        "type": "fixed",
+        "value": 5
+      },
+      "family": "wan",
+      "id": "wan2.2-i2v-flash",
+      "inputs": {},
+      "params": {
+        "negativePrompt": true,
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 70,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.2-i2v-plus": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Higher quality legacy I2V option",
+      "display_name": "Wan 2.2 I2V Plus",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": {
+        "type": "fixed",
+        "value": 5
+      },
+      "family": "wan",
+      "id": "wan2.2-i2v-plus",
+      "inputs": {},
+      "params": {
+        "negativePrompt": true,
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 80,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.2-t2i-flash": {
+      "backend_env_key": null,
+      "capabilities": [
+        "t2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Faster legacy T2I option",
+      "display_name": "Wan 2.2 T2I Flash",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan2.2-t2i-flash",
+      "inputs": {},
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 70,
+        "recommended": false,
+        "selection_group": "t2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.2-t2i-plus": {
+      "backend_env_key": null,
+      "capabilities": [
+        "t2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Higher quality legacy T2I option",
+      "display_name": "Wan 2.2 T2I Plus",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan2.2-t2i-plus",
+      "inputs": {},
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 80,
+        "recommended": false,
+        "selection_group": "t2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.5-i2i-preview": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Default legacy I2I option",
+      "display_name": "Wan 2.5 I2I Preview",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-image"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan2.5-i2i-preview",
+      "inputs": {
+        "reference_images": {
+          "max": 3
+        }
+      },
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 90,
+        "recommended": false,
+        "selection_group": "i2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.5-i2v-preview": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Default legacy I2V option",
+      "display_name": "Wan 2.5 I2V Preview",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "options": [
+          5,
+          10
+        ],
+        "type": "buttons"
+      },
+      "family": "wan",
+      "id": "wan2.5-i2v-preview",
+      "inputs": {},
+      "params": {
+        "audio": true,
+        "negativePrompt": true,
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 90,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.5-t2i-preview": {
+      "backend_env_key": null,
+      "capabilities": [
+        "t2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Default legacy T2I option",
+      "display_name": "Wan 2.5 T2I Preview",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan2.5-t2i-preview",
+      "inputs": {},
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 90,
+        "recommended": false,
+        "selection_group": "t2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.6-i2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v",
+        "r2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Latest model, supports R2V",
+      "display_name": "Wan 2.6 I2V / R2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 15,
+        "min": 2,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "wan",
+      "id": "wan2.6-i2v",
+      "inputs": {},
+      "params": {
+        "audio": true,
+        "negativePrompt": true,
+        "promptExtend": true,
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "shotType": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [
+          "latest"
+        ],
+        "order": 100,
+        "recommended": true,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.6-i2v-flash": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Fast generation",
+      "display_name": "Wan 2.6 I2V Flash",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 15,
+        "min": 2,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "wan",
+      "id": "wan2.6-i2v-flash",
+      "inputs": {},
+      "params": {
+        "audio": true,
+        "negativePrompt": true,
+        "promptExtend": true,
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "shotType": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 95,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.6-image": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Latest I2I model",
+      "display_name": "Wan 2.6 Image",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-image"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan2.6-image",
+      "inputs": {
+        "reference_images": {
+          "max": 4
+        }
+      },
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [
+          "latest"
+        ],
+        "order": 100,
+        "recommended": true,
+        "selection_group": "i2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan2.6-r2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "r2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Dedicated reference-to-video route",
+      "display_name": "Wan 2.6 R2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan2.6-r2v",
+      "inputs": {},
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "hidden",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 10,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": []
+      }
+    },
+    "wan2.6-t2i": {
+      "backend_env_key": null,
+      "capabilities": [
+        "t2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Latest T2I model",
+      "display_name": "Wan 2.6 T2I",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan2.6-t2i",
+      "inputs": {},
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [
+          "latest"
+        ],
+        "order": 100,
+        "recommended": true,
+        "selection_group": "t2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    }
+  },
+  "modes": {
+    "kling/kling-v3#i2v": {
+      "backend_env_key": "KLING_PROVIDER_MODE",
+      "capabilities": [
+        "t2v",
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "KLING_ACCESS_KEY",
+          "KLING_SECRET_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Kling AI latest model",
+      "display_name": "Kling v3",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/bailian-kling-proxy",
+          "kling/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "kling/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 15,
+        "min": 3,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "kling",
+      "id": "kling/kling-v3#i2v",
+      "inputs": {},
+      "legacy_model_id": "kling-v3",
+      "mode": "i2v",
+      "model_line_id": "kling/kling-v3",
+      "params": {
+        "cfgScale": {
+          "default": 0.5,
+          "max": 1,
+          "min": 0,
+          "step": 0.1
+        },
+        "mode": {
+          "default": "std",
+          "options": [
+            "std",
+            "pro"
+          ]
+        },
+        "negativePrompt": true,
+        "sound": true
+      },
+      "provider": "kling",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "kling-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "kling_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "kling_vendor_base64_image"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "kling_vendor_video_url"
+        }
+      },
+      "ui": {
+        "badges": [
+          "proxy-capable"
+        ],
+        "order": 60,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "pixverse/pixverse-v4-i2v#i2v": {
+      "backend_env_key": "PIXVERSE_PROVIDER_MODE",
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "PIXVERSE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Catalog-ready placeholder until runtime adapter exposure is finalized",
+      "display_name": "PixVerse V4 I2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "pixverse/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "pixverse/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "pixverse",
+      "id": "pixverse/pixverse-v4-i2v#i2v",
+      "inputs": {},
+      "legacy_model_id": "pixverse-v4-i2v",
+      "mode": "i2v",
+      "model_line_id": "pixverse/pixverse-v4-i2v",
+      "params": {},
+      "provider": "pixverse",
+      "release_stage": "preview",
+      "routing_prefixes": [
+        "pixverse-"
+      ],
+      "runtime": {},
+      "status": "planned",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "pixverse_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "pixverse_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "pixverse_vendor_video_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 10,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": []
+      }
+    },
+    "vidu/viduq3-pro#i2v": {
+      "backend_env_key": "VIDU_PROVIDER_MODE",
+      "capabilities": [
+        "t2v",
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "VIDU_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Vidu latest model",
+      "display_name": "Vidu Q3 Pro",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/bailian-vidu-proxy",
+          "vidu/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "vidu/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 16,
+        "min": 1,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "vidu",
+      "id": "vidu/viduq3-pro#i2v",
+      "inputs": {},
+      "legacy_model_id": "viduq3-pro",
+      "mode": "i2v",
+      "model_line_id": "vidu/viduq3-pro",
+      "params": {
+        "movementAmplitude": {
+          "default": "auto",
+          "options": [
+            "auto",
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "540p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "viduAudio": true
+      },
+      "provider": "vidu",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "vidu"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "vidu_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_video_url"
+        }
+      },
+      "ui": {
+        "badges": [
+          "proxy-capable"
+        ],
+        "order": 50,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "vidu/viduq3-turbo#i2v": {
+      "backend_env_key": "VIDU_PROVIDER_MODE",
+      "capabilities": [
+        "t2v",
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ],
+        "vendor": [
+          "VIDU_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Vidu fast generation",
+      "display_name": "Vidu Q3 Turbo",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/bailian-vidu-proxy",
+          "vidu/vendor-api"
+        ],
+        "official_snapshot_ids": [
+          "vidu/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 16,
+        "min": 1,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "vidu",
+      "id": "vidu/viduq3-turbo#i2v",
+      "inputs": {},
+      "legacy_model_id": "viduq3-turbo",
+      "mode": "i2v",
+      "model_line_id": "vidu/viduq3-turbo",
+      "params": {
+        "movementAmplitude": {
+          "default": "auto",
+          "options": [
+            "auto",
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "540p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "viduAudio": true
+      },
+      "provider": "vidu",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "vidu"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope",
+        "vendor"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_audio_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_image_to_video",
+          "vendor": "vidu_vendor_image_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url",
+          "vendor": "vidu_vendor_video_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 45,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.2-i2v-flash#i2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Faster legacy I2V option",
+      "display_name": "Wan 2.2 I2V Flash",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": {
+        "type": "fixed",
+        "value": 5
+      },
+      "family": "wan",
+      "id": "wan/wan2.2-i2v-flash#i2v",
+      "inputs": {},
+      "legacy_model_id": "wan2.2-i2v-flash",
+      "mode": "i2v",
+      "model_line_id": "wan/wan2.2-i2v-flash",
+      "params": {
+        "negativePrompt": true,
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 70,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.2-i2v-plus#i2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Higher quality legacy I2V option",
+      "display_name": "Wan 2.2 I2V Plus",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": {
+        "type": "fixed",
+        "value": 5
+      },
+      "family": "wan",
+      "id": "wan/wan2.2-i2v-plus#i2v",
+      "inputs": {},
+      "legacy_model_id": "wan2.2-i2v-plus",
+      "mode": "i2v",
+      "model_line_id": "wan/wan2.2-i2v-plus",
+      "params": {
+        "negativePrompt": true,
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 80,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.2-t2i-flash#t2i": {
+      "backend_env_key": null,
+      "capabilities": [
+        "t2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Faster legacy T2I option",
+      "display_name": "Wan 2.2 T2I Flash",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan/wan2.2-t2i-flash#t2i",
+      "inputs": {},
+      "legacy_model_id": "wan2.2-t2i-flash",
+      "mode": "t2i",
+      "model_line_id": "wan/wan2.2-t2i-flash",
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 70,
+        "recommended": false,
+        "selection_group": "t2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.2-t2i-plus#t2i": {
+      "backend_env_key": null,
+      "capabilities": [
+        "t2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Higher quality legacy T2I option",
+      "display_name": "Wan 2.2 T2I Plus",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan/wan2.2-t2i-plus#t2i",
+      "inputs": {},
+      "legacy_model_id": "wan2.2-t2i-plus",
+      "mode": "t2i",
+      "model_line_id": "wan/wan2.2-t2i-plus",
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 80,
+        "recommended": false,
+        "selection_group": "t2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.5-i2i-preview#i2i": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Default legacy I2I option",
+      "display_name": "Wan 2.5 I2I Preview",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-image"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan/wan2.5-i2i-preview#i2i",
+      "inputs": {
+        "reference_images": {
+          "max": 3
+        }
+      },
+      "legacy_model_id": "wan2.5-i2i-preview",
+      "mode": "i2i",
+      "model_line_id": "wan/wan2.5-i2i-preview",
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 90,
+        "recommended": false,
+        "selection_group": "i2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.5-i2v-preview#i2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Default legacy I2V option",
+      "display_name": "Wan 2.5 I2V Preview",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "options": [
+          5,
+          10
+        ],
+        "type": "buttons"
+      },
+      "family": "wan",
+      "id": "wan/wan2.5-i2v-preview#i2v",
+      "inputs": {},
+      "legacy_model_id": "wan2.5-i2v-preview",
+      "mode": "i2v",
+      "model_line_id": "wan/wan2.5-i2v-preview",
+      "params": {
+        "audio": true,
+        "negativePrompt": true,
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 90,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.5-t2i-preview#t2i": {
+      "backend_env_key": null,
+      "capabilities": [
+        "t2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Default legacy T2I option",
+      "display_name": "Wan 2.5 T2I Preview",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan/wan2.5-t2i-preview#t2i",
+      "inputs": {},
+      "legacy_model_id": "wan2.5-t2i-preview",
+      "mode": "t2i",
+      "model_line_id": "wan/wan2.5-t2i-preview",
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 90,
+        "recommended": false,
+        "selection_group": "t2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.6-i2v-flash#i2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Fast generation",
+      "display_name": "Wan 2.6 I2V Flash",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 15,
+        "min": 2,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "wan",
+      "id": "wan/wan2.6-i2v-flash#i2v",
+      "inputs": {},
+      "legacy_model_id": "wan2.6-i2v-flash",
+      "mode": "i2v",
+      "model_line_id": "wan/wan2.6-i2v-flash",
+      "params": {
+        "audio": true,
+        "negativePrompt": true,
+        "promptExtend": true,
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "shotType": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 95,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.6-image#i2i": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Latest I2I model",
+      "display_name": "Wan 2.6 Image",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-image"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan/wan2.6-image#i2i",
+      "inputs": {
+        "reference_images": {
+          "max": 4
+        }
+      },
+      "legacy_model_id": "wan2.6-image",
+      "mode": "i2i",
+      "model_line_id": "wan/wan2.6-image",
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [
+          "latest"
+        ],
+        "order": 100,
+        "recommended": true,
+        "selection_group": "i2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.6-t2i#t2i": {
+      "backend_env_key": null,
+      "capabilities": [
+        "t2i"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Latest T2I model",
+      "display_name": "Wan 2.6 T2I",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-t2i"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan/wan2.6-t2i#t2i",
+      "inputs": {},
+      "legacy_model_id": "wan2.6-t2i",
+      "mode": "t2i",
+      "model_line_id": "wan/wan2.6-t2i",
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {},
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [
+          "latest"
+        ],
+        "order": 100,
+        "recommended": true,
+        "selection_group": "t2i",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.6-video#i2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v",
+        "r2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Latest model, supports R2V",
+      "display_name": "Wan 2.6 I2V / R2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 15,
+        "min": 2,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "wan",
+      "id": "wan/wan2.6-video#i2v",
+      "inputs": {},
+      "legacy_model_id": "wan2.6-i2v",
+      "mode": "i2v",
+      "model_line_id": "wan/wan2.6-video",
+      "params": {
+        "audio": true,
+        "negativePrompt": true,
+        "promptExtend": true,
+        "resolution": {
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "shotType": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {
+        "dashscope": {
+          "gateway": "dashscope"
+        }
+      },
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [
+          "latest"
+        ],
+        "order": 100,
+        "recommended": true,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "wan/wan2.6-video#r2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "r2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Dedicated reference-to-video route",
+      "display_name": "Wan 2.6 R2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/wan-i2v-r2v"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/wan/2026-04-03"
+        ]
+      },
+      "duration": null,
+      "family": "wan",
+      "id": "wan/wan2.6-video#r2v",
+      "inputs": {},
+      "legacy_model_id": "wan2.6-r2v",
+      "mode": "r2v",
+      "model_line_id": "wan/wan2.6-video",
+      "params": {},
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "wan2.2-",
+        "wan2.5-",
+        "wan2.6-"
+      ],
+      "runtime": {
+        "dashscope": {
+          "gateway": "dashscope"
+        }
+      },
+      "status": "hidden",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_multimodal_message"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 10,
+        "recommended": false,
+        "selection_group": "i2v",
+        "visible_in": []
+      }
+    }
+  },
+  "version": 1
+}

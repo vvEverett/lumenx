@@ -147,12 +147,53 @@ cd frontend
 npm install && npm run dev
 ```
 
+Notes:
+
+- `npm run dev` now goes through a repo-controlled stable launcher.
+- On macOS, it enables Watchpack polling by default to avoid `EMFILE: too many open files, watch` in large workspaces, so dev-mode debugging remains usable.
+
 ---
 
 ## 📖 Documentation
 
 - **[User Manual](USER_MANUAL.md)**: **Must-read** for first-time users.
 - **[API Documentation](http://localhost:8000/docs)**: Backend Swagger UI.
+- **[Model Onboarding Implementation](docs/model-onboarding-implementation.md)**: explains what the model onboarding system does today and what each related file is responsible for.
+- **[Model Docs And Catalog Architecture](docs/plans/2026-04-03-model-docs-and-catalog-architecture.md)**: explains why the system is structured this way.
+
+---
+
+## 🧠 Model Onboarding Workflow
+
+LumenX now ships with a repo-native model onboarding workflow entry:
+
+- text alias: `/lumenx-model-onboarding`
+- use it for:
+  - onboarding a new model
+  - updating model versions
+  - switching defaults
+  - changing model params, capability flags, or UI exposure
+  - refreshing model-document evidence
+
+Recommended verification sequence:
+
+```bash
+python scripts/build_model_catalog.py
+python scripts/validate_model_catalog.py
+pytest -q
+cd frontend && npm run typecheck
+cd frontend && npm run test:all
+cd frontend && npm run build
+```
+
+`npm run typecheck` is a stable wrapper. On a clean checkout, if Next.js has not generated `.next/types` yet, it will bootstrap them first and then run `tsc --noEmit`.
+
+The goal is not only to change files, but to leave behind:
+
+- document evidence
+- catalog changes
+- regenerated backend/frontend artifacts
+- repeatable verification results
 
 ---
 

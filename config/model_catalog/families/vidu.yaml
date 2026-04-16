@@ -1,0 +1,90 @@
+family: vidu
+provider: vidu
+routing_prefixes:
+  - vidu
+supported_backends:
+  - dashscope
+  - vendor
+default_backend: dashscope
+backend_env_key: VIDU_PROVIDER_MODE
+credential_sources:
+  dashscope:
+    - DASHSCOPE_API_KEY
+  vendor:
+    - VIDU_API_KEY
+supported_modalities:
+  - t2v
+  - i2v
+transport:
+  image_input_mode:
+    dashscope: dashscope_image_to_video
+    vendor: vidu_vendor_image_url
+  audio_input_mode:
+    dashscope: dashscope_temp_file_url
+    vendor: vidu_vendor_audio_url
+  reference_video_input_mode:
+    dashscope: dashscope_temp_file_url
+    vendor: vidu_vendor_video_url
+docs:
+  official_snapshot_ids:
+    - vidu/2026-04-03
+models:
+  - id: viduq3-pro
+    display_name: Vidu Q3 Pro
+    description: Vidu latest model
+    status: active
+    release_stage: stable
+    capabilities: [t2v, i2v]
+    docs:
+      context_hub_doc_ids:
+        - aliyun/bailian-vidu-proxy
+        - vidu/vendor-api
+    ui:
+      selection_group: i2v
+      visible_in: [project_settings, series_settings, video_sidebar, global_settings]
+      order: 50
+      badges: [proxy-capable]
+    duration:
+      type: slider
+      min: 1
+      max: 16
+      step: 1
+      default: 5
+    params:
+      resolution:
+        options: [540p, 720p, 1080p]
+        default: 720p
+      seed: true
+      viduAudio: true
+      movementAmplitude:
+        options: [auto, small, medium, large]
+        default: auto
+  - id: viduq3-turbo
+    display_name: Vidu Q3 Turbo
+    description: Vidu fast generation
+    status: active
+    release_stage: stable
+    capabilities: [t2v, i2v]
+    docs:
+      context_hub_doc_ids:
+        - aliyun/bailian-vidu-proxy
+        - vidu/vendor-api
+    ui:
+      selection_group: i2v
+      visible_in: [project_settings, series_settings, video_sidebar, global_settings]
+      order: 45
+    duration:
+      type: slider
+      min: 1
+      max: 16
+      step: 1
+      default: 5
+    params:
+      resolution:
+        options: [540p, 720p, 1080p]
+        default: 720p
+      seed: true
+      viduAudio: true
+      movementAmplitude:
+        options: [auto, small, medium, large]
+        default: auto

@@ -3,7 +3,14 @@
 import { useState, useEffect } from "react";
 import { Save, Loader2, Key, ChevronDown, ChevronRight, Settings, MessageSquareCode } from "lucide-react";
 import { api, type EnvConfigPayload, type ProviderMode } from "@/lib/api";
-import { T2I_MODELS, I2I_MODELS, I2V_MODELS, ASPECT_RATIOS } from "@/store/projectStore";
+import { ASPECT_RATIOS } from "@/store/projectStore";
+import {
+  DEFAULT_MODEL_SETTINGS,
+  GLOBAL_I2I_MODELS,
+  GLOBAL_I2V_MODELS,
+  GLOBAL_T2I_MODELS,
+  normalizeModelSettings,
+} from "@/lib/modelCatalog";
 import { Image, Video, Layout, Check, User, Building, Box } from "lucide-react";
 
 type EnvConfig = EnvConfigPayload & {
@@ -115,15 +122,10 @@ export default function SettingsPage() {
 
   // ── Default Model Settings ──
   const [modelSettings, setModelSettings] = useState<DefaultModelSettings>(() =>
-    loadFromLS(LS_KEY_MODEL, {
-      t2i_model: "wan2.5-t2i-preview",
-      i2i_model: "wan2.5-i2i-preview",
-      i2v_model: "wan2.5-i2v-preview",
-      character_aspect_ratio: "9:16",
-      scene_aspect_ratio: "16:9",
-      prop_aspect_ratio: "1:1",
-      storyboard_aspect_ratio: "16:9",
-    })
+    normalizeModelSettings(
+      loadFromLS(LS_KEY_MODEL, DEFAULT_MODEL_SETTINGS),
+      "global_settings"
+    )
   );
 
   // ── Default Prompt Config ──
@@ -178,7 +180,10 @@ export default function SettingsPage() {
   };
 
   const handleSaveModelDefaults = () => {
-    localStorage.setItem(LS_KEY_MODEL, JSON.stringify(modelSettings));
+    localStorage.setItem(
+      LS_KEY_MODEL,
+      JSON.stringify(normalizeModelSettings(modelSettings, "global_settings"))
+    );
     alert("Default model settings saved!");
   };
 
@@ -367,7 +372,7 @@ export default function SettingsPage() {
             <span>Text-to-Image Model</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {T2I_MODELS.map((model) => (
+            {GLOBAL_T2I_MODELS.map((model) => (
               <button
                 key={model.id}
                 onClick={() => setModelSettings((s) => ({ ...s, t2i_model: model.id }))}
@@ -407,7 +412,7 @@ export default function SettingsPage() {
               <span>Storyboard (Image-to-Image)</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {I2I_MODELS.map((model) => (
+              {GLOBAL_I2I_MODELS.map((model) => (
                 <button key={model.id} onClick={() => setModelSettings((s) => ({ ...s, i2i_model: model.id }))} className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${modelSettings.i2i_model === model.id ? "border-blue-500/50 bg-blue-500/10" : "border-white/10 hover:border-white/20 bg-white/5"}`}>
                   {modelSettings.i2i_model === model.id && <div className="absolute top-2 right-2"><Check size={14} className="text-blue-400" /></div>}
                   <span className="text-sm font-medium text-white">{model.name}</span>
@@ -433,7 +438,7 @@ export default function SettingsPage() {
               <span>Motion (Image-to-Video)</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {I2V_MODELS.map((model) => (
+              {GLOBAL_I2V_MODELS.map((model) => (
                 <button key={model.id} onClick={() => setModelSettings((s) => ({ ...s, i2v_model: model.id }))} className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${modelSettings.i2v_model === model.id ? "border-purple-500/50 bg-purple-500/10" : "border-white/10 hover:border-white/20 bg-white/5"}`}>
                   {modelSettings.i2v_model === model.id && <div className="absolute top-2 right-2"><Check size={14} className="text-purple-400" /></div>}
                   <span className="text-sm font-medium text-white">{model.name}</span>

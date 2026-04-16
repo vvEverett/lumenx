@@ -3,6 +3,11 @@ from enum import Enum
 import time
 from pydantic import BaseModel, Field
 
+from ...utils.model_catalog import get_default_model_settings
+
+
+_DEFAULT_MODEL_SETTINGS = get_default_model_settings()
+
 class AspectRatio(str, Enum):
     SQUARE = "1:1"
     PORTRAIT = "9:16"
@@ -252,9 +257,9 @@ class StoryboardFrame(BaseModel):
 
 class ModelSettings(BaseModel):
     """Model selection settings for different generation stages"""
-    t2i_model: str = Field("wan2.6-t2i", description="Text-to-Image model for Assets")
-    i2i_model: str = Field("wan2.6-image", description="Image-to-Image model for Storyboard")
-    i2v_model: str = Field("wan2.6-i2v", description="Image-to-Video model for Motion")
+    t2i_model: str = Field(_DEFAULT_MODEL_SETTINGS.t2i_model, description="Text-to-Image model for Assets")
+    i2i_model: str = Field(_DEFAULT_MODEL_SETTINGS.i2i_model, description="Image-to-Image model for Storyboard")
+    i2v_model: str = Field(_DEFAULT_MODEL_SETTINGS.i2v_model, description="Image-to-Video model for Motion")
     character_aspect_ratio: str = Field("9:16", description="Aspect ratio for Characters (9:16, 16:9, 1:1)")
     scene_aspect_ratio: str = Field("16:9", description="Aspect ratio for Scenes (9:16, 16:9, 1:1)")
     prop_aspect_ratio: str = Field("1:1", description="Aspect ratio for Props (9:16, 16:9, 1:1)")

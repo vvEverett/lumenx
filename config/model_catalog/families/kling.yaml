@@ -1,0 +1,64 @@
+family: kling
+provider: kling
+routing_prefixes:
+  - kling-
+supported_backends:
+  - dashscope
+  - vendor
+default_backend: dashscope
+backend_env_key: KLING_PROVIDER_MODE
+credential_sources:
+  dashscope:
+    - DASHSCOPE_API_KEY
+  vendor:
+    - KLING_ACCESS_KEY
+    - KLING_SECRET_KEY
+supported_modalities:
+  - t2v
+  - i2v
+transport:
+  image_input_mode:
+    dashscope: dashscope_image_to_video
+    vendor: kling_vendor_base64_image
+  audio_input_mode:
+    dashscope: dashscope_temp_file_url
+    vendor: kling_vendor_audio_url
+  reference_video_input_mode:
+    dashscope: dashscope_temp_file_url
+    vendor: kling_vendor_video_url
+docs:
+  official_snapshot_ids:
+    - kling/2026-04-03
+models:
+  - id: kling-v3
+    display_name: Kling v3
+    description: Kling AI latest model
+    status: active
+    release_stage: stable
+    capabilities: [t2v, i2v]
+    docs:
+      context_hub_doc_ids:
+        - aliyun/bailian-kling-proxy
+        - kling/vendor-api
+    ui:
+      selection_group: i2v
+      visible_in: [project_settings, series_settings, video_sidebar, global_settings]
+      order: 60
+      badges: [proxy-capable]
+    duration:
+      type: slider
+      min: 3
+      max: 15
+      step: 1
+      default: 5
+    params:
+      negativePrompt: true
+      mode:
+        options: [std, pro]
+        default: std
+      sound: true
+      cfgScale:
+        min: 0
+        max: 1
+        step: 0.1
+        default: 0.5

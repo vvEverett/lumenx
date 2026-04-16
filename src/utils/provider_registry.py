@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass, field, replace
 from typing import Dict, Mapping, Optional, Sequence, Tuple
 
+from .model_catalog import build_provider_family_configs, load_generated_model_catalog
 
 SUPPORTED_PROVIDER_BACKENDS = ("dashscope", "vendor")
 
@@ -149,7 +150,11 @@ DEFAULT_PROVIDER_FAMILIES: Tuple[ProviderFamilyConfig, ...] = (
 
 
 def get_default_provider_registry() -> ProviderRegistry:
-    return ProviderRegistry(DEFAULT_PROVIDER_FAMILIES)
+    try:
+        catalog = load_generated_model_catalog()
+        return ProviderRegistry(build_provider_family_configs(catalog))
+    except Exception:
+        return ProviderRegistry(DEFAULT_PROVIDER_FAMILIES)
 
 
 def resolve_provider_backend(model_name: str, env: Optional[Mapping[str, str]] = None) -> str:

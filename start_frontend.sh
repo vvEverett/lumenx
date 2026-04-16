@@ -2,6 +2,7 @@
 
 echo "========================================"
 echo "Starting Frontend (Next.js)..."
+echo "macOS note: npm run dev now enables a stable watcher path automatically."
 echo "========================================"
 
 cd frontend

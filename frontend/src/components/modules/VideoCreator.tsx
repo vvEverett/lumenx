@@ -18,6 +18,7 @@ import {
 
 import { useProjectStore } from "@/store/projectStore";
 import { api, API_URL, VideoTask } from "@/lib/api";
+import { R2V_ROUTE_MODEL_ID, R2V_SELECTION_MODEL_ID } from "@/lib/modelCatalog";
 import { getAssetUrl, getAssetUrlWithTimestamp } from "@/lib/utils";
 import PromptBuilder, { PromptSegment, PromptBuilderRef } from "./PromptBuilder";
 import type { VideoParams } from "@/store/projectStore";
@@ -329,7 +330,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                 }
 
                 // Determine model based on generation mode
-                const actualModel = generationMode === 'r2v' ? 'wan2.6-r2v' : params.model;
+                const actualModel = generationMode === 'r2v' ? R2V_ROUTE_MODEL_ID : params.model;
                 const referenceVideos = generationMode === 'r2v'
                     ? castSlots.filter(s => s.url).map(s => s.url)
                     : undefined;
@@ -395,8 +396,8 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                 }
 
                 // Determine model based on generation mode
-                // R2V mode uses wan2.6-r2v, I2V uses selected model
-                const actualModel = generationMode === 'r2v' ? 'wan2.6-r2v' : params.model;
+                // R2V mode uses the hidden route model, I2V uses the selected visible model.
+                const actualModel = generationMode === 'r2v' ? R2V_ROUTE_MODEL_ID : params.model;
 
                 // Get reference video URLs from cast slots for R2V
                 const referenceVideos = generationMode === 'r2v'
@@ -569,7 +570,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                     setGenerationMode("r2v");
                                     onParamsChange({
                                         generationMode: "r2v",
-                                        model: "wan2.6-i2v" // Force Wan 2.6 when switching to R2V
+                                        model: R2V_SELECTION_MODEL_ID
                                     });
                                 }}
                                 className={`px-5 py-2.5 text-sm rounded-lg flex items-center gap-2 transition-all font-medium ${generationMode === "r2v"

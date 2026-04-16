@@ -147,12 +147,53 @@ cd frontend
 npm install && npm run dev
 ```
 
+说明：
+
+- `npm run dev` 现在会走仓库内置的稳定启动器。
+- 在 macOS 上，它会默认启用 Watchpack polling，避免大型工作区下出现 `EMFILE: too many open files, watch`，方便继续使用 dev 模式调试。
+
 ---
 
 ## 📖 文档中心
 
 - **[用户手册](USER_MANUAL.md)**: 必读！详细的功能使用说明。
 - **[API 文档](http://localhost:8000/docs)**: 后端接口定义的 Swagger UI。
+- **[模型接入实现说明](docs/model-onboarding-implementation.md)**: 解释模型接入系统已经如何落地、每个相关文件负责什么。
+- **[模型文档与 catalog 架构设计](docs/plans/2026-04-03-model-docs-and-catalog-architecture.md)**: 解释这套系统为什么这样设计。
+
+---
+
+## 🧠 模型接入工作流
+
+LumenX 现在已经内置了仓库级的模型接入工作流入口：
+
+- 文本别名：`/lumenx-model-onboarding`
+- 适用场景：
+  - 接入新模型
+  - 更新模型版本
+  - 修改默认模型
+  - 调整模型参数、能力标记、UI 暴露
+  - 刷新模型文档证据
+
+推荐操作顺序：
+
+```bash
+python scripts/build_model_catalog.py
+python scripts/validate_model_catalog.py
+pytest -q
+cd frontend && npm run typecheck
+cd frontend && npm run test:all
+cd frontend && npm run build
+```
+
+`npm run typecheck` 是一个稳定包装层：如果干净 checkout 里还没有 Next.js 自动生成的 `.next/types`，它会先补一次构建，再继续执行 `tsc --noEmit`。
+
+这套流程的目标不是只“把文件改掉”，而是让每次模型更新都留下：
+
+- 文档证据
+- catalog 变更
+- 前后端生成物
+- 可复现的验证结果
 
 ---
 

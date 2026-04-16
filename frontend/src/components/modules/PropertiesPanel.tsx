@@ -5,6 +5,7 @@ import { Settings, Sliders, Image as ImageIcon, Type, FileText, Users, Layout, V
 import { useProjectStore } from "@/store/projectStore";
 import { useState, useEffect } from "react";
 import { api, API_URL } from "@/lib/api";
+import { getMaxReferenceImages } from "@/lib/modelCatalog";
 import { getAssetUrl } from "@/lib/utils";
 
 interface PropertiesPanelProps {
@@ -473,9 +474,9 @@ function StoryboardInspector() {
 
                     const referenceCount = (sceneHasImage ? 1 : 0) + charImageCount + propImageCount;
 
-                    // Dynamic limit based on model
-                    const i2iModel = currentProject?.model_settings?.i2i_model;
-                    const referenceLimit = i2iModel === 'wan2.6-image' ? 4 : 3;
+                    const referenceLimit = getMaxReferenceImages(
+                        currentProject?.model_settings?.i2i_model
+                    );
                     const isLimitReached = referenceCount >= referenceLimit;
 
                     return (

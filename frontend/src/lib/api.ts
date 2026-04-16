@@ -1,4 +1,5 @@
 import axios from "axios";
+import { DEFAULT_I2V_MODEL_ID } from "@/lib/modelCatalog";
 
 // Dynamic API URL detection:
 // 1. In packaged app (Electron): Frontend is served by backend, use same origin
@@ -115,7 +116,7 @@ export const api = {
         promptExtend: boolean = true,
         negativePrompt?: string,
         batchSize: number = 1,
-        model: string = "wan2.6-i2v",
+        model: string = DEFAULT_I2V_MODEL_ID,
         frameId?: string,
         shotType: string = "single",  // 'single' or 'multi' (only for wan2.6-i2v)
         generationMode: string = "i2v",  // 'i2v' or 'r2v'

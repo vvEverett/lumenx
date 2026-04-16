@@ -1,0 +1,44 @@
+family: pixverse
+provider: pixverse
+routing_prefixes:
+  - pixverse-
+supported_backends:
+  - dashscope
+  - vendor
+default_backend: dashscope
+backend_env_key: PIXVERSE_PROVIDER_MODE
+credential_sources:
+  dashscope:
+    - DASHSCOPE_API_KEY
+  vendor:
+    - PIXVERSE_API_KEY
+supported_modalities:
+  - t2v
+  - i2v
+transport:
+  image_input_mode:
+    dashscope: dashscope_image_to_video
+    vendor: pixverse_vendor_image_url
+  audio_input_mode:
+    dashscope: dashscope_temp_file_url
+    vendor: pixverse_vendor_audio_url
+  reference_video_input_mode:
+    dashscope: dashscope_temp_file_url
+    vendor: pixverse_vendor_video_url
+docs:
+  official_snapshot_ids:
+    - pixverse/2026-04-03
+models:
+  - id: pixverse-v4-i2v
+    display_name: PixVerse V4 I2V
+    description: Catalog-ready placeholder until runtime adapter exposure is finalized
+    status: planned
+    release_stage: preview
+    capabilities: [i2v]
+    docs:
+      context_hub_doc_ids:
+        - pixverse/vendor-api
+    ui:
+      selection_group: i2v
+      visible_in: []
+      order: 10

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Image, Video, Film, Check, Layout, User, Building, Box } from 'lucide-react';
 import { useProjectStore, T2I_MODELS, I2I_MODELS, I2V_MODELS, ASPECT_RATIOS } from '@/store/projectStore';
+import { resolveModelSettings } from '@/lib/modelCatalog';
 import { api } from '@/lib/api';
 
 interface ModelSettingsModalProps {
@@ -14,27 +15,27 @@ interface ModelSettingsModalProps {
 export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsModalProps) {
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
+    const resolvedSettings = resolveModelSettings(currentProject?.model_settings, 'project_settings');
 
-    const [t2iModel, setT2iModel] = useState(currentProject?.model_settings?.t2i_model || 'wan2.5-t2i-preview');
-    const [i2iModel, setI2iModel] = useState(currentProject?.model_settings?.i2i_model || 'wan2.5-i2i-preview');
-    const [i2vModel, setI2vModel] = useState(currentProject?.model_settings?.i2v_model || 'wan2.5-i2v-preview');
-    const [characterAspectRatio, setCharacterAspectRatio] = useState(currentProject?.model_settings?.character_aspect_ratio || '9:16');
-    const [sceneAspectRatio, setSceneAspectRatio] = useState(currentProject?.model_settings?.scene_aspect_ratio || '16:9');
-    const [propAspectRatio, setPropAspectRatio] = useState(currentProject?.model_settings?.prop_aspect_ratio || '1:1');
-    const [storyboardAspectRatio, setStoryboardAspectRatio] = useState(currentProject?.model_settings?.storyboard_aspect_ratio || '16:9');
+    const [t2iModel, setT2iModel] = useState(resolvedSettings.t2i_model);
+    const [i2iModel, setI2iModel] = useState(resolvedSettings.i2i_model);
+    const [i2vModel, setI2vModel] = useState(resolvedSettings.i2v_model);
+    const [characterAspectRatio, setCharacterAspectRatio] = useState(resolvedSettings.character_aspect_ratio);
+    const [sceneAspectRatio, setSceneAspectRatio] = useState(resolvedSettings.scene_aspect_ratio);
+    const [propAspectRatio, setPropAspectRatio] = useState(resolvedSettings.prop_aspect_ratio);
+    const [storyboardAspectRatio, setStoryboardAspectRatio] = useState(resolvedSettings.storyboard_aspect_ratio);
     const [isSaving, setIsSaving] = useState(false);
 
     // Sync state when project changes
     useEffect(() => {
-        if (currentProject?.model_settings) {
-            setT2iModel(currentProject.model_settings.t2i_model || 'wan2.5-t2i-preview');
-            setI2iModel(currentProject.model_settings.i2i_model || 'wan2.5-i2i-preview');
-            setI2vModel(currentProject.model_settings.i2v_model || 'wan2.5-i2v-preview');
-            setCharacterAspectRatio(currentProject.model_settings.character_aspect_ratio || '9:16');
-            setSceneAspectRatio(currentProject.model_settings.scene_aspect_ratio || '16:9');
-            setPropAspectRatio(currentProject.model_settings.prop_aspect_ratio || '1:1');
-            setStoryboardAspectRatio(currentProject.model_settings.storyboard_aspect_ratio || '16:9');
-        }
+        const normalizedSettings = resolveModelSettings(currentProject?.model_settings, 'project_settings');
+        setT2iModel(normalizedSettings.t2i_model);
+        setI2iModel(normalizedSettings.i2i_model);
+        setI2vModel(normalizedSettings.i2v_model);
+        setCharacterAspectRatio(normalizedSettings.character_aspect_ratio);
+        setSceneAspectRatio(normalizedSettings.scene_aspect_ratio);
+        setPropAspectRatio(normalizedSettings.prop_aspect_ratio);
+        setStoryboardAspectRatio(normalizedSettings.storyboard_aspect_ratio);
     }, [currentProject?.model_settings]);
 
     const handleSave = async () => {

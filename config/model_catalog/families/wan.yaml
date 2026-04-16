@@ -1,0 +1,249 @@
+family: wan
+provider: aliyun
+routing_prefixes:
+  - wan2.6-
+  - wan2.5-
+  - wan2.2-
+supported_backends:
+  - dashscope
+default_backend: dashscope
+credential_sources:
+  dashscope:
+    - DASHSCOPE_API_KEY
+supported_modalities:
+  - t2i
+  - i2i
+  - i2v
+  - r2v
+transport:
+  image_input_mode:
+    dashscope: dashscope_multimodal_message
+  audio_input_mode:
+    dashscope: dashscope_temp_file_url
+  reference_video_input_mode:
+    dashscope: dashscope_temp_file_url
+docs:
+  official_snapshot_ids:
+    - aliyun/wan/2026-04-03
+models:
+  - id: wan2.6-t2i
+    display_name: Wan 2.6 T2I
+    description: Latest T2I model
+    status: active
+    release_stage: stable
+    capabilities: [t2i]
+    docs:
+      context_hub_doc_ids: [aliyun/wan-t2i]
+    ui:
+      selection_group: t2i
+      visible_in: [project_settings, series_settings, global_settings]
+      recommended: true
+      order: 100
+      badges: [latest]
+  - id: wan2.5-t2i-preview
+    display_name: Wan 2.5 T2I Preview
+    description: Default legacy T2I option
+    status: active
+    release_stage: stable
+    capabilities: [t2i]
+    docs:
+      context_hub_doc_ids: [aliyun/wan-t2i]
+    ui:
+      selection_group: t2i
+      visible_in: [project_settings, series_settings, global_settings]
+      order: 90
+  - id: wan2.2-t2i-plus
+    display_name: Wan 2.2 T2I Plus
+    description: Higher quality legacy T2I option
+    status: active
+    release_stage: stable
+    capabilities: [t2i]
+    docs:
+      context_hub_doc_ids: [aliyun/wan-t2i]
+    ui:
+      selection_group: t2i
+      visible_in: [project_settings, series_settings, global_settings]
+      order: 80
+  - id: wan2.2-t2i-flash
+    display_name: Wan 2.2 T2I Flash
+    description: Faster legacy T2I option
+    status: active
+    release_stage: stable
+    capabilities: [t2i]
+    docs:
+      context_hub_doc_ids: [aliyun/wan-t2i]
+    ui:
+      selection_group: t2i
+      visible_in: [project_settings, series_settings, global_settings]
+      order: 70
+  - id: wan2.6-image
+    display_name: Wan 2.6 Image
+    description: Latest I2I model
+    status: active
+    release_stage: stable
+    capabilities: [i2i]
+    docs:
+      context_hub_doc_ids: [aliyun/wan-image]
+    ui:
+      selection_group: i2i
+      visible_in: [project_settings, series_settings, global_settings]
+      recommended: true
+      order: 100
+      badges: [latest]
+    inputs:
+      reference_images:
+        max: 4
+  - id: wan2.5-i2i-preview
+    display_name: Wan 2.5 I2I Preview
+    description: Default legacy I2I option
+    status: active
+    release_stage: stable
+    capabilities: [i2i]
+    docs:
+      context_hub_doc_ids: [aliyun/wan-image]
+    ui:
+      selection_group: i2i
+      visible_in: [project_settings, series_settings, global_settings]
+      order: 90
+    inputs:
+      reference_images:
+        max: 3
+  - id: wan/wan2.6-video
+    display_name: Wan 2.6 Video
+    description: Latest Wan 2.6 video line
+    status: active
+    release_stage: stable
+    docs:
+      context_hub_doc_ids: [aliyun/wan-i2v-r2v]
+    runtime:
+      dashscope:
+        gateway: dashscope
+    modes:
+      i2v:
+        legacy_id: wan2.6-i2v
+        display_name: Wan 2.6 I2V / R2V
+        description: Latest model, supports R2V
+        capabilities: [i2v, r2v]
+        ui:
+          selection_group: i2v
+          visible_in: [project_settings, series_settings, video_sidebar, global_settings]
+          recommended: true
+          order: 100
+          badges: [latest]
+        duration:
+          type: slider
+          min: 2
+          max: 15
+          step: 1
+          default: 5
+        params:
+          resolution:
+            options: [480p, 720p, 1080p]
+            default: 720p
+          seed: true
+          negativePrompt: true
+          promptExtend: true
+          shotType: true
+          audio: true
+      r2v:
+        legacy_id: wan2.6-r2v
+        display_name: Wan 2.6 R2V
+        description: Dedicated reference-to-video route
+        status: hidden
+        capabilities: [r2v]
+        ui:
+          selection_group: i2v
+          visible_in: []
+          order: 10
+  - id: wan2.6-i2v-flash
+    display_name: Wan 2.6 I2V Flash
+    description: Fast generation
+    status: active
+    release_stage: stable
+    capabilities: [i2v]
+    docs:
+      context_hub_doc_ids: [aliyun/wan-i2v-r2v]
+    ui:
+      selection_group: i2v
+      visible_in: [project_settings, series_settings, video_sidebar, global_settings]
+      order: 95
+    duration:
+      type: slider
+      min: 2
+      max: 15
+      step: 1
+      default: 5
+    params:
+      resolution:
+        options: [480p, 720p, 1080p]
+        default: 720p
+      seed: true
+      negativePrompt: true
+      promptExtend: true
+      shotType: true
+      audio: true
+  - id: wan2.5-i2v-preview
+    display_name: Wan 2.5 I2V Preview
+    description: Default legacy I2V option
+    status: active
+    release_stage: stable
+    capabilities: [i2v]
+    docs:
+      context_hub_doc_ids: [aliyun/wan-i2v-r2v]
+    ui:
+      selection_group: i2v
+      visible_in: [project_settings, series_settings, video_sidebar, global_settings]
+      order: 90
+    duration:
+      type: buttons
+      options: [5, 10]
+      default: 5
+    params:
+      resolution:
+        options: [480p, 720p, 1080p]
+        default: 720p
+      seed: true
+      negativePrompt: true
+      audio: true
+  - id: wan2.2-i2v-plus
+    display_name: Wan 2.2 I2V Plus
+    description: Higher quality legacy I2V option
+    status: active
+    release_stage: stable
+    capabilities: [i2v]
+    docs:
+      context_hub_doc_ids: [aliyun/wan-i2v-r2v]
+    ui:
+      selection_group: i2v
+      visible_in: [project_settings, series_settings, video_sidebar, global_settings]
+      order: 80
+    duration:
+      type: fixed
+      value: 5
+    params:
+      resolution:
+        options: [480p, 720p, 1080p]
+        default: 720p
+      seed: true
+      negativePrompt: true
+  - id: wan2.2-i2v-flash
+    display_name: Wan 2.2 I2V Flash
+    description: Faster legacy I2V option
+    status: active
+    release_stage: stable
+    capabilities: [i2v]
+    docs:
+      context_hub_doc_ids: [aliyun/wan-i2v-r2v]
+    ui:
+      selection_group: i2v
+      visible_in: [project_settings, series_settings, video_sidebar, global_settings]
+      order: 70
+    duration:
+      type: fixed
+      value: 5
+    params:
+      resolution:
+        options: [480p, 720p, 1080p]
+        default: 720p
+      seed: true
+      negativePrompt: true
