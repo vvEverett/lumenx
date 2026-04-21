@@ -3,6 +3,7 @@
 echo "========================================"
 echo "Starting Frontend (Next.js)..."
 echo "macOS note: npm run dev now enables a stable watcher path automatically."
+echo "Default frontend dev port: 3008"
 echo "========================================"
 
 cd frontend

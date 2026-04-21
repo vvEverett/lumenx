@@ -143,7 +143,7 @@ mkdir -p output/uploads
 ```bash
 cd frontend
 
-# Install dependencies & start service (http://localhost:3000)
+# Install dependencies & start service (http://localhost:3008)
 npm install && npm run dev
 ```
 
@@ -151,6 +151,7 @@ Notes:
 
 - `npm run dev` now goes through a repo-controlled stable launcher.
 - On macOS, it enables Watchpack polling by default to avoid `EMFILE: too many open files, watch` in large workspaces, so dev-mode debugging remains usable.
+- The frontend dev server now defaults to port `3008`, which avoids clashing with other local projects that commonly use `3000`.
 
 ---
 

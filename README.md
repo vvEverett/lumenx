@@ -143,7 +143,7 @@ mkdir -p output/uploads
 ```bash
 cd frontend
 
-# 安装依赖 & 启动服务 (http://localhost:3000)
+# 安装依赖 & 启动服务 (http://localhost:3008)
 npm install && npm run dev
 ```
 
@@ -151,6 +151,7 @@ npm install && npm run dev
 
 - `npm run dev` 现在会走仓库内置的稳定启动器。
 - 在 macOS 上，它会默认启用 Watchpack polling，避免大型工作区下出现 `EMFILE: too many open files, watch`，方便继续使用 dev 模式调试。
+- 这个仓库的前端默认开发端口现在固定为 `3008`，避免和你本机其他项目常用的 `3000` 冲突。
 
 ---
 

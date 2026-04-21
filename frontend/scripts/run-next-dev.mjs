@@ -29,6 +29,16 @@ export function buildNextDevEnv(
 export function runNextDev(args = process.argv.slice(2)) {
   const env = buildNextDevEnv();
   const nextEntry = path.resolve("node_modules", "next", "dist", "bin", "next");
+  const hasExplicitPortArg = args.some(
+    (arg, index) =>
+      arg === "--port" ||
+      arg === "-p" ||
+      arg.startsWith("--port=") ||
+      (index > 0 && (args[index - 1] === "--port" || args[index - 1] === "-p")),
+  );
+  const resolvedArgs = hasExplicitPortArg
+    ? args
+    : ["--port", env.PORT || "3008", ...args];
 
   if (env.WATCHPACK_POLLING === "true") {
     console.log(
@@ -36,7 +46,7 @@ export function runNextDev(args = process.argv.slice(2)) {
     );
   }
 
-  const child = spawn(process.execPath, [nextEntry, "dev", ...args], {
+  const child = spawn(process.execPath, [nextEntry, "dev", ...resolvedArgs], {
     stdio: "inherit",
     env,
   });

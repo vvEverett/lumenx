@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Settings, Sliders, Image as ImageIcon, Type, FileText, Users, Layout, Video, Mic, Music, Film, Info, StickyNote, Paintbrush, Wand2, Sparkles } from "lucide-react";
+import { Settings, Sliders, Image as ImageIcon, Type, FileText, Users, Layout, Video, Mic, Music, Film, Info, Paintbrush, Wand2, Sparkles } from "lucide-react";
 import { useProjectStore } from "@/store/projectStore";
 import { useState, useEffect } from "react";
 import { api, API_URL } from "@/lib/api";
@@ -79,16 +79,6 @@ function ScriptInspector({ project }: { project: any }) {
                     <StatBox label="Scenes" value={sceneCount} />
                     <StatBox label="Est. Dur" value="~2m" />
                 </div>
-            </div>
-
-            <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <StickyNote size={14} /> Quick Notes
-                </h3>
-                <textarea
-                    className="w-full h-32 bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-gray-300 resize-none focus:outline-none focus:border-primary/50"
-                    placeholder="Jot down ideas here..."
-                />
             </div>
 
             <div className="pt-4 border-t border-white/10">

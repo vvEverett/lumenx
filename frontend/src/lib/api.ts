@@ -3,15 +3,15 @@ import { DEFAULT_I2V_MODEL_ID } from "@/lib/modelCatalog";
 
 // Dynamic API URL detection:
 // 1. In packaged app (Electron): Frontend is served by backend, use same origin
-// 2. In development (port 3000/3001): Use backend port 17177
+// 2. In development (port 3008/3009, legacy 3000/3001): Use backend port 17177
 const getApiUrl = (): string => {
     // If running in browser
     if (typeof window !== 'undefined') {
         const { protocol, hostname, port } = window.location;
 
-        // In development mode (port 3000/3001 = Next.js dev server)
+        // In development mode (port 3008/3009, legacy 3000/3001 = Next.js dev server)
         // Backend is on a different port
-        if (port === '3000' || port === '3001') {
+        if (port === '3008' || port === '3009' || port === '3000' || port === '3001') {
             return `${protocol}//${hostname}:17177`;
         }
 

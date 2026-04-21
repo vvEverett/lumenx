@@ -144,7 +144,7 @@ python -m uvicorn src.apps.comic_gen.api:app --reload --host 0.0.0.0 --port 1717
 cd frontend
 npm install
 npm run dev
-# Frontend available at: http://localhost:3000
+# Frontend available at: http://localhost:3008
 ```
 
 ### Full Development Mode
