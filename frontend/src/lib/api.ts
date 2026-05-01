@@ -64,6 +64,8 @@ export interface VideoTask {
     frame_id?: string;
     generation_mode?: string;
     reference_video_urls?: string[];
+    reference_image_urls?: string[];
+    ratio?: string;
 }
 
 export const api = {
@@ -127,7 +129,10 @@ export const api = {
         cfgScale?: number,
         // Vidu params
         viduAudio?: boolean,
-        movementAmplitude?: string
+        movementAmplitude?: string,
+        // HappyHorse params
+        referenceImageUrls: string[] = [],  // Reference images for HappyHorse R2V (1-9)
+        ratio?: string  // Aspect ratio: 16:9, 9:16, 1:1, 4:3, 3:4
     ) => {
         const res = await axios.post(`${API_URL}/projects/${id}/video_tasks`, {
             image_url,
@@ -151,7 +156,10 @@ export const api = {
             cfg_scale: cfgScale,
             // Vidu
             vidu_audio: viduAudio,
-            movement_amplitude: movementAmplitude
+            movement_amplitude: movementAmplitude,
+            // HappyHorse
+            reference_image_urls: referenceImageUrls,
+            ratio
         });
         return res.data;
     },

@@ -19,6 +19,8 @@ html.dark {
   --color-text-primary: #ededed;
   --color-text-secondary: #9ca3af;
   --color-text-muted: #6b7280;
+  --color-overlay: rgba(0, 0, 0, 0.8);
+  --color-bg-inset: rgba(255, 255, 255, 0.03);
   --foreground-rgb: 237, 237, 237;
   --background-start-rgb: 5, 5, 8;
   --background-end-rgb: 5, 5, 8;
@@ -39,6 +41,8 @@ html.light {
   --color-text-primary: #1a1a1a;
   --color-text-secondary: #6b7280;
   --color-text-muted: #9ca3af;
+  --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-bg-inset: rgba(0, 0, 0, 0.02);
   --foreground-rgb: 26, 26, 26;
   --background-start-rgb: 248, 249, 250;
   --background-end-rgb: 248, 249, 250;

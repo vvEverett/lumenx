@@ -7,6 +7,7 @@ import { Image as ImageIcon, Play, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Series, Character, Scene, Prop, Project } from "@/store/projectStore";
 import AssetCard from "@/components/common/AssetCard";
+import { useTranslations } from "next-intl";
 import SeriesSidebar, { type SidebarItem } from "./SeriesSidebar";
 
 const SeriesModelSettingsModal = dynamic(() => import("./SeriesModelSettingsModal"), { ssr: false });
@@ -18,12 +19,6 @@ interface SeriesDetailPageProps {
 }
 
 type AssetTab = "characters" | "scenes" | "props";
-
-const ASSET_LABELS: Record<AssetTab, string> = {
-  characters: "角色",
-  scenes: "场景",
-  props: "道具",
-};
 
 export default function SeriesDetailPage({ seriesId }: SeriesDetailPageProps) {
   const [series, setSeries] = useState<Series | null>(null);
@@ -38,6 +33,15 @@ export default function SeriesDetailPage({ seriesId }: SeriesDetailPageProps) {
   const [showModelSettings, setShowModelSettings] = useState(false);
   const [showPromptConfig, setShowPromptConfig] = useState(false);
   const [showImportAssets, setShowImportAssets] = useState(false);
+
+  const t = useTranslations("series");
+  const tc = useTranslations("common");
+
+  const ASSET_LABELS: Record<AssetTab, string> = {
+    characters: t("characterLabel"),
+    scenes: t("sceneLabel"),
+    props: t("propLabel"),
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -126,7 +130,7 @@ export default function SeriesDetailPage({ seriesId }: SeriesDetailPageProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
-        <div className="text-gray-400">加载中...</div>
+        <div className="text-text-secondary">{tc("loading")}</div>
       </div>
     );
   }
@@ -136,8 +140,8 @@ export default function SeriesDetailPage({ seriesId }: SeriesDetailPageProps) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="text-center">
-          <p className="text-gray-400 mb-4">系列未找到</p>
-          <a href="#/" className="text-primary hover:underline">返回首页</a>
+          <p className="text-text-secondary mb-4">{t("notFound")}</p>
+          <a href="#/" className="text-primary hover:underline">{t("backToHome")}</a>
         </div>
       </div>
     );
@@ -244,6 +248,8 @@ function AssetContentPanel({
   assets: (Character | Scene | Prop)[];
   label: string;
 }) {
+  const t = useTranslations("series");
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 24 }}
@@ -254,30 +260,30 @@ function AssetContentPanel({
     >
       {/* Header */}
       <div className="px-8 pt-6 pb-4">
-        <h2 className="text-xl font-display font-bold text-white">
+        <h2 className="text-xl font-display font-bold text-foreground">
           {label}
-          <span className="text-sm font-normal text-gray-500 ml-2">
-            {assets.length} 项
+          <span className="text-sm font-normal text-text-secondary ml-2">
+            {t("itemCount", { count: assets.length })}
           </span>
         </h2>
-        <p className="text-xs text-gray-600 mt-1">
-          在集数编辑器中生成的资产将自动共享到这里
+        <p className="text-xs text-text-muted mt-1">
+          {t("sharedAssetsEditHint")}
         </p>
       </div>
 
       {/* Grid */}
       <div className="flex-1 overflow-y-auto px-8 pb-8">
         {assets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-gray-500">
+          <div className="flex flex-col items-center justify-center py-24 text-text-secondary">
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="w-16 h-16 rounded-2xl bg-white/5 border border-glass-border flex items-center justify-center mb-4"
+              className="w-16 h-16 rounded-2xl bg-glass border border-glass-border flex items-center justify-center mb-4"
             >
-              <ImageIcon size={28} className="text-gray-600" />
+              <ImageIcon size={28} className="text-text-muted" />
             </motion.div>
-            <p className="text-sm font-medium">暂无{label}资产</p>
-            <p className="text-xs text-gray-600 mt-1">资产将在集数中生成后共享到这里</p>
+            <p className="text-sm font-medium">{t("noAssets", { label })}</p>
+            <p className="text-xs text-text-muted mt-1">{t("assetsSharedHint")}</p>
           </div>
         ) : (
           <motion.div
@@ -322,6 +328,8 @@ function EpisodeContentPanel({
   seriesId: string;
   onOpenEditor: () => void;
 }) {
+  const t = useTranslations("series");
+
   const frames = episode.frames || [];
 
   return (
@@ -339,12 +347,12 @@ function EpisodeContentPanel({
             <span className="text-xs bg-primary/20 text-primary px-2.5 py-1 rounded-lg font-mono font-bold">
               EP{episode.episode_number || "?"}
             </span>
-            <h2 className="text-xl font-display font-bold text-white">
+            <h2 className="text-xl font-display font-bold text-foreground">
               {episode.title}
             </h2>
           </div>
-          <p className="text-xs text-gray-500">
-            {frames.length} 分镜
+          <p className="text-xs text-text-secondary">
+            {t("frameCount", { count: frames.length })}
           </p>
         </div>
         <motion.button
@@ -354,7 +362,7 @@ function EpisodeContentPanel({
           className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-primary/20 hover:shadow-primary/30"
         >
           <Play size={14} />
-          进入编辑器
+          {t("enterEditor")}
           <ChevronRight size={14} />
         </motion.button>
       </div>
@@ -362,16 +370,16 @@ function EpisodeContentPanel({
       {/* Frames preview */}
       <div className="flex-1 overflow-y-auto px-8 pb-8">
         {frames.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-gray-500">
+          <div className="flex flex-col items-center justify-center py-24 text-text-secondary">
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="w-16 h-16 rounded-2xl bg-white/5 border border-glass-border flex items-center justify-center mb-4"
+              className="w-16 h-16 rounded-2xl bg-glass border border-glass-border flex items-center justify-center mb-4"
             >
-              <Play size={28} className="text-gray-600" />
+              <Play size={28} className="text-text-muted" />
             </motion.div>
-            <p className="text-sm font-medium">暂无分镜</p>
-            <p className="text-xs text-gray-600 mt-1">进入编辑器开始创作</p>
+            <p className="text-sm font-medium">{t("noFrames")}</p>
+            <p className="text-xs text-text-muted mt-1">{t("startCreating")}</p>
           </div>
         ) : (
           <motion.div
@@ -398,19 +406,19 @@ function EpisodeContentPanel({
                 className="glass-panel rounded-xl overflow-hidden group cursor-pointer"
                 onClick={onOpenEditor}
               >
-                <div className="aspect-video bg-gray-800/50 flex items-center justify-center overflow-hidden relative">
+                <div className="aspect-video bg-surface flex items-center justify-center overflow-hidden relative">
                   {frame.rendered_image_url ? (
                     <img
                       src={frame.rendered_image_url}
-                      alt={`分镜 ${i + 1}`}
+                      alt={t("frameNum", { number: i + 1 })}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="text-gray-600 text-xs font-mono">
+                    <div className="text-text-muted text-xs font-mono">
                       #{i + 1}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-overlay/0 group-hover:bg-overlay transition-colors duration-200 flex items-center justify-center">
                     <Play
                       size={20}
                       className="text-white opacity-0 group-hover:opacity-80 transition-opacity duration-200"
@@ -418,8 +426,8 @@ function EpisodeContentPanel({
                   </div>
                 </div>
                 <div className="p-2.5">
-                  <p className="text-xs text-gray-400 truncate">
-                    {frame.scene_description || `分镜 ${i + 1}`}
+                  <p className="text-xs text-text-secondary truncate">
+                    {frame.scene_description || t("frameNum", { number: i + 1 })}
                   </p>
                 </div>
               </motion.div>

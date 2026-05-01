@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Paintbrush, User, MapPin, Box, Lock, Unlock, RefreshCw, Upload, Image as ImageIcon, X, Check, Settings, ChevronRight, Trash2, Plus, Link as LinkIcon } from "lucide-react";
 import { useProjectStore } from "@/store/projectStore";
@@ -12,6 +13,7 @@ import { VideoVariantSelector } from "../common/VideoVariantSelector";
 import UploadAssetModal from "../modals/UploadAssetModal";
 
 export default function ConsistencyVault() {
+    const tv = useTranslations("vault");
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
 
@@ -117,7 +119,7 @@ export default function ConsistencyVault() {
                         } else if (status.status === "failed") {
                             clearInterval(pollInterval);
                             console.error("Asset generation failed:", status.error);
-                            alert(status.error || '生成失败，请稍后重试');
+                            alert(tv('genFailed', { error: status.error || '' }));
 
                             // Also refresh project to show updated status
                             try {
@@ -135,7 +137,7 @@ export default function ConsistencyVault() {
                     } catch (pollError: any) {
                         console.error("Polling error:", pollError);
                         clearInterval(pollInterval);
-                        alert(`轮询任务状态失败: ${pollError.message || '网络错误'}`);
+                        alert(tv('pollFailed', { error: pollError.message || '' }));
                         if (removeGeneratingTask) {
                             removeGeneratingTask(assetId, generationType);
                         }
@@ -152,7 +154,7 @@ export default function ConsistencyVault() {
             }
         } catch (error: any) {
             console.error("Failed to generate asset:", error);
-            alert(`启动生成任务失败: ${error.response?.data?.detail || error.message}`);
+            alert(tv('startGenFailed', { error: error.response?.data?.detail || error.message }));
             if (removeGeneratingTask) {
                 removeGeneratingTask(assetId, generationType);
             }
@@ -263,7 +265,7 @@ export default function ConsistencyVault() {
                             console.log(`[Video Polling] ${generationType} generated successfully`);
                         } else if (status.status === "failed") {
                             clearInterval(pollInterval);
-                            alert(`视频生成失败: ${status.error || '生成失败，请稍后重试'}`);
+                            alert(tv('genFailed', { error: status.error || '' }));
                             if (removeGeneratingTask) {
                                 removeGeneratingTask(assetId, generationType);
                             }
@@ -274,7 +276,7 @@ export default function ConsistencyVault() {
                     } catch (pollError: any) {
                         console.error("Video polling error:", pollError);
                         clearInterval(pollInterval);
-                        alert(`视频轮询失败: ${pollError.message || '网络错误'}`);
+                        alert(tv('pollFailed', { error: pollError.message || '' }));
                         if (removeGeneratingTask) {
                             removeGeneratingTask(assetId, generationType);
                         }
@@ -289,7 +291,7 @@ export default function ConsistencyVault() {
             }
         } catch (error: any) {
             console.error("Failed to generate video:", error);
-            alert(`启动视频生成失败: ${error.response?.data?.detail || error.message}`);
+            alert(tv('startGenFailed', { error: error.response?.data?.detail || error.message }));
             if (removeGeneratingTask) {
                 removeGeneratingTask(assetId, generationType);
             }
@@ -315,10 +317,7 @@ export default function ConsistencyVault() {
         if (!currentProject) return;
 
         const confirmed = confirm(
-            "同步描述说明：\n\n" +
-            "此操作会将 Script 页面中的最新描述同步到所有素材。\n" +
-            "已生成的图片不会被删除，但后续重新生成时将使用新描述。\n\n" +
-            "是否继续？"
+            tv("syncDesc")
         );
 
         if (!confirmed) return;
@@ -326,10 +325,10 @@ export default function ConsistencyVault() {
         try {
             const updatedProject = await api.syncDescriptions(currentProject.id);
             updateProject(currentProject.id, updatedProject);
-            alert("描述同步成功！");
+            alert(tv("syncSuccess"));
         } catch (error: any) {
             console.error("Failed to sync descriptions:", error);
-            alert(`同步失败: ${error.message}`);
+            alert(tv('syncFailed', { error: error.message }));
         }
     };
 
@@ -359,8 +358,8 @@ export default function ConsistencyVault() {
     return (
         <div className="flex flex-col h-full text-white">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-black/20">
-                <div className="flex gap-2 bg-black/40 p-1 rounded-xl border border-white/5">
+            <div className="flex items-center justify-between p-6 border-b border-glass-border bg-overlay">
+                <div className="flex gap-2 bg-overlay p-1 rounded-xl border border-border-subtle">
                     <TabButton
                         active={activeTab === "character"}
                         onClick={() => setActiveTab("character")}
@@ -387,11 +386,11 @@ export default function ConsistencyVault() {
                 <div className="flex gap-2">
                     <button
                         onClick={handleSyncDescriptions}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-colors"
-                        title="同步 Script 页面中的描述到所有素材"
+                        className="flex items-center gap-2 px-4 py-2 bg-glass hover:bg-hover-bg border border-glass-border rounded-lg transition-colors"
+                        title={tv("syncDescHint")}
                     >
                         <RefreshCw size={16} className="text-blue-400" />
-                        <span className="text-sm font-bold">同步描述</span>
+                        <span className="text-sm font-bold">{tv("syncDescription")}</span>
                     </button>
 
                 </div>
@@ -400,12 +399,12 @@ export default function ConsistencyVault() {
             {/* Content Grid */}
             <div className="flex-1 overflow-y-auto p-6">
                 {!currentProject ? (
-                    <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="flex items-center justify-center h-full text-text-muted">
                         Loading project...
                     </div>
                 ) : assets?.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-4">
-                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center h-full text-text-muted gap-4">
+                        <div className="w-16 h-16 rounded-full bg-glass flex items-center justify-center">
                             {activeTab === "character" ? <User size={32} /> : activeTab === "scene" ? <MapPin size={32} /> : <Box size={32} />}
                         </div>
                         <p>No {activeTab}s found</p>
@@ -434,9 +433,9 @@ export default function ConsistencyVault() {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             onClick={() => setIsCreateDialogOpen(true)}
-                            className="group relative aspect-[3/4] bg-black/20 rounded-2xl border-2 border-dashed border-white/20 hover:border-primary/50 overflow-hidden transition-all cursor-pointer flex items-center justify-center hover:bg-white/5"
+                            className="group relative aspect-[3/4] bg-overlay rounded-2xl border-2 border-dashed border-glass-border hover:border-primary/50 overflow-hidden transition-all cursor-pointer flex items-center justify-center hover:bg-glass"
                         >
-                            <div className="flex flex-col items-center gap-3 text-gray-400 group-hover:text-primary transition-colors">
+                            <div className="flex flex-col items-center gap-3 text-text-secondary group-hover:text-primary transition-colors">
                                 <Plus size={40} />
                                 <span className="text-sm font-medium">Add {activeTab}</span>
                             </div>
@@ -578,26 +577,26 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
     };
 
     return (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-8">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm p-8">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-5xl h-[85vh] flex overflow-hidden shadow-2xl"
+                className="bg-surface border border-glass-border rounded-2xl w-full max-w-5xl h-[85vh] flex overflow-hidden shadow-2xl"
             >
                 {/* Left: Variant Selector */}
-                <div className="w-1/2 bg-black/40 relative border-r border-white/10 flex flex-col overflow-hidden">
+                <div className="w-1/2 bg-overlay relative border-r border-glass-border flex flex-col overflow-hidden">
                     {/* Tab Switcher */}
-                    <div className="flex border-b border-white/10 bg-black/20">
+                    <div className="flex border-b border-glass-border bg-overlay">
                         <button
                             onClick={() => setActiveTab("image")}
-                            className={`flex-1 p-3 text-sm font-bold transition-colors ${activeTab === "image" ? "text-white border-b-2 border-primary bg-white/5" : "text-gray-500 hover:text-gray-300"}`}
+                            className={`flex-1 p-3 text-sm font-bold transition-colors ${activeTab === "image" ? "text-white border-b-2 border-primary bg-glass" : "text-text-muted hover:text-text-secondary"}`}
                         >
                             Image Reference
                         </button>
                         <button
                             onClick={() => setActiveTab("video")}
-                            className={`flex-1 p-3 text-sm font-bold transition-colors ${activeTab === "video" ? "text-white border-b-2 border-primary bg-white/5" : "text-gray-500 hover:text-gray-300"}`}
+                            className={`flex-1 p-3 text-sm font-bold transition-colors ${activeTab === "video" ? "text-white border-b-2 border-primary bg-glass" : "text-text-muted hover:text-text-secondary"}`}
                         >
                             Video Reference
                         </button>
@@ -631,9 +630,9 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                 {/* Right: Details */}
                 <div className="w-1/2 flex flex-col">
                     {/* Header */}
-                    <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
+                    <div className="p-6 border-b border-glass-border flex justify-between items-center bg-overlay">
                         <h2 className="text-2xl font-bold text-white">{asset.name}</h2>
-                        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white">
+                        <button onClick={onClose} className="p-2 hover:bg-hover-bg rounded-full text-text-secondary hover:text-white">
                             <X size={24} />
                         </button>
                     </div>
@@ -643,7 +642,7 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                         {/* Description */}
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <label className="text-sm font-bold text-gray-400 uppercase">Description</label>
+                                <label className="text-sm font-bold text-text-secondary uppercase">Description</label>
                                 {!isEditing && (
                                     <button onClick={() => setIsEditing(true)} className="text-xs text-primary hover:underline">
                                         Edit
@@ -655,15 +654,15 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                                     <textarea
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
-                                        className="w-full h-32 bg-black/20 border border-white/10 rounded-lg p-3 text-sm text-gray-300 resize-none focus:border-primary focus:outline-none"
+                                        className="w-full h-32 bg-overlay border border-glass-border rounded-lg p-3 text-sm text-text-secondary resize-none focus:border-primary focus:outline-none"
                                     />
                                     <div className="flex justify-end gap-2">
-                                        <button onClick={() => { setIsEditing(false); setDescription(asset.description); }} className="px-3 py-1.5 text-xs text-gray-400 hover:text-white">Cancel</button>
+                                        <button onClick={() => { setIsEditing(false); setDescription(asset.description); }} className="px-3 py-1.5 text-xs text-text-secondary hover:text-white">Cancel</button>
                                         <button onClick={handleSave} className="px-3 py-1.5 bg-primary text-white text-xs rounded hover:bg-primary/90">Save Description</button>
                                     </div>
                                 </div>
                             ) : (
-                                <p className="text-sm text-gray-300 leading-relaxed bg-white/5 p-3 rounded-lg border border-transparent hover:border-white/10 transition-colors">
+                                <p className="text-sm text-text-secondary leading-relaxed bg-glass p-3 rounded-lg border border-transparent hover:border-glass-border transition-colors">
                                     {asset.description}
                                 </p>
                             )}
@@ -672,11 +671,11 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                         {/* Video Prompt (Only visible in Video Tab) */}
                         {activeTab === "video" && (
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-400 uppercase">Video Prompt</label>
+                                <label className="text-sm font-bold text-text-secondary uppercase">Video Prompt</label>
                                 <textarea
                                     value={videoPrompt}
                                     onChange={(e) => setVideoPrompt(e.target.value)}
-                                    className="w-full h-24 bg-black/20 border border-white/10 rounded-lg p-3 text-sm text-gray-300 resize-none focus:border-primary focus:outline-none"
+                                    className="w-full h-24 bg-overlay border border-glass-border rounded-lg p-3 text-sm text-text-secondary resize-none focus:border-primary focus:outline-none"
                                     placeholder="Describe the motion..."
                                 />
                             </div>
@@ -685,8 +684,8 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                         {/* Style Control (Only visible in Image Tab) */}
                         {activeTab === "image" && (
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-400 uppercase">Style Settings</label>
-                                <div className="bg-white/5 rounded-lg p-3 border border-white/5">
+                                <label className="text-sm font-bold text-text-secondary uppercase">Style Settings</label>
+                                <div className="bg-glass rounded-lg p-3 border border-border-subtle">
                                     <div className="flex items-center gap-2 mb-2">
                                         <input
                                             type="checkbox"
@@ -695,13 +694,13 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                                             onChange={(e) => setApplyStyle(e.target.checked)}
                                             className="rounded border-gray-600 bg-gray-700 text-primary focus:ring-primary"
                                         />
-                                        <label htmlFor="applyStyleModal" className="text-sm font-bold text-gray-300 cursor-pointer select-none">
+                                        <label htmlFor="applyStyleModal" className="text-sm font-bold text-text-secondary cursor-pointer select-none">
                                             Apply Art Direction Style
                                         </label>
                                     </div>
 
                                     {stylePrompt && (
-                                        <div className="text-xs text-gray-500 font-mono bg-black/20 p-2 rounded border border-white/5">
+                                        <div className="text-xs text-text-muted font-mono bg-overlay p-2 rounded border border-border-subtle">
                                             <span className="text-primary font-bold">Style:</span> {stylePrompt}
                                         </div>
                                     )}
@@ -714,7 +713,7 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                             <div className="space-y-2">
                                 <button
                                     onClick={() => setShowAdvanced(!showAdvanced)}
-                                    className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase"
+                                    className="flex items-center gap-2 text-xs font-bold text-text-muted hover:text-white transition-colors uppercase"
                                 >
                                     <span>Advanced Settings (Negative Prompt)</span>
                                     <ChevronRight size={12} className={`transform transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
@@ -731,7 +730,7 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                                             <textarea
                                                 value={negativePrompt}
                                                 onChange={(e) => setNegativePrompt(e.target.value)}
-                                                className="w-full h-24 bg-black/20 border border-white/10 rounded-lg p-3 text-xs text-gray-400 resize-none focus:outline-none focus:border-primary/50 font-mono"
+                                                className="w-full h-24 bg-overlay border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50 font-mono"
                                                 placeholder="Enter negative prompt..."
                                             />
                                         </motion.div>
@@ -742,7 +741,7 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="p-6 border-t border-white/10 bg-black/20 flex gap-4">
+                    <div className="p-6 border-t border-glass-border bg-overlay flex gap-4">
                         <button
                             onClick={onClose}
                             className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-900/20"
@@ -762,15 +761,15 @@ function TabButton({ active, onClick, icon, label, count }: any) {
         <button
             onClick={onClick}
             className={`flex items-center justify-between w-full p-3 rounded-xl transition-all ${active
-                ? "bg-white/10 text-white border border-white/10 shadow-sm"
-                : "text-gray-500 hover:bg-white/5 hover:text-gray-300"
+                ? "bg-glass text-white border border-glass-border shadow-sm"
+                : "text-text-muted hover:bg-glass hover:text-text-secondary"
                 }`}
         >
             <div className="flex items-center gap-3">
                 {icon}
                 <span className="font-bold text-sm">{label}</span>
             </div>
-            <span className="text-xs bg-black/30 px-2 py-0.5 rounded-full">{count}</span>
+            <span className="text-xs bg-overlay px-2 py-0.5 rounded-full">{count}</span>
         </button>
     );
 }
@@ -803,7 +802,7 @@ function ImageWithRetry({ src, alt, className }: { src: string, alt: string, cla
     return (
         <div className={`relative ${className}`}>
             {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/5 backdrop-blur-sm z-10">
+                <div className="absolute inset-0 flex items-center justify-center bg-glass backdrop-blur-sm z-10">
                     <RefreshCw className="animate-spin text-white/50" size={24} />
                 </div>
             )}
@@ -859,7 +858,7 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={onClick}
-            className={`group relative aspect-[3/4] bg-black/40 rounded-2xl border overflow-hidden transition-colors cursor-pointer ${isLocked ? 'border-yellow-500/50' : 'border-white/10 hover:border-primary/50'
+            className={`group relative aspect-[3/4] bg-overlay rounded-2xl border overflow-hidden transition-colors cursor-pointer ${isLocked ? 'border-yellow-500/50' : 'border-glass-border hover:border-primary/50'
                 }`}
         >
             {/* Image Area */}
@@ -872,14 +871,14 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
                     className="w-full h-full object-cover"
                 />
             ) : (
-                <div className="w-full h-full flex items-center justify-center bg-white/5">
+                <div className="w-full h-full flex items-center justify-center bg-glass">
                     <ImageIcon className="text-white/10" size={48} />
                 </div>
             )}
 
             {/* Loading Overlay */}
             {isGenerating && (
-                <div className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex items-center justify-center flex-col gap-2">
+                <div className="absolute inset-0 z-20 bg-overlay backdrop-blur-sm flex items-center justify-center flex-col gap-2">
                     <RefreshCw className="animate-spin text-primary" size={32} />
                     <span className="text-xs font-mono text-primary">Generating...</span>
                 </div>
@@ -904,7 +903,7 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
                     }}
                     className={`p-2 rounded-full backdrop-blur-md transition-colors ${isLocked
                         ? "bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30"
-                        : "bg-black/40 text-white hover:bg-white/20"
+                        : "bg-overlay text-white hover:bg-hover-bg"
                         }`}
                 >
                     {isLocked ? <Lock size={14} /> : <Unlock size={14} />}
@@ -913,8 +912,8 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
 
             {/* Bottom Info */}
             <div className="absolute bottom-0 left-0 right-0 p-4 z-30">
-                <h3 className="text-lg font-bold text-white mb-1 truncate">{asset.name}</h3>
-                <p className="text-xs text-gray-400 line-clamp-2 mb-3 h-8">
+                <h3 className="text-lg font-bold text-foreground mb-1 truncate">{asset.name}</h3>
+                <p className="text-xs text-text-secondary line-clamp-2 mb-3 h-8">
                     {asset.description || "No description"}
                 </p>
 
@@ -926,7 +925,7 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
                         }}
                         disabled={isLocked || isGenerating}
                         className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-colors ${isLocked
-                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                            ? 'bg-gray-600 text-text-secondary cursor-not-allowed'
                             : 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20'
                             }`}
                     >
@@ -938,8 +937,8 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
                             e.stopPropagation();
                             onUpload?.();
                         }}
-                        className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white cursor-pointer transition-colors"
-                        title="上传图片"
+                        className="p-2 bg-glass hover:bg-hover-bg rounded-lg text-white cursor-pointer transition-colors"
+                        title={tv("uploadAsset")}
                     >
                         <Upload size={14} />
                     </button>
@@ -972,50 +971,50 @@ function CreateAssetDialog({ type, onClose, onCreate }: { type: string; onClose:
     const typeLabel = type === "character" ? "Character" : type === "scene" ? "Scene" : "Prop";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm p-8">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+                className="bg-surface border border-glass-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
             >
-                <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
+                <div className="p-6 border-b border-glass-border flex justify-between items-center bg-overlay">
                     <div className="flex items-center gap-3">
                         <Plus className="text-primary" size={20} />
-                        <h2 className="text-lg font-bold text-white">Create New {typeLabel}</h2>
+                        <h2 className="text-lg font-bold text-foreground">Create New {typeLabel}</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                        <X size={20} className="text-gray-400" />
+                    <button onClick={onClose} className="p-2 hover:bg-hover-bg rounded-lg transition-colors">
+                        <X size={20} className="text-text-secondary" />
                     </button>
                 </div>
 
                 <div className="p-6 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Name *</label>
+                        <label className="block text-sm font-medium text-text-secondary mb-2">Name *</label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder={`Enter ${type} name`}
-                            className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none"
+                            className="w-full px-4 py-3 bg-overlay border border-glass-border rounded-lg text-white placeholder-text-muted focus:border-primary/50 focus:outline-none"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
+                        <label className="block text-sm font-medium text-text-secondary mb-2">Description</label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder={`Describe the ${type}...`}
                             rows={4}
-                            className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none resize-none"
+                            className="w-full px-4 py-3 bg-overlay border border-glass-border rounded-lg text-white placeholder-text-muted focus:border-primary/50 focus:outline-none resize-none"
                         />
                     </div>
                 </div>
 
-                <div className="p-6 border-t border-white/10 flex justify-end gap-3">
+                <div className="p-6 border-t border-glass-border flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors"
+                        className="px-6 py-2 bg-glass hover:bg-hover-bg text-white rounded-lg transition-colors"
                     >
                         Cancel
                     </button>

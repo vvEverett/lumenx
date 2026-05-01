@@ -370,3 +370,36 @@ export const R2V_ROUTE_MODEL_ID =
 export function isR2vSelectionModel(modelId: string): boolean {
     return modelId === R2V_SELECTION_MODEL_ID;
 }
+
+// ---------------------------------------------------------------------------
+// Dynamic R2V routing: resolve the hidden R2V model per-family
+// ---------------------------------------------------------------------------
+
+/** Map from family name to hidden R2V route model ID. */
+const R2V_ROUTE_MAP: Record<string, string> = {};
+for (const model of SORTED_MODEL_ENTRIES) {
+    if (model.capabilities.includes('r2v') && model.ui.visible_in.length === 0) {
+        if (!R2V_ROUTE_MAP[model.family]) {
+            R2V_ROUTE_MAP[model.family] = model.id;
+        }
+    }
+}
+
+/**
+ * Given the currently selected I2V model, resolve the correct R2V route model.
+ * Each family has its own hidden R2V model (e.g. wan -> wan2.6-r2v, happyhorse -> happyhorse-1.0-r2v).
+ */
+export function getR2vRouteModelId(selectedI2vModelId: string): string {
+    const selectedModel = MODEL_CATALOG.models[selectedI2vModelId];
+    if (!selectedModel) return R2V_ROUTE_MODEL_ID;
+    return R2V_ROUTE_MAP[selectedModel.family] ?? R2V_ROUTE_MODEL_ID;
+}
+
+/**
+ * Returns true if the given R2V model uses image references (HappyHorse)
+ * instead of video references (Wan).
+ */
+export function isR2vImageBased(modelId: string): boolean {
+    const model = MODEL_CATALOG.models[modelId];
+    return model?.family === 'happyhorse';
+}

@@ -351,6 +351,88 @@ class WanxModel(VideoGenModel):
                     seed=seed,
                     extra_headers=extra_media_headers,
                 )
+            elif final_model_name.startswith('happyhorse-1.0-'):
+                # HappyHorse model family (I2V, R2V, T2V, V2V)
+                resolver_model = final_model_name
+                backend = self._resolve_provider_backend_for_model(resolver_model)
+                temp_url_resolver = self._build_dashscope_temp_url_resolver(resolver_model)
+
+                # Build media array based on model type
+                media = None
+                if final_model_name == 'happyhorse-1.0-i2v':
+                    # I2V: first_frame image
+                    image_ref = img_path or img_url
+                    if image_ref:
+                        resolved = resolve_media_input(
+                            image_ref,
+                            model_name=resolver_model,
+                            modality="image",
+                            backend=backend,
+                            uploader=uploader,
+                            dashscope_temp_url_resolver=temp_url_resolver,
+                        )
+                        media = [{"type": "first_frame", "url": resolved.value}]
+                        self._merge_media_headers(extra_media_headers, resolved.headers)
+
+                elif final_model_name == 'happyhorse-1.0-r2v':
+                    # R2V: reference images (1-9)
+                    ref_image_urls = kwargs.get('ref_image_urls', [])
+                    if not ref_image_urls:
+                        raise ValueError("ref_image_urls is required for happyhorse-1.0-r2v")
+                    resolved_refs = resolve_media_inputs(
+                        ref_image_urls,
+                        model_name=resolver_model,
+                        modality="image",
+                        backend=backend,
+                        uploader=uploader,
+                        dashscope_temp_url_resolver=temp_url_resolver,
+                    )
+                    media = [{"type": "reference_image", "url": r.value} for r in resolved_refs]
+                    for r in resolved_refs:
+                        self._merge_media_headers(extra_media_headers, r.headers)
+
+                elif final_model_name == 'happyhorse-1.0-video-edit':
+                    # V2V: video + optional reference images (reserved for future)
+                    ref_image_urls = kwargs.get('ref_image_urls', [])
+                    video_input = kwargs.get('video_url')
+                    if video_input:
+                        resolved_video = resolve_media_input(
+                            video_input,
+                            model_name=resolver_model,
+                            modality="reference_video",
+                            backend=backend,
+                            uploader=uploader,
+                            dashscope_temp_url_resolver=temp_url_resolver,
+                        )
+                        media = [{"type": "video", "url": resolved_video.value}]
+                        self._merge_media_headers(extra_media_headers, resolved_video.headers)
+                        # Add reference images if provided
+                        if ref_image_urls:
+                            resolved_imgs = resolve_media_inputs(
+                                ref_image_urls,
+                                model_name=resolver_model,
+                                modality="image",
+                                backend=backend,
+                                uploader=uploader,
+                                dashscope_temp_url_resolver=temp_url_resolver,
+                            )
+                            for r in resolved_imgs:
+                                media.append({"type": "reference_image", "url": r.value})
+                                self._merge_media_headers(extra_media_headers, r.headers)
+                # T2V: no media needed
+
+                video_url = self._generate_hh_http(
+                    prompt=prompt,
+                    model_name=final_model_name,
+                    media=media,
+                    resolution=resolution,
+                    duration=duration,
+                    ratio=kwargs.get('ratio'),
+                    seed=seed,
+                    watermark=watermark,
+                    audio_setting=kwargs.get('audio_setting'),
+                    extra_headers=extra_media_headers,
+                )
             else:
                 # Use SDK for other models
                 if img_path or img_url:
@@ -595,6 +677,115 @@ class WanxModel(VideoGenModel):
             elif task_status in ['CANCELED', 'UNKNOWN']:
                 raise RuntimeError(f"{model_name} task {task_status}: {poll_result}")
             
+        raise RuntimeError(f"{model_name} task timed out after {max_wait_time}s")
+
+    def _generate_hh_http(self, *, prompt: str, model_name: str,
+                           media: Optional[List[Dict[str, str]]] = None,
+                           resolution: str = "1080P", duration: int = 5,
+                           ratio: Optional[str] = None, seed: Optional[int] = None,
+                           watermark: bool = False, audio_setting: Optional[str] = None,
+                           extra_headers: Optional[Mapping[str, str]] = None) -> str:
+        """Generate video using HappyHorse models via HTTP API (asynchronous with polling)."""
+        base = get_provider_base_url("DASHSCOPE")
+        create_url = f"{base}/api/v1/services/aigc/video-generation/video-synthesis"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "X-DashScope-Async": "enable"
+        }
+        if extra_headers:
+            headers.update(dict(extra_headers))
+
+        payload = {
+            "model": model_name,
+            "input": {
+                "prompt": prompt,
+            },
+            "parameters": {
+                "resolution": resolution,
+                "duration": duration,
+                "watermark": watermark,
+            }
+        }
+
+        # Add media array if provided (I2V/R2V/V2V)
+        if media:
+            payload["input"]["media"] = media
+
+        # Model-specific parameters
+        if ratio and model_name != "happyhorse-1.0-i2v":
+            # I2V doesn't support ratio parameter
+            payload["parameters"]["ratio"] = ratio
+        if seed:
+            payload["parameters"]["seed"] = seed
+        if audio_setting and model_name == "happyhorse-1.0-video-edit":
+            payload["parameters"]["audio_setting"] = audio_setting
+
+        logger.info(f"Calling HappyHorse {model_name} HTTP API (async)...")
+        logger.info(f"Payload: {payload}")
+
+        # Step 1: Create task
+        response = requests.post(create_url, headers=headers, json=payload, timeout=120)
+
+        logger.info(f"Create task response status: {response.status_code}")
+        logger.info(f"Create task response body: {response.text[:500] if response.text else 'empty'}")
+
+        if response.status_code != 200:
+            error_data = response.json() if response.text else {}
+            error_msg = error_data.get('message', response.text)
+            raise RuntimeError(f"{model_name} task creation failed: {error_msg}")
+
+        result = response.json()
+        task_id = result.get('output', {}).get('task_id')
+        if not task_id:
+            raise RuntimeError(f"No task_id in response: {result}")
+
+        logger.info(f"HappyHorse task created: {task_id}")
+
+        # Step 2: Poll for task completion
+        poll_url = f"{base}/api/v1/tasks/{task_id}"
+        poll_headers = {
+            "Authorization": f"Bearer {self.api_key}"
+        }
+
+        max_wait_time = 900  # 15 minutes max wait
+        poll_interval = 15   # Poll every 15 seconds
+        elapsed = 0
+
+        while elapsed < max_wait_time:
+            time.sleep(poll_interval)
+            elapsed += poll_interval
+
+            poll_response = requests.get(poll_url, headers=poll_headers, timeout=30)
+
+            if poll_response.status_code != 200:
+                logger.warning(f"Poll request failed: {poll_response.status_code}")
+                continue
+
+            poll_result = poll_response.json()
+            task_status = poll_result.get('output', {}).get('task_status')
+
+            logger.info(f"Task {task_id} status: {task_status} (elapsed: {elapsed}s)")
+
+            if task_status == 'SUCCEEDED':
+                video_url = poll_result.get('output', {}).get('video_url')
+                if not video_url:
+                    raise RuntimeError(f"No video_url in completed task: {poll_result}")
+
+                logger.info(f"HappyHorse task completed. Video URL: {video_url}")
+                return video_url
+
+            elif task_status == 'FAILED':
+                error_msg = poll_result.get('output', {}).get('message', 'Unknown error')
+                code = poll_result.get('output', {}).get('code', '')
+                raise RuntimeError(f"{model_name} task failed: {code} - {error_msg}")
+
+            elif task_status in ['CANCELED', 'UNKNOWN']:
+                raise RuntimeError(f"{model_name} task {task_status}: {poll_result}")
+
+            # PENDING or RUNNING - continue polling
+
         raise RuntimeError(f"{model_name} task timed out after {max_wait_time}s")
 
     def _generate_sdk(self, prompt: str, model_name: str, img_url: str = None, size: str = "1280*720",

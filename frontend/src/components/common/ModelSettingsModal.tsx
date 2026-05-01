@@ -6,6 +6,7 @@ import { Settings, X, Image, Video, Film, Check, Layout, User, Building, Box } f
 import { useProjectStore, T2I_MODELS, I2I_MODELS, I2V_MODELS, ASPECT_RATIOS } from '@/store/projectStore';
 import { resolveModelSettings } from '@/lib/modelCatalog';
 import { api } from '@/lib/api';
+import { useTranslations } from "next-intl";
 
 interface ModelSettingsModalProps {
     isOpen: boolean;
@@ -14,6 +15,8 @@ interface ModelSettingsModalProps {
 
 export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsModalProps) {
     const currentProject = useProjectStore((state) => state.currentProject);
+    const t = useTranslations("models");
+    const tc = useTranslations("common");
     const updateProject = useProjectStore((state) => state.updateProject);
     const resolvedSettings = resolveModelSettings(currentProject?.model_settings, 'project_settings');
 
@@ -56,7 +59,7 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
             onClose();
         } catch (error) {
             console.error("Failed to save model settings:", error);
-            alert("Failed to save settings");
+            alert(t("saveSettingsFailed"));
         } finally {
             setIsSaving(false);
         }
@@ -70,32 +73,32 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm flex items-center justify-center p-4"
                 onClick={onClose}
             >
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-[#1a1a1a] rounded-2xl border border-white/10 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+                    className="bg-elevated rounded-2xl border border-glass-border w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-5 border-b border-white/10">
+                    <div className="flex items-center justify-between p-5 border-b border-glass-border">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg">
                                 <Settings size={20} className="text-blue-400" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-white">Generation Settings</h2>
-                                <p className="text-xs text-gray-500">Configure models and aspect ratios</p>
+                                <h2 className="text-lg font-bold text-foreground">{t("genSettings")}</h2>
+                                <p className="text-xs text-text-muted">{t("genSettingsDesc")}</p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            className="p-2 hover:bg-hover-bg rounded-lg transition-colors"
                         >
-                            <X size={20} className="text-gray-400" />
+                            <X size={20} className="text-text-secondary" />
                         </button>
                     </div>
 
@@ -103,14 +106,14 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                     <div className="p-5 space-y-6 overflow-y-auto">
                         {/* Assets Section */}
                         <div className="space-y-5">
-                            <div className="flex items-center gap-2 text-sm font-bold text-white">
+                            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                                 <Image size={16} className="text-green-400" />
-                                <span>Assets (Text-to-Image)</span>
+                                <span>{t("assetsT2I")}</span>
                             </div>
 
                             {/* T2I Model */}
                             <div className="space-y-2">
-                                <label className="text-xs text-gray-400">Model</label>
+                                <label className="text-xs text-text-secondary">{t("model")}</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {T2I_MODELS.map((model) => (
                                         <button
@@ -118,7 +121,7 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                                             onClick={() => setT2iModel(model.id)}
                                             className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${t2iModel === model.id
                                                     ? 'border-green-500/50 bg-green-500/10'
-                                                    : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                    : 'border-glass-border hover:border-glass-border bg-glass'
                                                 }`}
                                         >
                                             {t2iModel === model.id && (
@@ -126,8 +129,8 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                                                     <Check size={14} className="text-green-400" />
                                                 </div>
                                             )}
-                                            <span className="text-sm font-medium text-white">{model.name}</span>
-                                            <span className="text-xs text-gray-500">{model.description}</span>
+                                            <span className="text-sm font-medium text-foreground">{model.name}</span>
+                                            <span className="text-xs text-text-muted">{model.description}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -137,9 +140,9 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                             <div className="grid grid-cols-3 gap-4">
                                 {/* Character Aspect Ratio */}
                                 <div className="space-y-2">
-                                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                                    <div className="flex items-center gap-1 text-xs text-text-secondary">
                                         <User size={12} />
-                                        <label>Character</label>
+                                        <label>{t("character")}</label>
                                     </div>
                                     <div className="space-y-1">
                                         {ASPECT_RATIOS.map((ratio) => (
@@ -148,10 +151,10 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                                                 onClick={() => setCharacterAspectRatio(ratio.id)}
                                                 className={`w-full flex flex-col items-center py-2 px-2 rounded border transition-all ${characterAspectRatio === ratio.id
                                                         ? 'border-green-500/50 bg-green-500/10'
-                                                        : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                        : 'border-glass-border hover:border-glass-border bg-glass'
                                                     }`}
                                             >
-                                                <span className="text-xs font-medium text-white">{ratio.name}</span>
+                                                <span className="text-xs font-medium text-foreground">{ratio.name}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -159,9 +162,9 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
 
                                 {/* Scene Aspect Ratio */}
                                 <div className="space-y-2">
-                                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                                    <div className="flex items-center gap-1 text-xs text-text-secondary">
                                         <Building size={12} />
-                                        <label>Scene</label>
+                                        <label>{t("scene")}</label>
                                     </div>
                                     <div className="space-y-1">
                                         {ASPECT_RATIOS.map((ratio) => (
@@ -170,10 +173,10 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                                                 onClick={() => setSceneAspectRatio(ratio.id)}
                                                 className={`w-full flex flex-col items-center py-2 px-2 rounded border transition-all ${sceneAspectRatio === ratio.id
                                                         ? 'border-green-500/50 bg-green-500/10'
-                                                        : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                        : 'border-glass-border hover:border-glass-border bg-glass'
                                                     }`}
                                             >
-                                                <span className="text-xs font-medium text-white">{ratio.name}</span>
+                                                <span className="text-xs font-medium text-foreground">{ratio.name}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -181,9 +184,9 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
 
                                 {/* Prop Aspect Ratio */}
                                 <div className="space-y-2">
-                                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                                    <div className="flex items-center gap-1 text-xs text-text-secondary">
                                         <Box size={12} />
-                                        <label>Prop</label>
+                                        <label>{t("prop")}</label>
                                     </div>
                                     <div className="space-y-1">
                                         {ASPECT_RATIOS.map((ratio) => (
@@ -192,10 +195,10 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                                                 onClick={() => setPropAspectRatio(ratio.id)}
                                                 className={`w-full flex flex-col items-center py-2 px-2 rounded border transition-all ${propAspectRatio === ratio.id
                                                         ? 'border-green-500/50 bg-green-500/10'
-                                                        : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                        : 'border-glass-border hover:border-glass-border bg-glass'
                                                     }`}
                                             >
-                                                <span className="text-xs font-medium text-white">{ratio.name}</span>
+                                                <span className="text-xs font-medium text-foreground">{ratio.name}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -203,18 +206,18 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                             </div>
                         </div>
 
-                        <div className="border-t border-white/10" />
+                        <div className="border-t border-glass-border" />
 
                         {/* Storyboard Section */}
                         <div className="space-y-4">
-                            <div className="flex items-center gap-2 text-sm font-bold text-white">
+                            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                                 <Layout size={16} className="text-blue-400" />
-                                <span>Storyboard (Image-to-Image)</span>
+                                <span>{t("storyboardI2I")}</span>
                             </div>
 
                             {/* I2I Model */}
                             <div className="space-y-2">
-                                <label className="text-xs text-gray-400">Model</label>
+                                <label className="text-xs text-text-secondary">{t("model")}</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {I2I_MODELS.map((model) => (
                                         <button
@@ -222,7 +225,7 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                                             onClick={() => setI2iModel(model.id)}
                                             className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${i2iModel === model.id
                                                     ? 'border-blue-500/50 bg-blue-500/10'
-                                                    : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                    : 'border-glass-border hover:border-glass-border bg-glass'
                                                 }`}
                                         >
                                             {i2iModel === model.id && (
@@ -230,8 +233,8 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                                                     <Check size={14} className="text-blue-400" />
                                                 </div>
                                             )}
-                                            <span className="text-sm font-medium text-white">{model.name}</span>
-                                            <span className="text-xs text-gray-500">{model.description}</span>
+                                            <span className="text-sm font-medium text-foreground">{model.name}</span>
+                                            <span className="text-xs text-text-muted">{model.description}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -239,7 +242,7 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
 
                             {/* Storyboard Aspect Ratio */}
                             <div className="space-y-2">
-                                <label className="text-xs text-gray-400">Aspect Ratio</label>
+                                <label className="text-xs text-text-secondary">{t("aspectRatio")}</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {ASPECT_RATIOS.map((ratio) => (
                                         <button
@@ -247,30 +250,30 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                                             onClick={() => setStoryboardAspectRatio(ratio.id)}
                                             className={`flex flex-col items-center p-3 rounded-lg border transition-all ${storyboardAspectRatio === ratio.id
                                                     ? 'border-blue-500/50 bg-blue-500/10'
-                                                    : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                    : 'border-glass-border hover:border-glass-border bg-glass'
                                                 }`}
                                         >
-                                            <span className="text-sm font-medium text-white">{ratio.name}</span>
-                                            <span className="text-[10px] text-gray-500">{ratio.description}</span>
+                                            <span className="text-sm font-medium text-foreground">{ratio.name}</span>
+                                            <span className="text-[10px] text-text-muted">{ratio.description}</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="border-t border-white/10" />
+                        <div className="border-t border-glass-border" />
 
                         {/* Motion Section */}
                         <div className="space-y-4">
-                            <div className="flex items-center gap-2 text-sm font-bold text-white">
+                            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                                 <Video size={16} className="text-purple-400" />
-                                <span>Motion (Image-to-Video)</span>
+                                <span>{t("motionI2V")}</span>
                             </div>
-                            <p className="text-xs text-gray-500">Motion follows storyboard aspect ratio automatically.</p>
+                            <p className="text-xs text-text-muted">{t("motionFollowsAR")}</p>
 
                             {/* I2V Model */}
                             <div className="space-y-2">
-                                <label className="text-xs text-gray-400">Model</label>
+                                <label className="text-xs text-text-secondary">{t("model")}</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {I2V_MODELS.map((model) => (
                                         <button
@@ -278,7 +281,7 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                                             onClick={() => setI2vModel(model.id)}
                                             className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${i2vModel === model.id
                                                     ? 'border-purple-500/50 bg-purple-500/10'
-                                                    : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                    : 'border-glass-border hover:border-glass-border bg-glass'
                                                 }`}
                                         >
                                             {i2vModel === model.id && (
@@ -286,8 +289,8 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                                                     <Check size={14} className="text-purple-400" />
                                                 </div>
                                             )}
-                                            <span className="text-sm font-medium text-white">{model.name}</span>
-                                            <span className="text-xs text-gray-500">{model.description}</span>
+                                            <span className="text-sm font-medium text-foreground">{model.name}</span>
+                                            <span className="text-xs text-text-muted">{model.description}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -296,12 +299,12 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                     </div>
 
                     {/* Footer */}
-                    <div className="flex justify-end gap-3 p-5 border-t border-white/10 bg-black/20">
+                    <div className="flex justify-end gap-3 p-5 border-t border-glass-border bg-surface">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                            className="px-4 py-2 text-sm text-text-secondary hover:text-foreground transition-colors"
                         >
-                            Cancel
+                            {tc("cancel")}
                         </button>
                         <button
                             onClick={handleSave}
@@ -311,12 +314,12 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                             {isSaving ? (
                                 <>
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                                    Saving...
+                                    {t("saving")}
                                 </>
                             ) : (
                                 <>
                                     <Check size={16} />
-                                    Save Settings
+                                    {t("saveSettings")}
                                 </>
                             )}
                         </button>

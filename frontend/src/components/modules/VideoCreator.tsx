@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Upload, X, Wand2, Plus, ChevronDown, ChevronUp, Loader2, Layout,
@@ -18,7 +19,7 @@ import {
 
 import { useProjectStore } from "@/store/projectStore";
 import { api, API_URL, VideoTask } from "@/lib/api";
-import { R2V_ROUTE_MODEL_ID, R2V_SELECTION_MODEL_ID } from "@/lib/modelCatalog";
+import { R2V_SELECTION_MODEL_ID, getR2vRouteModelId, isR2vImageBased } from "@/lib/modelCatalog";
 import { getAssetUrl, getAssetUrlWithTimestamp } from "@/lib/utils";
 import PromptBuilder, { PromptSegment, PromptBuilderRef } from "./PromptBuilder";
 import type { VideoParams } from "@/store/projectStore";
@@ -32,6 +33,7 @@ interface VideoCreatorProps {
 }
 
 export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, params, onParamsChange }: VideoCreatorProps) {
+    const tc = useTranslations("creator");
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
 
@@ -179,7 +181,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
             }
         } catch (error) {
             console.error("Polish failed", error);
-            alert("AI 润色失败");
+            alert(tc("aiPolishFailed"));
         } finally {
             setIsPolishing(false);
         }
@@ -236,7 +238,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
             setSelectedReferenceVideos(prev => prev.filter(v => v !== videoUrl));
         } else {
             if (selectedReferenceVideos.length >= 3) {
-                alert("最多选择 3 个参考视频");
+                alert(tc("maxRefVideos"));
                 return;
             }
             setSelectedReferenceVideos(prev => [...prev, videoUrl]);
@@ -298,7 +300,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
             // R2V mode: need at least one cast slot filled
             const filledSlots = castSlots.filter(s => s.url);
             if (filledSlots.length === 0) {
-                alert("R2V 模式请至少填充一个角色槽位 (@Ref_A)");
+                alert(tc("r2vNeedSlot"));
                 return;
             }
             if (!prompt || !currentProject) return;
@@ -330,8 +332,9 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                 }
 
                 // Determine model based on generation mode
-                const actualModel = generationMode === 'r2v' ? R2V_ROUTE_MODEL_ID : params.model;
-                const referenceVideos = generationMode === 'r2v'
+                const actualModel = generationMode === 'r2v' ? getR2vRouteModelId(params.model) : params.model;
+                const r2vImageBased = generationMode === 'r2v' && isR2vImageBased(actualModel);
+                const referenceVideos = generationMode === 'r2v' && !r2vImageBased
                     ? castSlots.filter(s => s.url).map(s => s.url)
                     : undefined;
 
@@ -354,7 +357,10 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                         model: actualModel,
                         created_at: Date.now() / 1000,
                         generation_mode: generationMode,
-                        reference_video_urls: referenceVideos
+                        reference_video_urls: referenceVideos,
+                        reference_image_urls: r2vImageBased
+                            ? castSlots.filter(s => s.url).map(s => s.url)
+                            : undefined
                     });
                 }
             });
@@ -397,10 +403,14 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
 
                 // Determine model based on generation mode
                 // R2V mode uses the hidden route model, I2V uses the selected visible model.
-                const actualModel = generationMode === 'r2v' ? R2V_ROUTE_MODEL_ID : params.model;
+                const actualModel = generationMode === 'r2v' ? getR2vRouteModelId(params.model) : params.model;
+                const r2vImageBased = generationMode === 'r2v' && isR2vImageBased(actualModel);
 
-                // Get reference video URLs from cast slots for R2V
-                const referenceVideos = generationMode === 'r2v'
+                // Get reference URLs from cast slots for R2V
+                const referenceVideos = generationMode === 'r2v' && !r2vImageBased
+                    ? castSlots.filter(s => s.url).map(s => s.url)
+                    : [];
+                const referenceImages = r2vImageBased
                     ? castSlots.filter(s => s.url).map(s => s.url)
                     : [];
 
@@ -420,14 +430,17 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                     frameId,
                     params.shotType,
                     generationMode,  // Use local state
-                    referenceVideos,  // Use cast slots
+                    referenceVideos,  // Use cast slots (Wan R2V)
                     // Kling params
                     params.mode,
                     params.sound,
                     params.cfgScale,
                     // Vidu params
                     params.viduAudio,
-                    params.movementAmplitude
+                    params.movementAmplitude,
+                    // HappyHorse params
+                    referenceImages,  // Reference images for HappyHorse R2V
+                    undefined  // ratio (use default)
                 );
             }
 
@@ -443,7 +456,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
             // setSelectedImages([]); // Keep selection for iterative generation
         } catch (error) {
             console.error("Failed to submit task:", error);
-            alert("提交失败");
+            alert(tc("submitFailed"));
             // Refresh to remove optimistic updates
             const updatedProject = await api.getProject(currentProject.id);
             onTaskCreated(updatedProject);
@@ -538,20 +551,67 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
         )
     ].filter(v => v.url && v.url !== 'null' && v.url !== 'undefined') : [];
 
+    // Whether the current R2V mode uses image references (HappyHorse) or video references (Wan)
+    const r2vUsesImages = isR2vImageBased(getR2vRouteModelId(params.model));
+
+    // Available Reference Images (for HappyHorse R2V - character images)
+    const availableReferenceImages = currentProject ? [
+        ...currentProject.characters.flatMap((c: any) => {
+            const images: { url: string; thumbnail: string; title: string; assetName: string; type: string }[] = [];
+            if (c.full_body_image_url) {
+                images.push({
+                    url: getAssetUrl(c.full_body_image_url),
+                    thumbnail: getAssetUrl(c.full_body_image_url),
+                    title: `${c.name} - Full Body`,
+                    assetName: c.name,
+                    type: 'character_full_body'
+                });
+            }
+            if (c.full_body?.image_variants?.length) {
+                images.push(...c.full_body.image_variants.map((v: any) => ({
+                    url: getAssetUrl(v.url),
+                    thumbnail: getAssetUrl(v.url),
+                    title: `${c.name} - Full Body Variant`,
+                    assetName: c.name,
+                    type: 'character_full_body'
+                })));
+            }
+            if (c.headshot_image_url) {
+                images.push({
+                    url: getAssetUrl(c.headshot_image_url),
+                    thumbnail: getAssetUrl(c.headshot_image_url),
+                    title: `${c.name} - Headshot`,
+                    assetName: c.name,
+                    type: 'character_headshot'
+                });
+            }
+            if (c.head_shot?.image_variants?.length) {
+                images.push(...c.head_shot.image_variants.map((v: any) => ({
+                    url: getAssetUrl(v.url),
+                    thumbnail: getAssetUrl(v.url),
+                    title: `${c.name} - Headshot Variant`,
+                    assetName: c.name,
+                    type: 'character_headshot'
+                })));
+            }
+            return images;
+        })
+    ].filter(img => img.url && img.url !== 'null' && img.url !== 'undefined') : [];
+
     return (
         <div className="h-full flex flex-col relative min-h-0">
             {/* Scrollable Content Area */}
             <div className="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0">
-                <h2 className="text-2xl font-display font-bold text-white mb-6 flex items-center gap-3">
+                <h2 className="text-2xl font-display font-bold text-foreground mb-6 flex items-center gap-3">
                     <div className="w-2 h-8 bg-primary rounded-full" />
-                    动态演译
-                    <span className="text-xs font-mono text-gray-500 bg-white/5 px-2 py-1 rounded">Motion</span>
+                    {tc("title")}
+                    <span className="text-xs font-mono text-text-muted bg-glass px-2 py-1 rounded">Motion</span>
                 </h2>
 
                 <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full pb-8">
                     {/* Generation Mode Switcher */}
                     <div className="flex items-center justify-center">
-                        <div className="flex bg-black/40 rounded-xl p-1.5 gap-1 border border-white/10">
+                        <div className="flex bg-overlay rounded-xl p-1.5 gap-1 border border-glass-border">
                             <button
                                 onClick={() => {
                                     setGenerationMode("i2v");
@@ -559,11 +619,11 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                 }}
                                 className={`px-5 py-2.5 text-sm rounded-lg flex items-center gap-2 transition-all font-medium ${generationMode === "i2v"
                                     ? "bg-primary text-white shadow-lg"
-                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    : "text-text-secondary hover:text-foreground hover:bg-glass"
                                     }`}
                             >
                                 <ImageIcon size={16} />
-                                🖼️ 首帧驱动 (I2V)
+                                {tc("i2vMode")}
                             </button>
                             <button
                                 onClick={() => {
@@ -575,11 +635,11 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                 }}
                                 className={`px-5 py-2.5 text-sm rounded-lg flex items-center gap-2 transition-all font-medium ${generationMode === "r2v"
                                     ? "bg-purple-600 text-white shadow-lg"
-                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    : "text-text-secondary hover:text-foreground hover:bg-glass"
                                     }`}
                             >
                                 <Film size={16} />
-                                🎬 角色驱动 (R2V)
+                                {tc("r2vMode")}
                             </button>
                         </div>
                     </div>
@@ -587,31 +647,31 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                     {generationMode === 'i2v' && (
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <label className="text-sm font-medium text-gray-300">首帧图片 (First Frame)</label>
-                                <div className="flex bg-white/5 rounded-lg p-1 gap-1">
+                                <label className="text-sm font-medium text-text-secondary">{tc("firstFrame")}</label>
+                                <div className="flex bg-glass rounded-lg p-1 gap-1">
                                     <button
                                         onClick={() => setActiveTab("storyboard")}
                                         className={`px-3 py-1.5 text-xs rounded-md flex items-center gap-2 transition-all ${activeTab === "storyboard"
                                             ? "bg-primary text-white shadow-sm"
-                                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                                            : "text-text-secondary hover:text-foreground hover:bg-glass"
                                             }`}
                                     >
-                                        <Layout size={14} /> Storyboard
+                                        <Layout size={14} /> {tc("storyboardSource")}
                                     </button>
                                     <button
                                         onClick={() => setActiveTab("upload")}
                                         className={`px-3 py-1.5 text-xs rounded-md flex items-center gap-2 transition-all ${activeTab === "upload"
                                             ? "bg-primary text-white shadow-sm"
-                                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                                            : "text-text-secondary hover:text-foreground hover:bg-glass"
                                             }`}
                                     >
-                                        <Upload size={14} /> Upload
+                                        <Upload size={14} /> {tc("uploadSource")}
                                     </button>
                                 </div>
                             </div>
 
                             {/* Tab Content */}
-                            <div className="bg-black/20 border border-white/10 rounded-xl p-4 min-h-[200px]">
+                            <div className="bg-overlay border border-glass-border rounded-xl p-4 min-h-[200px]">
                                 {activeTab === "storyboard" ? (
                                     <div className="space-y-4">
                                         {currentProject?.frames && currentProject.frames.length > 0 ? (() => {
@@ -634,7 +694,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                         onClick={() => handleFrameSelect(frame)}
                                                         className={`group relative aspect-video rounded-lg overflow-hidden border cursor-pointer transition-all ${selectedImages.includes(frame.rendered_image_url || frame.image_url)
                                                             ? "border-primary ring-2 ring-primary/50"
-                                                            : "border-white/10 hover:border-white/30"
+                                                            : "border-glass-border hover:border-glass-border"
                                                             }`}
                                                     >
                                                         {(frame.rendered_image_url || frame.image_url) ? (
@@ -644,15 +704,15 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                                 className="w-full h-full object-cover"
                                                             />
                                                         ) : (
-                                                            <div className="w-full h-full bg-white/5 flex items-center justify-center text-xs text-gray-500">
+                                                            <div className="w-full h-full bg-glass flex items-center justify-center text-xs text-text-muted">
                                                                 No Image
                                                             </div>
                                                         )}
-                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <div className="absolute inset-0 bg-overlay opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <span className="text-xs text-white font-bold">Select</span>
                                                         </div>
                                                         {/* Frame Number Badge */}
-                                                        <div className="absolute top-1 left-1 bg-black/60 px-1.5 rounded text-[10px] text-gray-300 backdrop-blur-sm">
+                                                        <div className="absolute top-1 left-1 bg-overlay px-1.5 rounded text-[10px] text-text-secondary backdrop-blur-sm">
                                                             #{frame.id.slice(0, 4)}
                                                         </div>
                                                         {/* Extract Last Frame Button */}
@@ -682,7 +742,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                             </div>
                                             );
                                         })() : (
-                                            <div className="flex flex-col items-center justify-center h-[200px] text-gray-500 gap-2">
+                                            <div className="flex flex-col items-center justify-center h-[200px] text-text-muted gap-2">
                                                 <Layout size={32} className="opacity-20" />
                                                 <p className="text-xs">No storyboard frames found.</p>
                                             </div>
@@ -690,15 +750,15 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
 
                                         {/* Selected Preview (Storyboard Mode) */}
                                         {selectedImages.length > 0 && (
-                                            <div className="pt-4 border-t border-white/10">
-                                                <p className="text-xs text-gray-500 mb-2">Selected for Generation:</p>
+                                            <div className="pt-4 border-t border-glass-border">
+                                                <p className="text-xs text-text-muted mb-2">Selected for Generation:</p>
                                                 <div className="flex gap-2 flex-wrap">
                                                     {selectedImages.map((img, idx) => {
                                                         // Find frame to get updated_at for cache busting
                                                         const frame = currentProject?.frames?.find((f: any) => (f.rendered_image_url || f.image_url) === img);
                                                         const timestamp = frame?.updated_at || 0;
                                                         return (
-                                                            <div key={idx} className="relative w-24 aspect-video rounded-lg overflow-hidden border border-white/20">
+                                                            <div key={idx} className="relative w-24 aspect-video rounded-lg overflow-hidden border border-glass-border">
                                                                 <img
                                                                     src={timestamp ? getAssetUrlWithTimestamp(img, timestamp) : getAssetUrl(img)}
                                                                     alt="Selected"
@@ -706,7 +766,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                                 />
                                                                 <button
                                                                     onClick={() => removeImage(idx)}
-                                                                    className="absolute top-1 right-1 p-0.5 bg-black/60 rounded-full text-white hover:bg-red-500"
+                                                                    className="absolute top-1 right-1 p-0.5 bg-overlay rounded-full text-white hover:bg-red-500"
                                                                 >
                                                                     <X size={10} />
                                                                 </button>
@@ -722,7 +782,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-3 gap-4">
                                             {selectedImages.map((img, idx) => (
-                                                <div key={idx} className="relative aspect-video bg-black/40 rounded-xl overflow-hidden border border-white/10 group">
+                                                <div key={idx} className="relative aspect-video bg-overlay rounded-xl overflow-hidden border border-glass-border group">
                                                     <img
                                                         src={getAssetUrl(img)}
                                                         alt={`Input ${idx}`}
@@ -730,12 +790,12 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                     />
                                                     <button
                                                         onClick={() => removeImage(idx)}
-                                                        className="absolute top-2 right-2 p-1 bg-black/60 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                                                        className="absolute top-2 right-2 p-1 bg-overlay rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
                                                     >
                                                         <X size={12} />
                                                     </button>
                                                     {img.startsWith("blob:") && !uploadingPaths[img] && (
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-overlay">
                                                             <Loader2 className="animate-spin text-white" size={20} />
                                                         </div>
                                                     )}
@@ -745,7 +805,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                             {/* Add Button */}
                                             <div
                                                 onClick={() => document.getElementById('image-upload')?.click()}
-                                                className="aspect-video border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-colors cursor-pointer relative min-h-[100px]"
+                                                className="aspect-video border-2 border-dashed border-glass-border rounded-xl flex flex-col items-center justify-center bg-glass hover:bg-hover-bg transition-colors cursor-pointer relative min-h-[100px]"
                                             >
                                                 <input
                                                     id="image-upload"
@@ -755,21 +815,21 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                     className="hidden"
                                                     onChange={(e) => handleImageSelect(e.target.files)}
                                                 />
-                                                <Plus className="text-gray-400 mb-2" size={24} />
-                                                <p className="text-gray-400 text-xs font-medium">Add Image</p>
+                                                <Plus className="text-text-secondary mb-2" size={24} />
+                                                <p className="text-text-secondary text-xs font-medium">Add Image</p>
                                             </div>
                                         </div>
 
                                         {/* Quick Select from Assets (Only in Upload Mode) */}
                                         {availableAssets.length > 0 && (
-                                            <div className="mt-4 pt-4 border-t border-white/10">
-                                                <p className="text-xs text-gray-500 mb-2">Quick Select from Assets:</p>
+                                            <div className="mt-4 pt-4 border-t border-glass-border">
+                                                <p className="text-xs text-text-muted mb-2">Quick Select from Assets:</p>
                                                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                                                     {availableAssets.slice(0, 10).map((asset, i) => (
                                                         <div
                                                             key={i}
                                                             onClick={() => handleAssetSelect(asset.url)}
-                                                            className="w-16 h-16 relative rounded-lg overflow-hidden flex-shrink-0 border border-white/10 hover:border-primary cursor-pointer"
+                                                            className="w-16 h-16 relative rounded-lg overflow-hidden flex-shrink-0 border border-glass-border hover:border-primary cursor-pointer"
                                                         >
                                                             <img src={asset.url} alt={asset.title} className="w-full h-full object-cover" />
                                                         </div>
@@ -788,7 +848,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                         <div className="space-y-6">
                             {/* Frame Description Cards */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-gray-300">选择分镜 (Select Frame)</label>
+                                <label className="text-sm font-medium text-text-secondary">{tc("noFrameSelected", { defaultMessage: "Select Frame" })}</label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
                                     {currentProject?.frames && currentProject.frames.length > 0 ? (
                                         currentProject.frames.map((frame: any) => (
@@ -797,12 +857,12 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                 onClick={() => handleR2VFrameSelect(frame)}
                                                 className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedFrameId === frame.id
                                                     ? "border-purple-500 bg-purple-500/10 ring-2 ring-purple-500/30"
-                                                    : "border-white/10 bg-black/20 hover:border-white/30"
+                                                    : "border-glass-border bg-overlay hover:border-glass-border"
                                                     }`}
                                             >
                                                 <div className="flex items-start gap-3">
                                                     {/* Frame thumbnail */}
-                                                    <div className="w-16 h-10 rounded overflow-hidden flex-shrink-0 bg-black/40">
+                                                    <div className="w-16 h-10 rounded overflow-hidden flex-shrink-0 bg-overlay">
                                                         {frame.image_url ? (
                                                             <img
                                                                 src={getAssetUrlWithTimestamp(frame.image_url, frame.updated_at)}
@@ -810,16 +870,16 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                                 className="w-full h-full object-cover"
                                                             />
                                                         ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-gray-600">
+                                                            <div className="w-full h-full flex items-center justify-center text-text-muted">
                                                                 <Layout size={14} />
                                                             </div>
                                                         )}
                                                     </div>
                                                     {/* Frame description */}
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-xs text-gray-400 mb-1">#{frame.id.slice(0, 6)}</p>
-                                                        <p className="text-xs text-gray-300 line-clamp-2">
-                                                            {frame.action_description || frame.image_prompt || '暂无描述'}
+                                                        <p className="text-xs text-text-secondary mb-1">#{frame.id.slice(0, 6)}</p>
+                                                        <p className="text-xs text-text-secondary line-clamp-2">
+                                                            {frame.action_description || frame.image_prompt || 'No description'}
                                                         </p>
                                                         {frame.dialogue && (
                                                             <p className="text-[10px] text-purple-400 mt-1 italic line-clamp-1">
@@ -837,89 +897,171 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="col-span-2 flex flex-col items-center justify-center h-[100px] text-gray-500 gap-2">
+                                        <div className="col-span-2 flex flex-col items-center justify-center h-[100px] text-text-muted gap-2">
                                             <Layout size={24} className="opacity-20" />
-                                            <p className="text-xs">无分镜数据，请先在 Storyboard 阶段生成分镜</p>
+                                            <p className="text-xs">{tc("noFrameSelected")}</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Cast Slots (卡司槽位) */}
+                            {/* Cast Slots */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-gray-300">卡司槽位 (Cast Slots)</label>
-                                <div className="grid grid-cols-3 gap-4">
-                                    {[0, 1, 2].map((slotIndex) => {
-                                        const slot = castSlots[slotIndex];
-                                        const slotLabel = `@Ref_${String.fromCharCode(65 + slotIndex)}`; // @Ref_A, @Ref_B, @Ref_C
-                                        const slotTitle = slotIndex === 0 ? '主角' : '配角';
-                                        const video = slot?.url ? availableReferenceVideos.find(v => v.url === slot.url) : null;
+                                <label className="text-sm font-medium text-text-secondary">
+                                    {r2vUsesImages ? tc('referenceImages') : 'Cast Slots'}
+                                </label>
+                                {r2vUsesImages ? (
+                                    /* HappyHorse R2V: Image reference slots (1-9) */
+                                    <>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {Array.from({ length: Math.min(Math.max(castSlots.filter(s => s.url).length + 1, 3), 9) }, (_, slotIndex) => {
+                                                const slot = castSlots[slotIndex];
+                                                const refImage = slot?.url ? availableReferenceImages.find(img => img.url === slot.url) : null;
 
-                                        return (
-                                            <div
-                                                key={slotIndex}
-                                                className={`relative rounded-xl border-2 border-dashed transition-all ${slot?.url
-                                                    ? "border-purple-500 bg-purple-500/10"
-                                                    : "border-white/20 bg-black/20 hover:border-white/40"
-                                                    }`}
-                                            >
-                                                {/* Slot Header */}
-                                                <div className="absolute top-2 left-2 z-10">
-                                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-600 text-white font-bold">
-                                                        角色{slotIndex + 1}
-                                                    </span>
-                                                </div>
-
-                                                {slot?.url ? (
-                                                    /* Filled Slot */
-                                                    <div className="aspect-video relative">
-                                                        <img
-                                                            src={getAssetUrl(video?.thumbnail || '')}
-                                                            alt={slot.name}
-                                                            className="w-full h-full object-cover rounded-xl"
-                                                        />
-                                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 rounded-b-xl">
-                                                            <p className="text-xs text-white font-medium truncate">{slot.name}</p>
+                                                return (
+                                                    <div
+                                                        key={slotIndex}
+                                                        className={`relative rounded-xl border-2 border-dashed transition-all ${slot?.url
+                                                            ? "border-purple-500 bg-purple-500/10"
+                                                            : "border-glass-border bg-overlay hover:border-glass-border"
+                                                            }`}
+                                                    >
+                                                        {/* Slot Header */}
+                                                        <div className="absolute top-2 left-2 z-10">
+                                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-600 text-white font-bold">
+                                                                character{slotIndex + 1}
+                                                            </span>
                                                         </div>
-                                                        <button
-                                                            onClick={() => handleClearCastSlot(slotIndex)}
-                                                            className="absolute top-2 right-2 p-1 bg-black/60 rounded-full text-white hover:bg-red-500 transition-colors"
-                                                        >
-                                                            <X size={12} />
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    /* Empty Slot */
-                                                    <div className="aspect-video flex flex-col items-center justify-center p-4">
-                                                        <p className="text-xs text-gray-400 mb-2">{slotTitle}</p>
-                                                        <select
-                                                            className="w-full text-xs bg-black/40 border border-white/20 rounded-lg px-2 py-1.5 text-gray-300 focus:border-purple-500 focus:outline-none"
-                                                            value=""
-                                                            onChange={(e) => {
-                                                                const selectedVideo = availableReferenceVideos.find(v => v.url === e.target.value);
-                                                                if (selectedVideo) {
-                                                                    handleCastSlotSelect(slotIndex, { url: selectedVideo.url, name: selectedVideo.assetName });
-                                                                }
-                                                            }}
-                                                        >
-                                                            <option value="">选择参考视频...</option>
-                                                            {availableReferenceVideos.map((v, i) => (
-                                                                <option key={i} value={v.url}>{v.assetName} - {v.type}</option>
-                                                            ))}
-                                                        </select>
-                                                        {slotIndex === 0 && (
-                                                            <p className="text-[10px] text-amber-400 mt-2">必填</p>
+
+                                                        {slot?.url ? (
+                                                            /* Filled Slot - show image */
+                                                            <div className="aspect-square relative">
+                                                                <img
+                                                                    src={refImage?.thumbnail || slot.url}
+                                                                    alt={slot.name}
+                                                                    className="w-full h-full object-cover rounded-xl"
+                                                                />
+                                                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 rounded-b-xl">
+                                                                    <p className="text-xs text-white font-medium truncate">{slot.name}</p>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleClearCastSlot(slotIndex)}
+                                                                    className="absolute top-2 right-2 p-1 bg-overlay rounded-full text-white hover:bg-red-500 transition-colors"
+                                                                >
+                                                                    <X size={12} />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            /* Empty Slot */
+                                                            <div className="aspect-square flex flex-col items-center justify-center p-3">
+                                                                <ImageIcon size={16} className="text-text-muted mb-1" />
+                                                                <select
+                                                                    className="w-full text-xs bg-overlay border border-glass-border rounded-lg px-2 py-1.5 text-text-secondary focus:border-purple-500 focus:outline-none"
+                                                                    value=""
+                                                                    onChange={(e) => {
+                                                                        const selectedImg = availableReferenceImages.find(img => img.url === e.target.value);
+                                                                        if (selectedImg) {
+                                                                            handleCastSlotSelect(slotIndex, { url: selectedImg.url, name: selectedImg.assetName });
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <option value="">{tc('selectImage')}</option>
+                                                                    {availableReferenceImages.map((img, i) => (
+                                                                        <option key={i} value={img.url}>{img.assetName} - {img.type}</option>
+                                                                    ))}
+                                                                </select>
+                                                                {slotIndex === 0 && (
+                                                                    <p className="text-[10px] text-amber-400 mt-1">Required</p>
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                {availableReferenceVideos.length === 0 && (
-                                    <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
-                                        ⚠️ 无可用的参考视频。请先在 Assets 阶段为角色/场景生成 Motion Reference 视频。
-                                    </p>
+                                                );
+                                            })}
+                                        </div>
+                                        <p className="text-xs text-text-muted">{tc('refImagesHint')}</p>
+                                        {availableReferenceImages.length === 0 && (
+                                            <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+                                                {tc('noRefImagesAvailable')}
+                                            </p>
+                                        )}
+                                    </>
+                                ) : (
+                                    /* Wan R2V: Video reference slots (3) */
+                                    <>
+                                        <div className="grid grid-cols-3 gap-4">
+                                            {[0, 1, 2].map((slotIndex) => {
+                                                const slot = castSlots[slotIndex];
+                                                const slotTitle = slotIndex === 0 ? 'Protagonist' : 'Supporting';
+                                                const video = slot?.url ? availableReferenceVideos.find(v => v.url === slot.url) : null;
+
+                                                return (
+                                                    <div
+                                                        key={slotIndex}
+                                                        className={`relative rounded-xl border-2 border-dashed transition-all ${slot?.url
+                                                            ? "border-purple-500 bg-purple-500/10"
+                                                            : "border-glass-border bg-overlay hover:border-glass-border"
+                                                            }`}
+                                                    >
+                                                        {/* Slot Header */}
+                                                        <div className="absolute top-2 left-2 z-10">
+                                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-600 text-white font-bold">
+                                                                Character {slotIndex + 1}
+                                                            </span>
+                                                        </div>
+
+                                                        {slot?.url ? (
+                                                            /* Filled Slot */
+                                                            <div className="aspect-video relative">
+                                                                <img
+                                                                    src={getAssetUrl(video?.thumbnail || '')}
+                                                                    alt={slot.name}
+                                                                    className="w-full h-full object-cover rounded-xl"
+                                                                />
+                                                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 rounded-b-xl">
+                                                                    <p className="text-xs text-white font-medium truncate">{slot.name}</p>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleClearCastSlot(slotIndex)}
+                                                                    className="absolute top-2 right-2 p-1 bg-overlay rounded-full text-white hover:bg-red-500 transition-colors"
+                                                                >
+                                                                    <X size={12} />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            /* Empty Slot */
+                                                            <div className="aspect-video flex flex-col items-center justify-center p-4">
+                                                                <p className="text-xs text-text-secondary mb-2">{slotTitle}</p>
+                                                                <select
+                                                                    className="w-full text-xs bg-overlay border border-glass-border rounded-lg px-2 py-1.5 text-text-secondary focus:border-purple-500 focus:outline-none"
+                                                                    value=""
+                                                                    onChange={(e) => {
+                                                                        const selectedVideo = availableReferenceVideos.find(v => v.url === e.target.value);
+                                                                        if (selectedVideo) {
+                                                                            handleCastSlotSelect(slotIndex, { url: selectedVideo.url, name: selectedVideo.assetName });
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <option value="">{tc('selectRefVideo')}</option>
+                                                                    {availableReferenceVideos.map((v, i) => (
+                                                                        <option key={i} value={v.url}>{v.assetName} - {v.type}</option>
+                                                                    ))}
+                                                                </select>
+                                                                {slotIndex === 0 && (
+                                                                    <p className="text-[10px] text-amber-400 mt-2">Required</p>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        {availableReferenceVideos.length === 0 && (
+                                            <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+                                                {tc('noRefVideosAvailable')}
+                                            </p>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -929,15 +1071,15 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                     {/* 2. Prompt Input */}
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                            <label className="text-sm font-medium text-gray-300">提示词 (Prompt)</label>
+                            <label className="text-sm font-medium text-text-secondary">{tc("promptLabel")}</label>
                             <div className="flex items-center gap-2">
                                 {generationMode === 'i2v' && (
                                     <div className="relative">
                                         <button
                                             onClick={() => promptBuilderRef.current?.insertCamera()}
-                                            className="text-xs flex items-center gap-1 px-2 py-1 rounded transition-colors text-gray-400 hover:text-white hover:bg-white/5"
+                                            className="text-xs flex items-center gap-1 px-2 py-1 rounded transition-colors text-text-secondary hover:text-foreground hover:bg-glass"
                                         >
-                                            <Video size={12} /> 运镜
+                                            <Video size={12} /> Camera
                                         </button>
                                     </div>
                                 )}
@@ -947,14 +1089,14 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                     className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 disabled:opacity-50"
                                 >
                                     {isPolishing ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
-                                    AI 润色
+                                    {tc("aiPolish")}
                                 </button>
                                 <button
                                     onClick={() => setSegments([{ type: "text", value: "", id: "init" }])}
-                                    className="text-xs text-gray-400 hover:text-white flex items-center gap-1 px-2 py-1 rounded hover:bg-white/5 transition-colors"
+                                    className="text-xs text-text-secondary hover:text-foreground flex items-center gap-1 px-2 py-1 rounded hover:bg-glass transition-colors"
                                     title="Clear Prompt"
                                 >
-                                    <Eraser size={12} /> 清空
+                                    <Eraser size={12} /> Clear
                                 </button>
                             </div>
                         </div>
@@ -973,7 +1115,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                             disabled={!isActive}
                                             className={`text-xs px-2 py-1 rounded-lg border transition-all flex items-center gap-1.5 ${isActive
                                                 ? "border-purple-500/50 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20"
-                                                : "border-white/10 bg-white/5 text-gray-500 cursor-not-allowed"
+                                                : "border-glass-border bg-glass text-text-muted cursor-not-allowed"
                                                 }`}
                                         >
                                             {video?.thumbnail ? (
@@ -981,7 +1123,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                             ) : (
                                                 <span className="w-4 h-4 rounded-full bg-purple-500/30 flex items-center justify-center text-[10px]">+</span>
                                             )}
-                                            <span>插入 {slot?.name || `角色${idx + 1}`}</span>
+                                            <span>Insert {slot?.name || `Char ${idx + 1}`}</span>
                                         </button>
                                     );
                                 })}
@@ -994,8 +1136,8 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                 segments={segments}
                                 onChange={setSegments}
                                 placeholder={generationMode === 'r2v'
-                                    ? "输入提示词... \n插入角色格式: [character1:名称]\n插入运镜格式: (camera: 运镜指令)"
-                                    : "输入提示词，描述画面内容...\n插入运镜格式: (camera: 运镜指令)"
+                                    ? tc('promptPlaceholder')
+                                    : tc("promptPlaceholder")
                                 }
                             />
                         </div>
@@ -1011,11 +1153,11 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                 >
                                     <div className="flex justify-between items-start">
                                         <span className="text-xs font-bold text-purple-400 flex items-center gap-1">
-                                            <Wand2 size={12} /> AI 双语润色
+                                            <Wand2 size={12} /> {tc("aiPolish")}
                                         </span>
                                         <button
                                             onClick={() => { setPolishedPrompt(null); setFeedbackText(""); }}
-                                            className="text-[10px] text-gray-400 hover:text-white"
+                                            className="text-[10px] text-text-secondary hover:text-foreground"
                                         >
                                             ✕
                                         </button>
@@ -1024,18 +1166,18 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                     {/* Chinese Prompt */}
                                     <div className="space-y-1">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase">中文 (预览)</span>
+                                            <span className="text-[10px] font-bold text-text-muted uppercase">CN (Preview)</span>
                                             <button
                                                 onClick={() => {
                                                     navigator.clipboard.writeText(polishedPrompt.cn);
-                                                    alert("中文提示词已复制");
+                                                    alert("CN prompt copied");
                                                 }}
-                                                className="text-[10px] text-gray-400 hover:text-white bg-black/20 px-2 py-0.5 rounded"
+                                                className="text-[10px] text-text-secondary hover:text-foreground bg-overlay px-2 py-0.5 rounded"
                                             >
                                                 复制
                                             </button>
                                         </div>
-                                        <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap bg-black/20 p-2 rounded">
+                                        <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-overlay p-2 rounded">
                                             {polishedPrompt.cn}
                                         </p>
                                     </div>
@@ -1043,14 +1185,14 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                     {/* English Prompt */}
                                     <div className="space-y-1">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase">English (生成用)</span>
+                                            <span className="text-[10px] font-bold text-text-muted uppercase">EN (Generation)</span>
                                             <div className="flex gap-1">
                                                 <button
                                                     onClick={() => {
                                                         navigator.clipboard.writeText(polishedPrompt.en);
                                                         alert("English prompt copied");
                                                     }}
-                                                    className="text-[10px] text-gray-400 hover:text-white bg-black/20 px-2 py-0.5 rounded"
+                                                    className="text-[10px] text-text-secondary hover:text-foreground bg-overlay px-2 py-0.5 rounded"
                                                 >
                                                     Copy
                                                 </button>
@@ -1065,7 +1207,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                 </button>
                                             </div>
                                         </div>
-                                        <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap bg-black/20 p-2 rounded font-mono">
+                                        <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-overlay p-2 rounded font-mono">
                                             {polishedPrompt.en}
                                         </p>
                                     </div>
@@ -1082,8 +1224,8 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                         handlePolish(feedbackText.trim());
                                                     }
                                                 }}
-                                                placeholder="哪里不满意？描述你的修改意见..."
-                                                className="flex-1 text-xs bg-black/30 border border-purple-500/20 rounded px-2 py-1.5 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50"
+                                                placeholder="Feedback for refinement..."
+                                                className="flex-1 text-xs bg-overlay border border-purple-500/20 rounded px-2 py-1.5 text-white placeholder-text-muted focus:outline-none focus:border-purple-500/50"
                                             />
                                             <button
                                                 onClick={() => handlePolish(feedbackText.trim())}
@@ -1103,7 +1245,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
             </div >
 
             {/* 4. Fixed Action Bar */}
-            < div className="p-6 border-t border-white/10 bg-black/40 backdrop-blur-md z-10" >
+            < div className="p-6 border-t border-glass-border bg-overlay backdrop-blur-md z-10" >
                 <div className="max-w-4xl mx-auto w-full">
                     <button
                         onClick={handleSubmit}
@@ -1115,22 +1257,22 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                     >
                         {isSubmitting ? (
                             <>
-                                <Loader2 className="animate-spin" /> 提交中...
+                                <Loader2 className="animate-spin" /> {tc("generatingVideo")}
                             </>
                         ) : submitSuccess ? (
                             <>
-                                <Plus /> 已加入队列
+                                <Plus /> Queued
                             </>
                         ) : (
                             <>
-                                <Plus /> 加入生成队列 (Ctrl+Enter)
+                                <Plus /> {tc("generateVideo")} (Ctrl+Enter)
                             </>
                         )}
                     </button>
                     <div className="flex justify-center mt-3">
-                        <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer hover:text-gray-400">
-                            <input type="checkbox" className="rounded bg-white/10 border-white/20" />
-                            提交后清空内容
+                        <label className="flex items-center gap-2 text-xs text-text-muted cursor-pointer hover:text-text-secondary">
+                            <input type="checkbox" className="rounded bg-glass border-glass-border" />
+                            Clear after submit
                         </label>
                     </div>
                 </div>

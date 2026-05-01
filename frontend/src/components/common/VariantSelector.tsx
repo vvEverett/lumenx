@@ -1,8 +1,11 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ImageAsset, ImageVariant } from '@/store/projectStore';
 import { Trash2, Check, ChevronLeft, ChevronRight, Layers, X, Maximize2, Star } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 import { getAssetUrl } from '@/lib/utils';
+import { useTranslations } from "next-intl";
 
 interface VariantSelectorProps {
     asset: ImageAsset | undefined;
@@ -32,6 +35,7 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
     className = "",
     aspectRatio = "9:16"
 }) => {
+    const t = useTranslations("assets");
     const [batchSize, setBatchSize] = useState(1);
     const [localGeneratingBatchSize, setLocalGeneratingBatchSize] = useState(1); // Track the batch size when generation started locally
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
@@ -72,7 +76,7 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
         <div className={`flex flex-col gap-4 ${className}`}>
             {/* Main Viewer */}
             <div
-                className={`relative w-full ${getAspectRatioClass()} bg-gray-900 rounded-lg overflow-hidden border border-gray-700 group cursor-pointer`}
+                className={`relative w-full ${getAspectRatioClass()} bg-elevated rounded-lg overflow-hidden border border-glass-border group cursor-pointer`}
                 onClick={() => displayUrl && setZoomedImage(displayUrl)}
             >
                 {displayUrl ? (
@@ -84,15 +88,15 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
                         />
                         {/* Zoom hint */}
                         <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="flex items-center gap-1 px-2 py-1 bg-black/60 rounded-md backdrop-blur-sm">
-                                <Maximize2 size={12} className="text-white/70" />
-                                <span className="text-xs text-white/70">Click to zoom</span>
+                            <div className="flex items-center gap-1 px-2 py-1 bg-overlay rounded-md backdrop-blur-sm">
+                                <Maximize2 size={12} className="text-foreground/70" />
+                                <span className="text-xs text-foreground/70">{t("clickToZoom")}</span>
                             </div>
                         </div>
                     </>
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-500">
-                        No image generated
+                    <div className="w-full h-full flex items-center justify-center text-text-muted">
+                        {t("noImageGenerated")}
                     </div>
                 )}
 
@@ -102,7 +106,7 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
                         <button
                             onClick={(e) => { e.stopPropagation(); onDelete(selectedVariant.id); }}
                             className="p-2 bg-red-500/80 hover:bg-red-600 text-white rounded-full backdrop-blur-sm"
-                            title="Delete this variant"
+                            title={t("deleteVariant")}
                         >
                             <Trash2 size={16} />
                         </button>
@@ -110,10 +114,10 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
                 </div>
 
                 {isGenerating && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-overlay flex items-center justify-center z-10 backdrop-blur-sm">
                         <div className="flex flex-col items-center gap-3">
                             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
-                            <span className="text-white font-medium">Generating {displayGeneratingBatchSize} variant{displayGeneratingBatchSize > 1 ? 's' : ''}...</span>
+                            <span className="text-white font-medium">{t("generatingVariants", { count: displayGeneratingBatchSize })}</span>
                         </div>
                     </div>
                 )}
@@ -123,14 +127,14 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
             <div className="flex flex-col gap-3">
                 {/* Generation Controls */}
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 bg-gray-800 rounded-lg p-1 border border-gray-700">
+                    <div className="flex items-center gap-2 bg-elevated rounded-lg p-1 border border-glass-border">
                         {[1, 2, 3, 4].map(size => (
                             <button
                                 key={size}
                                 onClick={() => setBatchSize(size)}
                                 className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${batchSize === size
                                     ? 'bg-blue-600 text-white'
-                                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                                    : 'text-text-secondary hover:text-foreground hover:bg-hover-bg'
                                     }`}
                             >
                                 x{size}
@@ -142,12 +146,12 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
                         onClick={() => onGenerate(batchSize)}
                         disabled={isGenerating}
                         className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${isGenerating
-                            ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                            ? 'bg-gray-700 text-text-secondary cursor-not-allowed'
                             : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/20'
                             }`}
                     >
                         <Layers size={16} />
-                        Generate
+                        {t("generate")}
                     </button>
                 </div>
 
@@ -193,9 +197,9 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
                                                 }}
                                                 className={`absolute top-1 right-1 p-1 rounded-full transition-all ${isFavorited
                                                     ? 'bg-yellow-500 text-white'
-                                                    : 'bg-black/50 text-gray-300 opacity-0 group-hover/variant:opacity-100 hover:bg-yellow-500 hover:text-white'
+                                                    : 'bg-overlay/50 text-text-secondary opacity-0 group-hover/variant:opacity-100 hover:bg-yellow-500 hover:text-white'
                                                     }`}
-                                                title={isFavorited ? 'Click to unfavorite' : 'Click to favorite (protected from auto-delete)'}
+                                                title={isFavorited ? t("clickToUnfavorite") : t("clickToFavorite")}
                                             >
                                                 <Star size={12} fill={isFavorited ? 'currentColor' : 'none'} />
                                             </button>
@@ -206,12 +210,12 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    if (confirm('Delete this variant?')) {
+                                                    if (confirm(t("confirmDeleteVariant"))) {
                                                         onDelete(variant.id);
                                                     }
                                                 }}
                                                 className="absolute bottom-1 right-1 p-1 bg-red-500/80 hover:bg-red-500 rounded-full text-white opacity-0 group-hover/variant:opacity-100 transition-all"
-                                                title="Delete variant"
+                                                title={t("deleteVariant")}
                                             >
                                                 <Trash2 size={10} />
                                             </button>
@@ -220,7 +224,7 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
                                         {/* Favorited protection indicator */}
                                         {isFavorited && (
                                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-yellow-900/80 to-transparent py-1 px-1">
-                                                <span className="text-[8px] text-yellow-200 font-medium">Protected</span>
+                                                <span className="text-[8px] text-yellow-200 font-medium">{t("protected")}</span>
                                             </div>
                                         )}
                                     </div>
@@ -234,11 +238,11 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
             {/* Lightbox Modal */}
             {zoomedImage && (
                 <div
-                    className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-8"
+                    className="fixed inset-0 z-[100] bg-overlay flex items-center justify-center p-8"
                     onClick={() => setZoomedImage(null)}
                 >
                     <button
-                        className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                        className="absolute top-4 right-4 p-3 bg-hover-bg hover:bg-hover-bg rounded-full text-white transition-colors"
                         onClick={() => setZoomedImage(null)}
                     >
                         <X size={24} />

@@ -46,17 +46,17 @@ export default function AssetCard({ asset, type }: AssetCardProps) {
 
   return (
     <div className="glass-panel rounded-xl overflow-hidden">
-      <div className="aspect-square bg-gray-800/50 flex items-center justify-center overflow-hidden">
+      <div className="aspect-square bg-elevated/50 flex items-center justify-center overflow-hidden">
         {imageUrl ? (
           <img src={imageUrl} alt={asset.name} className="w-full h-full object-cover" />
         ) : (
-          <ImageIcon size={32} className="text-gray-600" />
+          <ImageIcon size={32} className="text-text-muted" />
         )}
       </div>
       <div className="p-3">
-        <h4 className="text-sm font-medium text-white truncate">{asset.name}</h4>
+        <h4 className="text-sm font-medium text-foreground truncate">{asset.name}</h4>
         {asset.description && (
-          <p className="text-xs text-gray-400 mt-1 line-clamp-2">{asset.description}</p>
+          <p className="text-xs text-text-secondary mt-1 line-clamp-2">{asset.description}</p>
         )}
       </div>
     </div>

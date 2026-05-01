@@ -112,6 +112,10 @@ class VideoTask(BaseModel):
     # Vidu params
     vidu_audio: Optional[bool] = Field(None, description="Vidu audio output")
     movement_amplitude: Optional[str] = Field(None, description="Vidu movement amplitude: auto/small/medium/large")
+    # HappyHorse params
+    reference_image_urls: List[str] = Field(default_factory=list, description="Reference image URLs for HappyHorse R2V (max 9)")
+    ratio: Optional[str] = Field(None, description="Aspect ratio for HappyHorse T2V/R2V: 16:9, 9:16, 1:1, 4:3, 3:4")
+    audio_setting: Optional[str] = Field(None, description="Audio setting for HappyHorse V2V: auto/origin")
     created_at: float = Field(default_factory=time.time)
 
 class Character(BaseModel):

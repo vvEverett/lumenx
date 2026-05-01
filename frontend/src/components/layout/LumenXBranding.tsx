@@ -39,14 +39,14 @@ export default function LumenXBranding({ size = "md", showSlogan = true }: Lumen
             </span>
           </div>
           <div className="flex justify-end -mt-1 pr-2">
-            <span className={`font-display ${studioSize} font-bold tracking-tight text-white`}>
+            <span className={`font-display ${studioSize} font-bold tracking-tight text-foreground`}>
               Studio
             </span>
           </div>
         </div>
       </div>
       {showSlogan && (
-        <p className="text-[9px] text-gray-500 tracking-wide text-center mt-3">
+        <p className="text-[9px] text-text-muted tracking-wide text-center mt-3">
           Render Noise into Narrative
         </p>
       )}

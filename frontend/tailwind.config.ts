@@ -21,6 +21,8 @@ const config: Config = {
         "border-subtle": "var(--color-border-subtle)",
         "text-secondary": "var(--color-text-secondary)",
         "text-muted": "var(--color-text-muted)",
+        overlay: "var(--color-overlay)",
+        "surface-inset": "var(--color-bg-inset)",
         primary: "#646cff",
         secondary: "#535bf2",
         accent: "#ff0080",

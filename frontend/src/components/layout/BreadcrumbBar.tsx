@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export interface BreadcrumbSegment {
   label: string;
@@ -13,6 +14,7 @@ interface BreadcrumbBarProps {
 }
 
 export default function BreadcrumbBar({ segments, actions }: BreadcrumbBarProps) {
+  const tc = useTranslations("common");
   const handleBack = () => {
     if (segments.length >= 2 && segments[segments.length - 2].hash) {
       window.location.hash = segments[segments.length - 2].hash!;
@@ -24,12 +26,12 @@ export default function BreadcrumbBar({ segments, actions }: BreadcrumbBarProps)
   };
 
   return (
-    <div className="relative z-30 flex items-center gap-3 px-4 py-2.5 bg-gray-900/80 backdrop-blur-sm border-b border-gray-700/50">
+    <div className="relative z-30 flex items-center gap-3 px-4 py-2.5 bg-surface/80 backdrop-blur-sm border-b border-glass-border">
       {/* Back arrow */}
       <button
         onClick={handleBack}
-        className="flex items-center text-gray-400 hover:text-white transition-colors"
-        title="返回"
+        className="flex items-center text-text-secondary hover:text-foreground transition-colors"
+        title={tc("back")}
       >
         <ChevronLeft size={18} />
       </button>
@@ -40,16 +42,16 @@ export default function BreadcrumbBar({ segments, actions }: BreadcrumbBarProps)
           const isLast = i === segments.length - 1;
           return (
             <span key={i} className="flex items-center gap-1.5 min-w-0">
-              {i > 0 && <span className="text-gray-600 flex-shrink-0">&rsaquo;</span>}
+              {i > 0 && <span className="text-text-muted flex-shrink-0">&rsaquo;</span>}
               {seg.hash && !isLast ? (
                 <a
                   href={seg.hash}
-                  className="text-gray-400 hover:text-white transition-colors truncate"
+                  className="text-text-secondary hover:text-foreground transition-colors truncate"
                 >
                   {seg.label}
                 </a>
               ) : (
-                <span className={isLast ? "text-white font-medium truncate" : "text-gray-400 truncate"}>
+                <span className={isLast ? "text-foreground font-medium truncate" : "text-text-secondary truncate"}>
                   {seg.label}
                 </span>
               )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, Image as ImageIcon, User, Layout, Eye } from "lucide-react";
 
@@ -15,20 +16,6 @@ interface UploadAssetModalProps {
     onUploadComplete: (updatedScript: any) => void;
 }
 
-const UPLOAD_TYPES = {
-    character: [
-        { id: "full_body", label: "全身图", icon: User, description: "角色全身立绘" },
-        { id: "head_shot", label: "头像特写", icon: Eye, description: "角色头像/面部特写" },
-        { id: "three_views", label: "三视图", icon: Layout, description: "角色正面/侧面/背面" },
-    ],
-    scene: [
-        { id: "image", label: "场景图", icon: ImageIcon, description: "场景参考图" },
-    ],
-    prop: [
-        { id: "image", label: "道具图", icon: ImageIcon, description: "道具参考图" },
-    ],
-};
-
 export default function UploadAssetModal({
     isOpen,
     onClose,
@@ -39,6 +26,8 @@ export default function UploadAssetModal({
     scriptId,
     onUploadComplete,
 }: UploadAssetModalProps) {
+    const t = useTranslations("assets");
+    const tc = useTranslations("common");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [uploadType, setUploadType] = useState<string>(
@@ -49,24 +38,34 @@ export default function UploadAssetModal({
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const uploadTypes = assetType === "character" ? [
+        { id: "full_body", label: t("fullBody"), icon: User, description: t("fullBodyDesc") },
+        { id: "head_shot", label: t("headShot"), icon: Eye, description: t("headShotDesc") },
+        { id: "three_views", label: t("threeViews"), icon: Layout, description: t("threeViewsDesc") },
+    ] : assetType === "scene" ? [
+        { id: "image", label: t("sceneImage"), icon: ImageIcon, description: t("sceneImageDesc") },
+    ] : [
+        { id: "image", label: t("propImage"), icon: ImageIcon, description: t("propImageDesc") },
+    ];
+
     const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             // Validate file type
             if (!file.type.startsWith("image/")) {
-                setError("请选择图片文件");
+                setError(t("errorNotImage"));
                 return;
             }
             // Validate file size (max 10MB)
             if (file.size > 10 * 1024 * 1024) {
-                setError("文件大小不能超过 10MB");
+                setError(t("errorTooLarge"));
                 return;
             }
             setSelectedFile(file);
             setPreviewUrl(URL.createObjectURL(file));
             setError(null);
         }
-    }, []);
+    }, [t]);
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -80,7 +79,7 @@ export default function UploadAssetModal({
 
     const handleUpload = async () => {
         if (!selectedFile) {
-            setError("请先选择图片");
+            setError(t("errorNoFile"));
             return;
         }
 
@@ -101,7 +100,7 @@ export default function UploadAssetModal({
             onUploadComplete(updatedScript);
             handleClose();
         } catch (err: any) {
-            setError(err.message || "上传失败，请重试");
+            setError(err.message || t("errorUploadFailed"));
         } finally {
             setIsUploading(false);
         }
@@ -115,8 +114,6 @@ export default function UploadAssetModal({
         onClose();
     };
 
-    const uploadTypes = UPLOAD_TYPES[assetType] || [];
-
     if (!isOpen) return null;
 
     return (
@@ -125,34 +122,34 @@ export default function UploadAssetModal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm"
                 onClick={handleClose}
             >
                 <motion.div
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="bg-gray-900 rounded-xl p-6 w-full max-w-lg mx-4 shadow-2xl border border-white/10"
+                    className="bg-elevated rounded-xl p-6 w-full max-w-lg mx-4 shadow-2xl border border-glass-border"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-white">
-                            上传资产 - {assetName}
+                        <h2 className="text-xl font-bold text-foreground">
+                            {t("uploadTitle", { name: assetName })}
                         </h2>
                         <button
                             onClick={handleClose}
-                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            className="p-2 hover:bg-hover-bg rounded-lg transition-colors"
                         >
-                            <X size={20} className="text-gray-400" />
+                            <X size={20} className="text-text-secondary" />
                         </button>
                     </div>
 
                     {/* Upload Type Selector (only for Character) */}
                     {assetType === "character" && (
                         <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-400 mb-3">
-                                选择资产类型
+                            <label className="block text-sm font-medium text-text-secondary mb-3">
+                                {t("selectAssetType")}
                             </label>
                             <div className="grid grid-cols-3 gap-3">
                                 {uploadTypes.map((type) => {
@@ -163,16 +160,16 @@ export default function UploadAssetModal({
                                             onClick={() => setUploadType(type.id)}
                                             className={`p-4 rounded-lg border-2 transition-all ${uploadType === type.id
                                                 ? "border-primary bg-primary/10"
-                                                : "border-white/10 hover:border-white/20"
+                                                : "border-glass-border hover:border-glass-border"
                                                 }`}
                                         >
                                             <Icon
                                                 size={24}
-                                                className={`mx-auto mb-2 ${uploadType === type.id ? "text-primary" : "text-gray-400"
+                                                className={`mx-auto mb-2 ${uploadType === type.id ? "text-primary" : "text-text-secondary"
                                                     }`}
                                             />
-                                            <div className="text-sm font-medium text-white">{type.label}</div>
-                                            <div className="text-xs text-gray-500 mt-1">{type.description}</div>
+                                            <div className="text-sm font-medium text-foreground">{type.label}</div>
+                                            <div className="text-xs text-text-muted mt-1">{type.description}</div>
                                         </button>
                                     );
                                 })}
@@ -182,8 +179,8 @@ export default function UploadAssetModal({
 
                     {/* File Upload Area */}
                     <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-400 mb-3">
-                            选择图片
+                        <label className="block text-sm font-medium text-text-secondary mb-3">
+                            {t("selectImage")}
                         </label>
                         <div
                             onDrop={handleDrop}
@@ -191,7 +188,7 @@ export default function UploadAssetModal({
                             onClick={() => fileInputRef.current?.click()}
                             className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all ${previewUrl
                                 ? "border-primary bg-primary/5"
-                                : "border-white/20 hover:border-white/40"
+                                : "border-glass-border hover:border-primary/50"
                                 }`}
                         >
                             <input
@@ -208,16 +205,16 @@ export default function UploadAssetModal({
                                         alt="Preview"
                                         className="max-h-48 mx-auto rounded-lg object-contain"
                                     />
-                                    <div className="mt-3 text-sm text-gray-400">
-                                        点击更换图片
+                                    <div className="mt-3 text-sm text-text-secondary">
+                                        {t("clickToChange")}
                                     </div>
                                 </div>
                             ) : (
                                 <>
-                                    <Upload size={32} className="mx-auto text-gray-500 mb-3" />
-                                    <div className="text-gray-400">拖拽图片到此处或点击选择</div>
-                                    <div className="text-xs text-gray-500 mt-2">
-                                        支持 JPG、PNG、WebP，最大 10MB
+                                    <Upload size={32} className="mx-auto text-text-muted mb-3" />
+                                    <div className="text-text-secondary">{t("dragImageHint")}</div>
+                                    <div className="text-xs text-text-muted mt-2">
+                                        {t("formatHint")}
                                     </div>
                                 </>
                             )}
@@ -226,18 +223,18 @@ export default function UploadAssetModal({
 
                     {/* Description Editor */}
                     <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-400 mb-2">
-                            角色描述 <span className="text-xs text-gray-500">(用于后续生成)</span>
+                        <label className="block text-sm font-medium text-text-secondary mb-2">
+                            {t("assetDescription")} <span className="text-xs text-text-muted">{t("forGeneration")}</span>
                         </label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             rows={3}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm resize-none focus:outline-none focus:border-primary/50"
-                            placeholder="描述角色的外观特征..."
+                            className="w-full bg-glass border border-glass-border rounded-lg px-3 py-2 text-foreground text-sm resize-none focus:outline-none focus:border-primary/50"
+                            placeholder={t("descriptionPlaceholder")}
                         />
-                        <div className="text-xs text-gray-500 mt-1">
-                            💡 请确保描述与上传图片一致，这将用于生成其他类型的资产
+                        <div className="text-xs text-text-muted mt-1">
+                            {t("descriptionNote")}
                         </div>
                     </div>
 
@@ -252,9 +249,9 @@ export default function UploadAssetModal({
                     <div className="flex gap-3">
                         <button
                             onClick={handleClose}
-                            className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors"
+                            className="flex-1 px-4 py-2 bg-glass hover:bg-hover-bg text-foreground rounded-lg transition-colors"
                         >
-                            取消
+                            {tc("cancel")}
                         </button>
                         <button
                             onClick={handleUpload}
@@ -264,12 +261,12 @@ export default function UploadAssetModal({
                             {isUploading ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    上传中...
+                                    {t("uploading")}
                                 </>
                             ) : (
                                 <>
                                     <Upload size={16} />
-                                    确认上传
+                                    {t("confirmUpload")}
                                 </>
                             )}
                         </button>

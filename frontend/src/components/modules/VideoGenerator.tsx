@@ -123,7 +123,7 @@ export default function VideoGenerator() {
     return (
         <div className="flex h-full w-full overflow-hidden">
             {/* Left: Creator (70%) */}
-            <div className="w-[70%] h-full border-r border-white/10">
+            <div className="w-[70%] h-full border-r border-glass-border">
                 <VideoCreator
                     onTaskCreated={handleTaskCreated}
                     remixData={remixData}

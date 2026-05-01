@@ -1,8 +1,11 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from 'react';
 import { VideoTask } from '@/store/projectStore';
 import { Trash2, Check, Layers, X, Maximize2, Play, Pause, RefreshCw } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 import { getAssetUrl } from '@/lib/utils';
+import { useTranslations } from "next-intl";
 
 interface VideoVariantSelectorProps {
     videos: VideoTask[];
@@ -25,6 +28,7 @@ export const VideoVariantSelector: React.FC<VideoVariantSelectorProps> = ({
     className = "",
     aspectRatio = "16:9"
 }) => {
+    const t = useTranslations("assets");
     const [duration, setDuration] = useState(5);
     const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -68,7 +72,7 @@ export const VideoVariantSelector: React.FC<VideoVariantSelectorProps> = ({
         <div className={`flex flex-col gap-4 ${className}`}>
             {/* Main Viewer */}
             <div
-                className={`relative w-full ${getAspectRatioClass()} bg-gray-900 rounded-lg overflow-hidden border border-gray-700 group`}
+                className={`relative w-full ${getAspectRatioClass()} bg-elevated rounded-lg overflow-hidden border border-glass-border group`}
             >
                 {displayUrl ? (
                     <video
@@ -80,14 +84,14 @@ export const VideoVariantSelector: React.FC<VideoVariantSelectorProps> = ({
                         playsInline
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-500 flex-col gap-2">
+                    <div className="w-full h-full flex items-center justify-center text-text-muted flex-col gap-2">
                         {isGenerating ? (
                             <>
                                 <RefreshCw className="animate-spin" size={24} />
-                                <span>Generating Video...</span>
+                                <span>{t("generatingVideo")}</span>
                             </>
                         ) : (
-                            <span>No video generated</span>
+                            <span>{t("noVideoGenerated")}</span>
                         )}
                     </div>
                 )}
@@ -98,7 +102,7 @@ export const VideoVariantSelector: React.FC<VideoVariantSelectorProps> = ({
                         <button
                             onClick={(e) => { e.stopPropagation(); onDelete(selectedVideo.id); }}
                             className="p-2 bg-red-500/80 hover:bg-red-600 text-white rounded-full backdrop-blur-sm"
-                            title="Delete this video"
+                            title={t("deleteVideo")}
                         >
                             <Trash2 size={16} />
                         </button>
@@ -110,15 +114,15 @@ export const VideoVariantSelector: React.FC<VideoVariantSelectorProps> = ({
             <div className="flex flex-col gap-3">
                 {/* Generation Controls */}
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 bg-gray-800 rounded-lg p-1 border border-gray-700">
-                        <span className="text-xs text-gray-400 px-2">Duration:</span>
+                    <div className="flex items-center gap-2 bg-elevated rounded-lg p-1 border border-glass-border">
+                        <span className="text-xs text-text-secondary px-2">{t("duration")}:</span>
                         {[5].map(d => (
                             <button
                                 key={d}
                                 onClick={() => setDuration(d)}
                                 className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${duration === d
                                     ? 'bg-blue-600 text-white'
-                                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                                    : 'text-text-secondary hover:text-foreground hover:bg-hover-bg'
                                     }`}
                             >
                                 {d}s
@@ -130,12 +134,12 @@ export const VideoVariantSelector: React.FC<VideoVariantSelectorProps> = ({
                         onClick={() => onGenerate(duration)}
                         disabled={isGenerating}
                         className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${isGenerating
-                            ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                            ? 'bg-gray-700 text-text-secondary cursor-not-allowed'
                             : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/20'
                             }`}
                     >
                         <Layers size={16} />
-                        {isGenerating ? "Generating..." : "Generate Video"}
+                        {isGenerating ? t("generating") : t("generateVideo")}
                     </button>
                 </div>
 

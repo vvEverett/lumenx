@@ -6,6 +6,7 @@ import {
     ChevronLeft
 } from "lucide-react";
 import clsx from "clsx";
+import { useTranslations } from "next-intl";
 import LumenXBranding from "./LumenXBranding";
 import type { BreadcrumbSegment } from "./BreadcrumbBar";
 
@@ -25,6 +26,8 @@ interface PipelineSidebarProps {
 }
 
 export default function PipelineSidebar({ activeStep, onStepChange, steps, breadcrumbSegments, headerActions }: PipelineSidebarProps) {
+    const tc = useTranslations("common");
+    const tp = useTranslations("pipeline");
     const handleBack = () => {
         if (!breadcrumbSegments) return;
         if (breadcrumbSegments.length >= 2 && breadcrumbSegments[breadcrumbSegments.length - 2].hash) {
@@ -40,7 +43,7 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
         <motion.aside
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="w-64 flex-1 min-h-0 border-r border-glass-border bg-black/40 backdrop-blur-xl flex flex-col z-50"
+            className="w-64 flex-1 min-h-0 border-r border-glass-border bg-surface backdrop-blur-xl flex flex-col z-50"
         >
             {/* Header: breadcrumb navigation or branding */}
             <div className="p-5 border-b border-glass-border">
@@ -50,8 +53,8 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
                         <div className="flex items-center gap-1.5">
                             <button
                                 onClick={handleBack}
-                                className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
-                                title="返回"
+                                className="flex-shrink-0 text-text-secondary hover:text-foreground transition-colors"
+                                title={tc("back")}
                             >
                                 <ChevronLeft size={16} />
                             </button>
@@ -60,18 +63,18 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
                                     const isLast = i === breadcrumbSegments.length - 1;
                                     return (
                                         <span key={i} className="flex items-center gap-1 min-w-0">
-                                            {i > 0 && <span className="text-gray-600 flex-shrink-0">&rsaquo;</span>}
+                                            {i > 0 && <span className="text-text-muted flex-shrink-0">&rsaquo;</span>}
                                             {seg.hash && !isLast ? (
                                                 <a
                                                     href={seg.hash}
-                                                    className="text-gray-500 hover:text-white transition-colors truncate"
+                                                    className="text-text-muted hover:text-foreground transition-colors truncate"
                                                 >
                                                     {seg.label}
                                                 </a>
                                             ) : (
                                                 <span className={clsx(
                                                     "truncate",
-                                                    isLast ? "text-white font-medium" : "text-gray-500"
+                                                    isLast ? "text-foreground font-medium" : "text-text-muted"
                                                 )}>
                                                     {seg.label}
                                                 </span>
@@ -106,7 +109,7 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
                                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group relative overflow-hidden",
                                 isActive
                                     ? "bg-primary/10 text-primary border border-primary/20"
-                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    : "text-text-secondary hover:text-foreground hover:bg-glass"
                             )}
                         >
                             {isActive && (
@@ -121,7 +124,7 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
                             <Icon size={20} className={clsx(
                                 "transition-colors",
                                 step.comingSoon ? "opacity-50" : "",
-                                isActive ? "text-primary" : "group-hover:text-white"
+                                isActive ? "text-primary" : "group-hover:text-foreground"
                             )} />
 
                             <div className="flex flex-col items-start text-sm flex-1">
@@ -129,11 +132,11 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
                                     <span className={clsx("font-medium", step.comingSoon && "opacity-70")}>{step.label}</span>
                                     {step.comingSoon && (
                                         <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-medium">
-                                            Beta
+                                            {tp("beta")}
                                         </span>
                                     )}
                                 </div>
-                                <span className="text-[10px] opacity-50 font-mono">STEP 0{index + 1}</span>
+                                <span className="text-[10px] opacity-50 font-mono">{tp("stepIndex", { number: index + 1 })}</span>
                             </div>
 
                             {isActive && (
@@ -145,11 +148,11 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
             </nav>
 
             <div className="p-4 border-t border-glass-border">
-                <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 border border-white/5">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-glass border border-border-subtle">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-accent" />
                     <div className="flex flex-col">
-                        <span className="text-sm font-medium text-white">Project Alpha</span>
-                        <span className="text-xs text-gray-500">v0.1.0</span>
+                        <span className="text-sm font-medium text-foreground">Project Alpha</span>
+                        <span className="text-xs text-text-muted">v0.1.0</span>
                     </div>
                 </div>
             </div>

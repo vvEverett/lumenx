@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Palette, Wand2, Plus, Check, Loader2, ChevronRight } from "lucide-react";
 import { useProjectStore, type StyleConfig, type StylePreset } from "@/store/projectStore"; // Combined imports
 import { api } from "@/lib/api";
 
 export default function ArtDirection() {
+    const ta = useTranslations("artDirection");
     const {
         currentProject,
         updateProject,
@@ -81,7 +83,7 @@ export default function ArtDirection() {
             );
         } catch (error) {
             console.error("Failed to analyze script:", error);
-            alert("风格分析失败");
+            alert(ta("analysisFailed"));
         }
     };
 
@@ -109,7 +111,7 @@ export default function ArtDirection() {
 
     const handleSaveCustom = async () => {
         if (!editingName || !editingPositive) {
-            alert("请填写风格名称和正向提示词");
+            alert(ta("fillNameAndPrompt"));
             return;
         }
 
@@ -137,17 +139,17 @@ export default function ArtDirection() {
                     aiRecommendations
                 );
                 updateProject(currentProject.id, updated);
-                alert("自定义风格已保存！");
+                alert(ta("customStyleSaved"));
             } catch (error) {
                 console.error("Failed to save custom style:", error);
-                alert("保存失败，请重试");
+                alert(ta("saveFailed"));
             }
         }
     };
 
     const handleApply = async () => {
         if (!currentProject || !selectedStyle) {
-            alert("请先选择一个风格");
+            alert(ta("selectStyleFirst"));
             return;
         }
 
@@ -168,10 +170,10 @@ export default function ArtDirection() {
                 aiRecommendations
             );
             updateProject(currentProject.id, updated);
-            alert("风格配置已应用！");
+            alert(ta("styleApplied"));
         } catch (error) {
             console.error("Failed to save art direction:", error);
-            alert("保存失败");
+            alert(ta("saveFailedShort"));
         } finally {
             setIsSaving(false);
         }
@@ -180,14 +182,14 @@ export default function ArtDirection() {
     return (
         <div className="flex flex-col h-full overflow-hidden">
             {/* Header */}
-            <div className="h-20 border-b border-white/10 bg-black/20 flex items-center px-8 justify-between">
+            <div className="h-20 border-b border-glass-border bg-surface flex items-center px-8 justify-between">
                 <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
                         <Palette className="text-white" size={20} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-display font-bold text-white">Art Direction</h2>
-                        <p className="text-xs text-gray-400">风格定调 - 建立全局视觉标准</p>
+                        <h2 className="text-xl font-display font-bold text-foreground">Art Direction</h2>
+                        <p className="text-xs text-text-secondary">{ta("subtitle")}</p>
                     </div>
                 </div>
 
@@ -199,11 +201,11 @@ export default function ArtDirection() {
                     {isSaving ? (
                         <>
                             <Loader2 size={16} className="animate-spin" />
-                            保存中...
+                            {ta("saving")}
                         </>
                     ) : (
                         <>
-                            应用并继续
+                            {ta("applyAndContinue")}
                             <ChevronRight size={16} />
                         </>
                     )}
@@ -212,13 +214,13 @@ export default function ArtDirection() {
 
             <div className="flex-1 flex overflow-hidden">
                 {/* Left Panel: AI + Presets */}
-                <div className="w-2/3 flex flex-col p-8 overflow-y-auto gap-8 border-r border-white/10">
+                <div className="w-2/3 flex flex-col p-8 overflow-y-auto gap-8 border-r border-glass-border">
                     {/* AI Recommendations */}
                     <div>
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                                 <Sparkles size={20} className="text-yellow-400" />
-                                AI 智能推荐
+                                {ta("aiRecommendations")}
                             </h3>
                             <button
                                 onClick={handleAnalyze}
@@ -228,12 +230,12 @@ export default function ArtDirection() {
                                 {isAnalyzingArtStyle ? (
                                     <>
                                         <Loader2 size={14} className="animate-spin" />
-                                        分析中...
+                                        {ta("analyzing")}
                                     </>
                                 ) : (
                                     <>
                                         <Wand2 size={14} />
-                                        分析剧本
+                                        {ta("analyzeScript")}
                                     </>
                                 )}
                             </button>
@@ -253,9 +255,9 @@ export default function ArtDirection() {
 
                     {/* Built-in Presets */}
                     <div>
-                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                             <Palette size={20} className="text-blue-400" />
-                            内置风格预设
+                            {ta("builtInPresets")}
                         </h3>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -273,9 +275,9 @@ export default function ArtDirection() {
                     {/* Custom Styles */}
                     {customStyles.length > 0 && (
                         <div>
-                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                                 <Plus size={20} className="text-green-400" />
-                                自定义风格
+                                {ta("customStyles")}
                             </h3>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -293,7 +295,7 @@ export default function ArtDirection() {
                 </div>
 
                 {/* Right Panel: Editor */}
-                <div className="w-1/3 flex flex-col p-8 overflow-y-auto bg-black/10">
+                <div className="w-1/3 flex flex-col p-8 overflow-y-auto bg-surface">
                     <StyleEditor
                         name={editingName}
                         positivePrompt={editingPositive}
@@ -312,26 +314,27 @@ export default function ArtDirection() {
 
 // Sub-components
 function StyleRecommendationCard({ style, isSelected, onSelect }: any) {
+    const ta = useTranslations("artDirection");
     return (
         <motion.div
             layout
             onClick={onSelect}
             className={`p-6 rounded-xl border-2 cursor-pointer transition-all ${isSelected
                 ? "bg-purple-500/20 border-purple-500 shadow-lg shadow-purple-500/20"
-                : "bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10"
+                : "bg-glass border-glass-border hover:border-glass-border hover:bg-hover-bg"
                 }`}
         >
             <div className="flex items-start gap-4">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isSelected ? 'bg-purple-500' : 'bg-white/10'}`}>
-                    {isSelected ? <Check size={16} className="text-white" /> : <Sparkles size={16} className="text-gray-400" />}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isSelected ? 'bg-purple-500' : 'bg-hover-bg'}`}>
+                    {isSelected ? <Check size={16} className="text-white" /> : <Sparkles size={16} className="text-text-secondary" />}
                 </div>
                 <div className="flex-1">
-                    <h4 className="font-bold text-white mb-1">{style.name}</h4>
-                    <p className="text-xs text-gray-400 mb-3">{style.description}</p>
+                    <h4 className="font-bold text-foreground mb-1">{style.name}</h4>
+                    <p className="text-xs text-text-secondary mb-3">{style.description}</p>
                     {style.reason && (
                         <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mb-3">
                             <p className="text-xs text-yellow-300">
-                                <span className="font-bold">推荐理由：</span>
+                                <span className="font-bold">{ta("reasonLabel")}</span>
                                 {style.reason}
                             </p>
                         </div>
@@ -356,19 +359,19 @@ function StylePresetCard({ style, isSelected, onSelect }: any) {
             onClick={onSelect}
             className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${isSelected
                 ? "bg-blue-500/20 border-blue-500 shadow-lg shadow-blue-500/20"
-                : "bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10"
+                : "bg-glass border-glass-border hover:border-glass-border hover:bg-hover-bg"
                 }`}
         >
             <div className="flex items-center gap-3 mb-2">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? 'bg-blue-500' : 'bg-white/10'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? 'bg-blue-500' : 'bg-hover-bg'}`}>
                     {isSelected && <Check size={12} className="text-white" />}
                 </div>
-                <h4 className="font-bold text-white text-sm">{style.name}</h4>
+                <h4 className="font-bold text-foreground text-sm">{style.name}</h4>
             </div>
             {style.description && (
-                <p className="text-xs text-gray-400 mb-2">{style.description}</p>
+                <p className="text-xs text-text-secondary mb-2">{style.description}</p>
             )}
-            <div className="text-[10px] text-gray-500 truncate">
+            <div className="text-[10px] text-text-muted truncate">
                 {style.positive_prompt.substring(0, 50)}...
             </div>
         </motion.div>
@@ -376,79 +379,80 @@ function StylePresetCard({ style, isSelected, onSelect }: any) {
 }
 
 function StyleEditor({ name, positivePrompt, negativePrompt, onNameChange, onPositiveChange, onNegativeChange, onSaveCustom, selectedStyle }: any) {
+    const ta = useTranslations("artDirection");
     return (
         <div className="space-y-6">
             <div>
-                <h3 className="text-lg font-bold text-white mb-4">风格编辑器</h3>
+                <h3 className="text-lg font-bold text-foreground mb-4">{ta("styleEditor")}</h3>
                 {!selectedStyle && (
-                    <div className="text-sm text-gray-500 italic mb-4">
-                        请先从左侧选择一个风格
+                    <div className="text-sm text-text-muted italic mb-4">
+                        {ta("selectStyleHint")}
                     </div>
                 )}
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                    风格名称
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                    {ta("styleName")}
                 </label>
                 <input
                     type="text"
                     value={name}
                     onChange={(e) => onNameChange(e.target.value)}
-                    placeholder="例如: Cyberpunk Neon"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-gray-600 focus:border-primary focus:outline-none"
+                    placeholder={ta("styleNamePlaceholder")}
+                    className="w-full bg-glass border border-glass-border rounded-lg p-3 text-sm text-foreground placeholder-text-muted focus:border-primary focus:outline-none"
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                    正向提示词 (Positive Prompt)
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                    {ta("positivePrompt")}
                 </label>
                 <textarea
                     value={positivePrompt}
                     onChange={(e) => onPositiveChange(e.target.value)}
-                    placeholder="例如: cinematic, 8k, volumetric lighting..."
+                    placeholder={ta("positivePromptPlaceholder")}
                     rows={6}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-gray-600 focus:border-primary focus:outline-none resize-none"
+                    className="w-full bg-glass border border-glass-border rounded-lg p-3 text-sm text-foreground placeholder-text-muted focus:border-primary focus:outline-none resize-none"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                    将自动应用到所有资产和分镜生成
+                <p className="text-xs text-text-muted mt-1">
+                    {ta("positivePromptHint")}
                 </p>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                    负向提示词 (Negative Prompt)
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                    {ta("negativePrompt")}
                 </label>
                 <textarea
                     value={negativePrompt}
                     onChange={(e) => onNegativeChange(e.target.value)}
-                    placeholder="例如: low quality, blurry, cartoon..."
+                    placeholder={ta("negativePromptPlaceholder")}
                     rows={4}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-gray-600 focus:border-primary focus:outline-none resize-none"
+                    className="w-full bg-glass border border-glass-border rounded-lg p-3 text-sm text-foreground placeholder-text-muted focus:border-primary focus:outline-none resize-none"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                    避免的视觉元素
+                <p className="text-xs text-text-muted mt-1">
+                    {ta("negativePromptHint")}
                 </p>
             </div>
 
-            <div className="pt-4 border-t border-white/10">
+            <div className="pt-4 border-t border-glass-border">
                 <button
                     onClick={onSaveCustom}
                     disabled={!name || !positivePrompt}
-                    className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full px-4 py-2 bg-hover-bg hover:bg-hover-bg text-foreground text-sm rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     <Plus size={14} />
-                    保存为自定义风格
+                    {ta("saveAsCustom")}
                 </button>
             </div>
 
             {/* Preview */}
             {positivePrompt && (
-                <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 mb-2">生成时的最终提示词预览：</p>
+                <div className="bg-glass border border-glass-border rounded-lg p-4">
+                    <p className="text-xs text-text-muted mb-2">{ta("previewLabel")}</p>
                     <p className="text-xs text-blue-400 font-mono">
-                        "{positivePrompt}, [用户描述]"
+                        &quot;{positivePrompt}, [user description]&quot;
                     </p>
                 </div>
             )}

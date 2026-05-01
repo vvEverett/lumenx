@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wand2, User, MapPin, Box, ChevronRight, ChevronLeft, Save, Sparkles, Plus, Trash2, X } from "lucide-react";
 import { api, crudApi } from "@/lib/api";
@@ -19,6 +20,8 @@ interface ScriptNode {
 }
 
 export default function ScriptProcessor() {
+    const ts = useTranslations("script");
+    const tc = useTranslations("common");
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
     const analyzeProject = useProjectStore((state) => state.analyzeProject);
@@ -74,14 +77,14 @@ export default function ScriptProcessor() {
             console.error("Failed to analyze script:", error);
             // Extract error message from axios response or error object
             const errorMessage = error?.response?.data?.detail || error?.message || "未知错误";
-            alert(`剧本分析失败: ${errorMessage}`);
+            alert(ts("analysisFailed", { error: errorMessage }));
         }
     };
 
     const handleDeleteNode = async (node: ScriptNode, e: React.MouseEvent) => {
         e.stopPropagation();
         if (!currentProject) return;
-        if (!confirm(`Are you sure you want to delete ${node.name}?`)) return;
+        if (!confirm(ts("confirmDelete", { name: node.name }))) return;
 
         try {
             if (node.type === "character" && node.id) {
@@ -96,7 +99,7 @@ export default function ScriptProcessor() {
             updateProject(currentProject.id, updatedProject);
         } catch (error) {
             console.error("Failed to delete node:", error);
-            alert("Failed to delete node");
+            alert(ts("deleteFailed"));
         }
     };
 
@@ -116,7 +119,7 @@ export default function ScriptProcessor() {
             setIsCreateDialogOpen(false);
         } catch (error) {
             console.error("Failed to create node:", error);
-            alert("Failed to create node");
+            alert(ts("createFailed"));
         }
     };
 
@@ -130,10 +133,10 @@ export default function ScriptProcessor() {
         <div className="flex h-full w-full overflow-hidden">
             {/* Left: Script Editor */}
             <div className={`flex-1 flex flex-col transition-all duration-300 ${showPanel ? 'mr-0' : 'mr-0'}`}>
-                <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black/20">
-                    <h2 className="text-lg font-display font-bold text-white flex items-center gap-2">
+                <div className="p-4 border-b border-glass-border flex justify-between items-center bg-surface">
+                    <h2 className="text-lg font-display font-bold text-foreground flex items-center gap-2">
                         <Sparkles className="text-primary" size={18} />
-                        剧本编辑器
+                        {ts("scriptEditor")}
                     </h2>
                     <div className="flex gap-2">
                         <button
@@ -142,11 +145,11 @@ export default function ScriptProcessor() {
                             className="glass-button px-4 py-1.5 text-sm flex items-center gap-2 text-primary border-primary/30 hover:bg-primary/10"
                         >
                             {isAnalyzing ? <Wand2 className="animate-spin" size={14} /> : <Wand2 size={14} />}
-                            {isAnalyzing ? "智能分析中..." : "提取实体"}
+                            {isAnalyzing ? ts("analyzingScript") : ts("extractEntities")}
                         </button>
                         <button
                             onClick={() => setShowPanel(!showPanel)}
-                            className="p-2 hover:bg-white/10 rounded-lg text-gray-400"
+                            className="p-2 hover:bg-hover-bg rounded-lg text-text-secondary"
                         >
                             {showPanel ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
                         </button>
@@ -163,8 +166,8 @@ export default function ScriptProcessor() {
                                 updateProject(currentProject.id, { originalText: newText });
                             }
                         }}
-                        placeholder="在此粘贴小说或剧本内容..."
-                        className="w-full h-full bg-transparent text-gray-300 font-mono text-base leading-relaxed resize-none focus:outline-none"
+                        placeholder={ts("scriptPlaceholder")}
+                        className="w-full h-full bg-transparent text-text-secondary font-mono text-base leading-relaxed resize-none focus:outline-none"
                         spellCheck={false}
                     />
                 </div>
@@ -177,16 +180,16 @@ export default function ScriptProcessor() {
                         initial={{ width: 0, opacity: 0 }}
                         animate={{ width: 400, opacity: 1 }}
                         exit={{ width: 0, opacity: 0 }}
-                        className="border-l border-white/10 bg-black/40 backdrop-blur-md flex flex-col h-full"
+                        className="border-l border-glass-border bg-surface backdrop-blur-md flex flex-col h-full"
                     >
-                        <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                        <div className="p-4 border-b border-glass-border flex justify-between items-center">
                             <div>
-                                <h3 className="font-bold text-white">实体识别面板</h3>
-                                <p className="text-xs text-gray-500">已识别 {nodes.length} 个关键要素</p>
+                                <h3 className="font-bold text-foreground">{ts("entityPanel")}</h3>
+                                <p className="text-xs text-text-muted">{ts("entitiesCount", { count: nodes.length })}</p>
                             </div>
                             <button
                                 onClick={() => setIsCreateDialogOpen(true)}
-                                className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-gray-300 hover:text-white transition-colors"
+                                className="p-1.5 bg-hover-bg hover:bg-hover-bg rounded-lg text-text-secondary hover:text-foreground transition-colors"
                                 title="Add Entity"
                             >
                                 <Plus size={16} />
@@ -195,8 +198,8 @@ export default function ScriptProcessor() {
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                             {nodes.length === 0 && !isAnalyzing && (
-                                <div className="text-center text-gray-500 mt-10 text-sm">
-                                    点击“提取实体”开始分析
+                                <div className="text-center text-text-muted mt-10 text-sm">
+                                    {ts("extractHint")}
                                 </div>
                             )}
 
@@ -207,9 +210,9 @@ export default function ScriptProcessor() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.05 }}
                                     onClick={() => setSelectedNode(node)}
-                                    className={`group p-3 rounded-lg border cursor-pointer transition-all hover:bg-white/5 ${selectedNode?.name === node.name
+                                    className={`group p-3 rounded-lg border cursor-pointer transition-all hover:bg-glass ${selectedNode?.name === node.name
                                         ? "border-primary bg-primary/5"
-                                        : "border-white/10 bg-white/5"
+                                        : "border-border-subtle bg-glass"
                                         }`}
                                 >
                                     <div className="flex items-center justify-between mb-1">
@@ -217,26 +220,26 @@ export default function ScriptProcessor() {
                                             {node.type === "character" && <User size={14} className="text-blue-400" />}
                                             {node.type === "scene" && <MapPin size={14} className="text-green-400" />}
                                             {node.type === "prop" && <Box size={14} className="text-yellow-400" />}
-                                            <span className="font-bold text-sm text-gray-200">{node.name}</span>
+                                            <span className="font-bold text-sm text-foreground">{node.name}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {node.visual_weight && (
                                                 <div className="flex gap-0.5">
                                                     {[...Array(5)].map((_, w) => (
-                                                        <div key={w} className={`w-1 h-3 rounded-full ${w < (node.visual_weight || 0) ? "bg-primary" : "bg-white/10"}`} />
+                                                        <div key={w} className={`w-1 h-3 rounded-full ${w < (node.visual_weight || 0) ? "bg-primary" : "bg-hover-bg"}`} />
                                                     ))}
                                                 </div>
                                             )}
                                             <button
                                                 onClick={(e) => handleDeleteNode(node, e)}
-                                                className="p-1 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                className="p-1 hover:bg-red-500/20 text-text-muted hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                                 title="Delete"
                                             >
                                                 <Trash2 size={12} />
                                             </button>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-gray-400 line-clamp-2">{node.desc}</p>
+                                    <p className="text-xs text-text-secondary line-clamp-2">{node.desc}</p>
                                 </motion.div>
                             ))}
                         </div>
@@ -247,15 +250,15 @@ export default function ScriptProcessor() {
             {/* Floating Attribute Card (Popover) */}
             <AnimatePresence>
                 {selectedNode && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setSelectedNode(null)}>
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm" onClick={() => setSelectedNode(null)}>
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             onClick={e => e.stopPropagation()}
-                            className="w-[500px] bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden"
+                            className="w-[500px] bg-elevated border border-glass-border rounded-xl shadow-2xl overflow-hidden"
                         >
-                            <div className="p-6 border-b border-white/10 flex justify-between items-start">
+                            <div className="p-6 border-b border-glass-border flex justify-between items-start">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className={`text-xs px-2 py-0.5 rounded uppercase font-bold ${selectedNode.type === "character" ? "bg-blue-500/20 text-blue-400" :
@@ -264,16 +267,16 @@ export default function ScriptProcessor() {
                                             }`}>
                                             {selectedNode.type}
                                         </span>
-                                        <h2 className="text-xl font-bold text-white">{selectedNode.name}</h2>
+                                        <h2 className="text-xl font-bold text-foreground">{selectedNode.name}</h2>
                                     </div>
-                                    <p className="text-sm text-gray-400">实体属性配置</p>
+                                    <p className="text-sm text-text-secondary">{ts("entityConfig")}</p>
                                 </div>
-                                <button onClick={() => setSelectedNode(null)} className="text-gray-500 hover:text-white">✕</button>
+                                <button onClick={() => setSelectedNode(null)} className="text-text-muted hover:text-foreground">✕</button>
                             </div>
 
                             <div className="p-6 space-y-4">
                                 <div>
-                                    <label className="block text-xs text-gray-500 mb-1">视觉描述 (Visual Description)</label>
+                                    <label className="block text-xs text-text-muted mb-1">{ts("visualDescription")}</label>
                                     <textarea
                                         value={selectedNode.desc}
                                         onChange={e => handleNodeUpdate({ ...selectedNode, desc: e.target.value })}
@@ -284,7 +287,7 @@ export default function ScriptProcessor() {
                                 {selectedNode.type === "character" && (
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-xs text-gray-500 mb-1">年龄 (Age)</label>
+                                            <label className="block text-xs text-text-muted mb-1">{ts("age")}</label>
                                             <input
                                                 type="text"
                                                 value={selectedNode.age || ""}
@@ -294,7 +297,7 @@ export default function ScriptProcessor() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-500 mb-1">性别 (Gender)</label>
+                                            <label className="block text-xs text-text-muted mb-1">{ts("gender")}</label>
                                             <input
                                                 type="text"
                                                 value={selectedNode.gender || ""}
@@ -304,7 +307,7 @@ export default function ScriptProcessor() {
                                             />
                                         </div>
                                         <div className="col-span-2">
-                                            <label className="block text-xs text-gray-500 mb-1">服装 (Clothing)</label>
+                                            <label className="block text-xs text-text-muted mb-1">{ts("clothing")}</label>
                                             <input
                                                 type="text"
                                                 value={selectedNode.clothing || ""}
@@ -318,7 +321,7 @@ export default function ScriptProcessor() {
 
                                 {selectedNode.type !== "prop" && (
                                     <div>
-                                        <label className="block text-xs text-gray-500 mb-2">视觉权重 (Visual Weight)</label>
+                                        <label className="block text-xs text-text-muted mb-2">{ts("visualWeight")}</label>
                                         <div className="flex gap-2">
                                             {[1, 2, 3, 4, 5].map(w => (
                                                 <button
@@ -326,21 +329,21 @@ export default function ScriptProcessor() {
                                                     onClick={() => handleNodeUpdate({ ...selectedNode, visual_weight: w })}
                                                     className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${(selectedNode.visual_weight || 3) === w
                                                         ? "bg-primary text-white"
-                                                        : "bg-white/5 text-gray-500 hover:bg-white/10"
+                                                        : "bg-glass text-text-muted hover:bg-hover-bg"
                                                         }`}
                                                 >
                                                     {w}
                                                 </button>
                                             ))}
                                         </div>
-                                        <p className="text-[10px] text-gray-600 mt-1 text-center">
-                                            1: 背景路人 — 3: 重要配角 — 5: 核心主角 (需LoRA训练)
+                                        <p className="text-[10px] text-text-muted mt-1 text-center">
+                                            {ts("weightScale")}
                                         </p>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="p-4 border-t border-white/10 bg-black/20 flex justify-end">
+                            <div className="p-4 border-t border-glass-border bg-surface flex justify-end">
                                 <button
                                     onClick={async () => {
                                         if (currentProject && selectedNode && selectedNode.id) {
@@ -370,7 +373,7 @@ export default function ScriptProcessor() {
                                                 setSelectedNode(null);
                                             } catch (error) {
                                                 console.error("Failed to update asset attributes:", error);
-                                                alert("保存失败，请重试");
+                                                alert(ts("saveFailed"));
                                             }
                                         } else {
                                             setSelectedNode(null);
@@ -378,7 +381,7 @@ export default function ScriptProcessor() {
                                     }}
                                     className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold flex items-center gap-2"
                                 >
-                                    <Save size={14} /> 保存配置
+                                    <Save size={14} /> {ts("saveConfig")}
                                 </button>
                             </div>
                         </motion.div>
@@ -399,26 +402,28 @@ export default function ScriptProcessor() {
 }
 
 function CreateEntityDialog({ onClose, onCreate }: { onClose: () => void; onCreate: (data: any) => void }) {
+    const ts = useTranslations("script");
+    const tc = useTranslations("common");
     const [name, setName] = useState("");
     const [desc, setDesc] = useState("");
     const [type, setType] = useState<"character" | "scene" | "prop">("character");
 
     const handleSubmit = () => {
-        if (!name.trim()) return alert("Name is required");
+        if (!name.trim()) return alert(ts("nameRequired"));
         onCreate({ name, description: desc, type });
     };
 
     return (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-            <div className="w-[400px] bg-[#1a1a1a] border border-white/10 rounded-xl p-6 space-y-4" onClick={e => e.stopPropagation()}>
-                <h3 className="font-bold text-white">Add New Entity</h3>
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm" onClick={onClose}>
+            <div className="w-[400px] bg-elevated border border-glass-border rounded-xl p-6 space-y-4" onClick={e => e.stopPropagation()}>
+                <h3 className="font-bold text-foreground">{ts("addEntity")}</h3>
 
-                <div className="flex gap-2 p-1 bg-black/20 rounded-lg">
+                <div className="flex gap-2 p-1 bg-surface rounded-lg">
                     {(["character", "scene", "prop"] as const).map(t => (
                         <button
                             key={t}
                             onClick={() => setType(t)}
-                            className={`flex-1 py-1.5 text-xs font-bold rounded capitalize ${type === t ? "bg-primary text-white" : "text-gray-500 hover:text-white"}`}
+                            className={`flex-1 py-1.5 text-xs font-bold rounded capitalize ${type === t ? "bg-primary text-white" : "text-text-muted hover:text-foreground"}`}
                         >
                             {t}
                         </button>
@@ -426,28 +431,28 @@ function CreateEntityDialog({ onClose, onCreate }: { onClose: () => void; onCrea
                 </div>
 
                 <div>
-                    <label className="text-xs text-gray-500">Name</label>
+                    <label className="text-xs text-text-muted">{ts("nameLabel")}</label>
                     <input
                         className="glass-input w-full"
                         value={name}
                         onChange={e => setName(e.target.value)}
-                        placeholder="Entity Name"
+                        placeholder={ts("entityNamePlaceholder")}
                     />
                 </div>
 
                 <div>
-                    <label className="text-xs text-gray-500">Description</label>
+                    <label className="text-xs text-text-muted">{ts("descriptionLabel")}</label>
                     <textarea
                         className="glass-input w-full h-24 resize-none"
                         value={desc}
                         onChange={e => setDesc(e.target.value)}
-                        placeholder="Visual description..."
+                        placeholder={ts("visualDescPlaceholder")}
                     />
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                    <button onClick={onClose} className="px-4 py-2 text-xs text-gray-400 hover:text-white">Cancel</button>
-                    <button onClick={handleSubmit} className="px-4 py-2 bg-primary text-white rounded text-xs font-bold">Create</button>
+                    <button onClick={onClose} className="px-4 py-2 text-xs text-text-secondary hover:text-foreground">{tc("cancel")}</button>
+                    <button onClick={handleSubmit} className="px-4 py-2 bg-primary text-white rounded text-xs font-bold">{tc("create")}</button>
                 </div>
             </div>
         </div>

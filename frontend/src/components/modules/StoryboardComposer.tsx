@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Layout, Image as ImageIcon, Box, Type, Move,
@@ -15,6 +16,7 @@ import { getAssetUrl, getAssetUrlWithTimestamp, extractErrorDetail } from "@/lib
 import StoryboardFrameEditor from "./StoryboardFrameEditor";
 
 export default function StoryboardComposer() {
+    const t = useTranslations("storyboard");
     const currentProject = useProjectStore((state) => state.currentProject);
     const selectedFrameId = useProjectStore((state) => state.selectedFrameId);
     const setSelectedFrameId = useProjectStore((state) => state.setSelectedFrameId);
@@ -46,12 +48,12 @@ export default function StoryboardComposer() {
 
         const text = currentProject.originalText;
         if (!text || !text.trim()) {
-            alert("请先输入剧本文本");
+            alert(t("enterScriptFirst"));
             return;
         }
 
         if (currentProject.frames?.length > 0) {
-            if (!confirm("这将覆盖当前的所有分镜帧。是否继续？")) return;
+            if (!confirm(t("overwriteConfirm"))) return;
         }
 
         setIsAnalyzing(true);
@@ -60,17 +62,17 @@ export default function StoryboardComposer() {
             const frameCount = updatedProject.frames?.length || 0;
             if (frameCount > 0) {
                 updateProject(currentProject.id, updatedProject);
-                alert(`成功生成 ${frameCount} 个分镜帧！`);
+                alert(t("framesGenerated", { count: frameCount }));
             } else {
-                alert("AI 模型未生成有效分镜帧，请重新点击按钮再试一次。");
+                alert(t("aiInvalidOutput"));
             }
         } catch (error: any) {
             console.error("Analyze to storyboard failed:", error);
             const detail = extractErrorDetail(error, "");
             if (detail.includes("JSON") || detail.includes("格式")) {
-                alert(`分镜生成失败：AI 模型输出格式异常。\n\n这是模型偶发的格式问题，通常重试即可解决。请再次点击生成按钮。`);
+                alert(t("aiFormatRetry"));
             } else {
-                alert(`分镜生成失败：${detail || "请查看控制台了解详情。"}`);
+                alert(t("genFailedDetail", { detail }));
             }
         } finally {
             setIsAnalyzing(false);
@@ -85,7 +87,7 @@ export default function StoryboardComposer() {
     const handleDeleteFrame = async (frameId: string, e: React.MouseEvent) => {
         e.stopPropagation();
         if (!currentProject) return;
-        if (!confirm("Are you sure you want to delete this frame?")) return;
+        if (!confirm(t("confirmDeleteFrame"))) return;
 
         try {
             await crudApi.deleteFrame(currentProject.id, frameId);
@@ -93,7 +95,7 @@ export default function StoryboardComposer() {
             updateProject(currentProject.id, updatedProject);
         } catch (error) {
             console.error("Failed to delete frame:", error);
-            alert("Failed to delete frame");
+            alert(t("deleteFrameFailed"));
         }
     };
 
@@ -107,7 +109,7 @@ export default function StoryboardComposer() {
             updateProject(currentProject.id, updatedProject);
         } catch (error) {
             console.error("Failed to copy frame:", error);
-            alert("Failed to copy frame");
+            alert(t("copyFrameFailed"));
         }
     };
 
@@ -125,7 +127,7 @@ export default function StoryboardComposer() {
             setInsertIndex(null);
         } catch (error) {
             console.error("Failed to create frame:", error);
-            alert("Failed to create frame");
+            alert(t("createFrameFailed"));
         }
     };
 
@@ -151,7 +153,7 @@ export default function StoryboardComposer() {
             // No need to fetch again if optimistic update was correct, but good for safety
         } catch (error) {
             console.error("Failed to reorder frames:", error);
-            alert("Failed to reorder frames");
+            alert(t("reorderFailed"));
             // Revert on error would be ideal here by fetching project again
             const project = await api.getProject(currentProject.id);
             updateProject(currentProject.id, project);
@@ -321,33 +323,33 @@ export default function StoryboardComposer() {
     };
 
     return (
-        <div className="flex flex-col h-full text-white overflow-hidden">
+        <div className="flex flex-col h-full text-foreground overflow-hidden">
             {/* Top Toolbar */}
-            <div className="flex-shrink-0 p-4 border-b border-white/10 flex items-center justify-between bg-black/20">
+            <div className="flex-shrink-0 p-4 border-b border-glass-border flex items-center justify-between bg-overlay">
                 <h3 className="font-bold text-sm flex items-center gap-2">
-                    <Layout size={16} className="text-primary" /> Storyboard Frames
+                    <Layout size={16} className="text-primary" /> {t("storyboardFrames")}
                 </h3>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setShowScriptOverlay(true)}
-                        className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
-                        title="查看原始脚本"
+                        className="flex items-center gap-1.5 text-xs text-text-secondary hover:text-foreground px-2.5 py-1.5 rounded-lg hover:bg-glass transition-colors"
+                        title={t("viewOriginalScript")}
                     >
                         <FileText size={14} />
-                        查看脚本
+                        {t("viewScript")}
                     </button>
-                    <div className="w-px h-4 bg-white/10" />
+                    <div className="w-px h-4 bg-glass" />
                     <button
                         onClick={handleAnalyzeToStoryboard}
                         disabled={isAnalyzing}
                         className="flex items-center gap-1.5 text-xs bg-primary/80 hover:bg-primary px-3 py-1.5 rounded-lg text-white transition-colors disabled:opacity-50"
-                        title="从剧本生成分镜帧"
+                        title={t("generateFromScript")}
                     >
                         {isAnalyzing ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
-                        {isAnalyzing ? "生成中..." : "生成分镜"}
+                        {isAnalyzing ? t("generatingFrames") : t("generateStoryboard")}
                     </button>
-                    <div className="w-px h-4 bg-white/10" />
-                    <span className="text-xs text-gray-500 font-mono">
+                    <div className="w-px h-4 bg-glass" />
+                    <span className="text-xs text-text-muted font-mono">
                         {currentProject?.frames?.length || 0} Frames
                     </span>
                 </div>
@@ -360,10 +362,10 @@ export default function StoryboardComposer() {
                         <div className="flex justify-center">
                             <button
                                 onClick={() => { setInsertIndex(0); setIsCreateDialogOpen(true); }}
-                                className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors border border-dashed border-white/10 hover:border-white/30"
+                                className="flex items-center gap-2 px-4 py-2 bg-glass hover:bg-hover-bg text-text-secondary hover:text-foreground rounded-lg transition-colors border border-dashed border-glass-border hover:border-glass-border"
                             >
                                 <Plus size={16} />
-                                <span className="text-sm font-medium">Insert Frame at Start</span>
+                                <span className="text-sm font-medium">{t("insertFrameAtStart")}</span>
                             </button>
                         </div>
 
@@ -374,17 +376,17 @@ export default function StoryboardComposer() {
                                     layoutId={frame.id}
                                     onClick={() => setSelectedFrameId(frame.id)}
                                     className={`group relative flex gap-6 p-4 rounded-xl border transition-all cursor-pointer ${selectedFrameId === frame.id
-                                        ? "bg-white/5 border-primary ring-1 ring-primary"
-                                        : "bg-[#161616] border-white/5 hover:border-white/20"
+                                        ? "bg-glass border-primary ring-1 ring-primary"
+                                        : "bg-surface border-border-subtle hover:border-glass-border"
                                         }`}
                                 >
                                     {/* Frame Number */}
-                                    <div className="absolute -left-3 -top-3 w-8 h-8 rounded-full bg-[#222] border border-white/10 flex items-center justify-center text-xs font-bold text-gray-400 shadow-lg z-10">
+                                    <div className="absolute -left-3 -top-3 w-8 h-8 rounded-full bg-elevated border border-glass-border flex items-center justify-center text-xs font-bold text-text-secondary shadow-lg z-10">
                                         {index + 1}
                                     </div>
 
                                     {/* Image Preview */}
-                                    <div className="w-64 aspect-video bg-black/40 rounded-lg border border-white/5 overflow-hidden flex-shrink-0 relative">
+                                    <div className="w-64 aspect-video bg-overlay rounded-lg border border-border-subtle overflow-hidden flex-shrink-0 relative">
                                         {frame.rendered_image_url || frame.image_url ? (
                                             <ImageWithRetry
                                                 key={frame.id + (frame.updated_at || 0)} // Force remount on refresh
@@ -394,16 +396,16 @@ export default function StoryboardComposer() {
                                                 onClick={(e: React.MouseEvent) => handleImageClick(frame.id, e)}
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-600 gap-2">
+                                            <div className="w-full h-full flex flex-col items-center justify-center text-text-muted gap-2">
                                                 <ImageIcon size={24} className="opacity-20" />
-                                                <span className="text-[10px]">No Image</span>
+                                                <span className="text-[10px]">{t("noImage", { defaultMessage: "No Image" })}</span>
                                             </div>
                                         )
 
                                         }
 
                                         {/* Hover Actions - pointer-events-none to allow image click */}
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
+                                        <div className="absolute inset-0 bg-overlay opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
                                             {/* Lock Button */}
                                             <button
                                                 onClick={async (e) => {
@@ -417,8 +419,8 @@ export default function StoryboardComposer() {
                                                         console.error("Toggle lock failed:", error);
                                                     }
                                                 }}
-                                                className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold flex items-center gap-1 pointer-events-auto"
-                                                title={frame.locked ? "解锁" : "锁定"}
+                                                className="p-2 bg-glass hover:bg-hover-bg text-white rounded-lg text-xs font-bold flex items-center gap-1 pointer-events-auto"
+                                                title={frame.locked ? t("unlockFrame") : t("lockFrame")}
                                             >
                                                 {frame.locked ? <Unlock size={14} /> : <Lock size={14} />}
                                             </button>
@@ -458,42 +460,42 @@ export default function StoryboardComposer() {
                                         <div className="flex items-start justify-between">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Action</span>
+                                                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{t("actionLabel")}</span>
                                                     {frame.camera_movement && (
                                                         <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
                                                             {frame.camera_movement}
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-gray-200 leading-relaxed line-clamp-3">
+                                                <p className="text-sm text-text-secondary leading-relaxed line-clamp-3">
                                                     {frame.action_description}
                                                 </p>
                                             </div>
                                         </div>
 
                                         {frame.dialogue && (
-                                            <div className="mt-auto pt-3 border-t border-white/5">
-                                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Dialogue</span>
-                                                <p className="text-sm text-gray-400 italic">"{frame.dialogue}"</p>
+                                            <div className="mt-auto pt-3 border-t border-border-subtle">
+                                                <span className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-1">{t("dialogueLabel")}</span>
+                                                <p className="text-sm text-text-secondary italic">"{frame.dialogue}"</p>
                                             </div>
                                         )}
 
                                         {/* Frame Actions */}
-                                        <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-white/5">
+                                        <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-border-subtle">
                                             <div className="flex items-center gap-1 mr-auto">
                                                 <button
                                                     onClick={(e) => handleMoveFrame(index, 'up', e)}
                                                     disabled={index === 0}
-                                                    className="btn-tip p-2 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    data-tip="Move Up"
+                                                    className="btn-tip p-2 hover:bg-hover-bg text-text-secondary hover:text-foreground rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    data-tip={t("moveUp")}
                                                 >
                                                     <ArrowUp size={14} />
                                                 </button>
                                                 <button
                                                     onClick={(e) => handleMoveFrame(index, 'down', e)}
                                                     disabled={index === (currentProject.frames?.length || 0) - 1}
-                                                    className="btn-tip p-2 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    data-tip="Move Down"
+                                                    className="btn-tip p-2 hover:bg-hover-bg text-text-secondary hover:text-foreground rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    data-tip={t("moveDown")}
                                                 >
                                                     <ArrowDown size={14} />
                                                 </button>
@@ -501,15 +503,15 @@ export default function StoryboardComposer() {
 
                                             <button
                                                 onClick={(e) => handleCopyFrame(frame.id, e)}
-                                                className="btn-tip p-2 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors"
-                                                data-tip="Duplicate"
+                                                className="btn-tip p-2 hover:bg-hover-bg text-text-secondary hover:text-foreground rounded-lg transition-colors"
+                                                data-tip={t("duplicateFrame")}
                                             >
                                                 <Copy size={14} />
                                             </button>
                                             <button
                                                 onClick={(e) => handleUploadFrameImage(frame.id, e)}
-                                                className="btn-tip p-2 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 rounded-lg transition-colors"
-                                                data-tip="Upload Image"
+                                                className="btn-tip p-2 hover:bg-blue-500/20 text-text-secondary hover:text-blue-400 rounded-lg transition-colors"
+                                                data-tip={t("uploadImage")}
                                             >
                                                 <Upload size={14} />
                                             </button>
@@ -522,8 +524,8 @@ export default function StoryboardComposer() {
                                                     <button
                                                         onClick={(e) => handleExtractLastFrame(frame.id, e)}
                                                         disabled={extractingFrameId === frame.id}
-                                                        className="btn-tip p-2 hover:bg-purple-500/20 text-gray-400 hover:text-purple-400 rounded-lg transition-colors disabled:opacity-50"
-                                                        data-tip="Use Prev End Frame"
+                                                        className="btn-tip p-2 hover:bg-purple-500/20 text-text-secondary hover:text-purple-400 rounded-lg transition-colors disabled:opacity-50"
+                                                        data-tip={t("usePrevEndFrame")}
                                                     >
                                                         {extractingFrameId === frame.id ? <Loader2 size={14} className="animate-spin" /> : <Film size={14} />}
                                                     </button>
@@ -531,7 +533,7 @@ export default function StoryboardComposer() {
                                             })()}
                                             <button
                                                 onClick={(e) => handleDeleteFrame(frame.id, e)}
-                                                className="btn-tip p-2 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
+                                                className="btn-tip p-2 hover:bg-red-500/20 text-text-secondary hover:text-red-400 rounded-lg transition-colors"
                                                 data-tip="Delete"
                                             >
                                                 <Trash2 size={14} />
@@ -544,8 +546,8 @@ export default function StoryboardComposer() {
                                 < div className="flex justify-center opacity-0 hover:opacity-100 transition-opacity -my-3 z-10 relative" >
                                     <button
                                         onClick={() => { setInsertIndex(index + 1); setIsCreateDialogOpen(true); }}
-                                        className="p-1 bg-[#222] border border-white/20 rounded-full text-gray-400 hover:text-white hover:border-primary hover:bg-primary/20 transition-all transform hover:scale-110"
-                                        title="Insert Frame Here"
+                                        className="p-1 bg-elevated border border-glass-border rounded-full text-text-secondary hover:text-foreground hover:border-primary hover:bg-primary/20 transition-all transform hover:scale-110"
+                                        title={t("insertFrameAtStart")}
                                     >
                                         <Plus size={16} />
                                     </button>
@@ -563,7 +565,7 @@ export default function StoryboardComposer() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                        className="absolute inset-0 z-40 flex items-center justify-center bg-overlay backdrop-blur-sm"
                         onClick={() => setShowScriptOverlay(false)}
                     >
                         <motion.div
@@ -571,24 +573,24 @@ export default function StoryboardComposer() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 16 }}
                             transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
-                            className="w-full max-w-2xl max-h-[80vh] bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                            className="w-full max-w-2xl max-h-[80vh] bg-surface border border-glass-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-glass-border bg-overlay">
                                 <div className="flex items-center gap-3">
                                     <FileText size={18} className="text-primary" />
-                                    <h3 className="text-sm font-bold text-white">原始脚本</h3>
+                                    <h3 className="text-sm font-bold text-foreground">{t("originalScript")}</h3>
                                 </div>
                                 <button
                                     onClick={() => setShowScriptOverlay(false)}
-                                    className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                                    className="p-1.5 hover:bg-hover-bg rounded-lg transition-colors"
                                 >
-                                    <X size={16} className="text-gray-400" />
+                                    <X size={16} className="text-text-secondary" />
                                 </button>
                             </div>
                             <div className="flex-1 overflow-y-auto p-6">
-                                <pre className="text-sm text-gray-300 whitespace-pre-wrap font-sans leading-relaxed">
-                                    {currentProject?.originalText || "暂无脚本内容"}
+                                <pre className="text-sm text-text-secondary whitespace-pre-wrap font-sans leading-relaxed">
+                                    {currentProject?.originalText || t("noScriptContent")}
                                 </pre>
                             </div>
                         </motion.div>
@@ -659,30 +661,30 @@ function CreateFrameDialog({ onClose, onCreate, scenes }: { onClose: () => void;
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm p-8">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl"
+                className="bg-surface border border-glass-border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl"
             >
-                <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
+                <div className="p-6 border-b border-glass-border flex justify-between items-center bg-overlay">
                     <div className="flex items-center gap-3">
                         <Plus className="text-primary" size={20} />
-                        <h2 className="text-lg font-bold text-white">Add New Frame</h2>
+                        <h2 className="text-lg font-bold text-foreground">Add New Frame</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                        <X size={20} className="text-gray-400" />
+                    <button onClick={onClose} className="p-2 hover:bg-hover-bg rounded-lg transition-colors">
+                        <X size={20} className="text-text-secondary" />
                     </button>
                 </div>
 
                 <div className="p-6 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Scene</label>
+                        <label className="block text-sm font-medium text-text-secondary mb-2">Scene</label>
                         <select
                             value={sceneId}
                             onChange={(e) => setSceneId(e.target.value)}
-                            className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-primary/50 focus:outline-none appearance-none"
+                            className="w-full px-4 py-3 bg-overlay border border-glass-border rounded-lg text-white focus:border-primary/50 focus:outline-none appearance-none"
                         >
                             <option value="" disabled>Select a scene</option>
                             {scenes.map((s: any) => (
@@ -691,31 +693,31 @@ function CreateFrameDialog({ onClose, onCreate, scenes }: { onClose: () => void;
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Action Description *</label>
+                        <label className="block text-sm font-medium text-text-secondary mb-2">Action Description *</label>
                         <textarea
                             value={action}
                             onChange={(e) => setAction(e.target.value)}
                             placeholder="What is happening in this frame?"
                             rows={3}
-                            className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none resize-none"
+                            className="w-full px-4 py-3 bg-overlay border border-glass-border rounded-lg text-white placeholder-text-muted focus:border-primary/50 focus:outline-none resize-none"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Dialogue (Optional)</label>
+                        <label className="block text-sm font-medium text-text-secondary mb-2">Dialogue (Optional)</label>
                         <textarea
                             value={dialogue}
                             onChange={(e) => setDialogue(e.target.value)}
                             placeholder="Character dialogue..."
                             rows={2}
-                            className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none resize-none"
+                            className="w-full px-4 py-3 bg-overlay border border-glass-border rounded-lg text-white placeholder-text-muted focus:border-primary/50 focus:outline-none resize-none"
                         />
                     </div>
                 </div>
 
-                <div className="p-6 border-t border-white/10 flex justify-end gap-3">
+                <div className="p-6 border-t border-glass-border flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors"
+                        className="px-6 py-2 bg-glass hover:bg-hover-bg text-white rounded-lg transition-colors"
                     >
                         Cancel
                     </button>
@@ -770,7 +772,7 @@ function ImageWithRetry({ src, alt, className, onClick }: { src: string, alt: st
     return (
         <div className={`relative ${className}`}>
             {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/5 backdrop-blur-sm z-10">
+                <div className="absolute inset-0 flex items-center justify-center bg-glass backdrop-blur-sm z-10">
                     <RefreshCw className="animate-spin text-white/50" size={24} />
                 </div>
             )}

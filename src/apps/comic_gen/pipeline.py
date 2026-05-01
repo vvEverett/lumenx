@@ -1393,7 +1393,7 @@ class ComicGenPipeline:
         self._save_data()
         return script
 
-    def create_video_task(self, script_id: str, image_url: str, prompt: str, duration: int = 5, seed: int = None, resolution: str = "720p", generate_audio: bool = False, audio_url: str = None, prompt_extend: bool = True, negative_prompt: str = None, model: str = "wan2.6-i2v", frame_id: str = None, shot_type: str = "single", generation_mode: str = "i2v", reference_video_urls: list = None, mode: str = None, sound: str = None, cfg_scale: float = None, vidu_audio: bool = None, movement_amplitude: str = None) -> Tuple[Script, str]:
+    def create_video_task(self, script_id: str, image_url: str, prompt: str, duration: int = 5, seed: int = None, resolution: str = "720p", generate_audio: bool = False, audio_url: str = None, prompt_extend: bool = True, negative_prompt: str = None, model: str = "wan2.6-i2v", frame_id: str = None, shot_type: str = "single", generation_mode: str = "i2v", reference_video_urls: list = None, reference_image_urls: list = None, ratio: str = None, mode: str = None, sound: str = None, cfg_scale: float = None, vidu_audio: bool = None, movement_amplitude: str = None) -> Tuple[Script, str]:
         """Creates a new video generation task."""
         script = self.get_script(script_id)
         if not script:
@@ -1401,9 +1401,12 @@ class ComicGenPipeline:
         
         task_id = str(uuid.uuid4())
         
-        # If R2V mode is selected, use the R2V model
+        # If R2V mode is selected, use the appropriate R2V model
         if generation_mode == "r2v":
-            model = "wan2.6-r2v"
+            if model and model.startswith("happyhorse-"):
+                model = "happyhorse-1.0-r2v"
+            else:
+                model = "wan2.6-r2v"
         
         # Snapshot the input image to ensure consistency
         snapshot_url = image_url
@@ -1451,6 +1454,8 @@ class ComicGenPipeline:
             shot_type=shot_type,
             generation_mode=generation_mode,
             reference_video_urls=reference_video_urls or [],
+            reference_image_urls=reference_image_urls or [],
+            ratio=ratio,
             mode=mode,
             sound=sound,
             cfg_scale=cfg_scale,
@@ -2073,6 +2078,9 @@ class ComicGenPipeline:
                     model=task.model,
                     shot_type=task.shot_type,
                     ref_video_urls=task.reference_video_urls if task.generation_mode == "r2v" else None,
+                    ref_image_urls=task.reference_image_urls if task.generation_mode == "r2v" else None,
+                    ratio=task.ratio,
+                    audio_setting=task.audio_setting,
                     camera_motion=None,
                     subject_motion=None
                 )
