@@ -198,9 +198,9 @@ export default function SettingsPage() {
   };
 
   const inputClass =
-    "w-full bg-overlay border border-glass-border rounded-lg px-4 py-2 text-foreground placeholder-text-muted focus:outline-none focus:border-primary/50 transition-colors";
+    "w-full bg-input-bg border border-glass-border rounded-lg px-4 py-2 text-foreground placeholder-text-muted focus:outline-none focus:border-primary/50 transition-colors";
   const modeButtonClass = (active: boolean) =>
-    `px-3 py-1.5 text-xs rounded-md border transition-colors ${active ? "border-amber-500/60 bg-amber-500/15 text-amber-200" : "border-glass-border bg-glass text-text-secondary hover:text-foreground"}`;
+    `px-3 py-1.5 text-xs rounded-md border transition-colors font-medium ${active ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "border-glass-border bg-surface text-text-secondary hover:text-foreground"}`;
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-4xl space-y-8">
@@ -297,7 +297,7 @@ export default function SettingsPage() {
               <input type="password" value={config.DASHSCOPE_API_KEY} onChange={(e) => handleChange("DASHSCOPE_API_KEY", e.target.value)} placeholder="Required for DashScope-first model routing" className={inputClass} />
             </div>
 
-            <div className="bg-glass border border-glass-border rounded-lg p-4 space-y-4">
+            <div className="bg-input-bg border border-glass-border rounded-lg p-4 space-y-4">
               <p className="text-xs text-text-secondary">Storage is local-first by default. These credentials are only needed when enabling OSS mirror.</p>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">Alibaba Cloud Access Key ID</label>
@@ -334,7 +334,7 @@ export default function SettingsPage() {
 
             <div className="pt-4 border-t border-glass-border">
               <h3 className="text-sm font-bold text-foreground mb-4">Kling Provider</h3>
-              <div className="bg-glass border border-glass-border rounded-lg p-4 space-y-4">
+              <div className="bg-surface border border-glass-border rounded-lg p-4 space-y-4">
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => handleChange("KLING_PROVIDER_MODE", "dashscope")} className={modeButtonClass(config.KLING_PROVIDER_MODE === "dashscope")}>
                     DashScope
@@ -363,7 +363,7 @@ export default function SettingsPage() {
 
             <div className="pt-4 border-t border-glass-border">
               <h3 className="text-sm font-bold text-foreground mb-4">Vidu Provider</h3>
-              <div className="bg-glass border border-glass-border rounded-lg p-4 space-y-4">
+              <div className="bg-input-bg border border-glass-border rounded-lg p-4 space-y-4">
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => handleChange("VIDU_PROVIDER_MODE", "dashscope")} className={modeButtonClass(config.VIDU_PROVIDER_MODE === "dashscope")}>
                     DashScope
@@ -409,7 +409,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleSaveApiConfig}
                 disabled={saving || loading}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-foreground text-sm font-medium rounded-lg transition-all disabled:opacity-50"
               >
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                 {saving ? "Saving..." : "Save Configuration"}
@@ -463,7 +463,7 @@ export default function SettingsPage() {
                 <div className="space-y-1">
                   {ASPECT_RATIOS.map((ratio) => (
                     <button key={ratio.id} onClick={() => setModelSettings((s) => ({ ...s, [key]: ratio.id }))} className={`w-full flex flex-col items-center py-2 px-2 rounded border transition-all ${modelSettings[key] === ratio.id ? "border-green-500/50 bg-green-500/10" : "border-glass-border hover:border-glass-border bg-glass"}`}>
-                      <span className="text-xs font-medium text-white">{ratio.name}</span>
+                      <span className="text-xs font-medium text-foreground">{ratio.name}</span>
                     </button>
                   ))}
                 </div>
@@ -515,7 +515,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex justify-end">
-          <button onClick={handleSaveModelDefaults} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm font-medium rounded-lg transition-all">
+          <button onClick={handleSaveModelDefaults} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-foreground text-sm font-medium rounded-lg transition-all">
             <Save size={16} />
             Save Defaults
           </button>
@@ -548,13 +548,13 @@ export default function SettingsPage() {
               value={promptConfig[section.key]}
               onChange={(e) => setPromptConfig((prev) => ({ ...prev, [section.key]: e.target.value }))}
               placeholder="Leave empty to use system default..."
-              className="w-full h-32 bg-overlay border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-y focus:outline-none focus:border-purple-500/50 font-mono placeholder-text-muted"
+              className="w-full h-32 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-y focus:outline-none focus:border-purple-500/50 font-mono placeholder-text-muted"
             />
           </div>
         ))}
 
         <div className="flex justify-end">
-          <button onClick={handleSavePromptDefaults} className="px-6 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors flex items-center gap-2">
+          <button onClick={handleSavePromptDefaults} className="px-6 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-500 text-foreground rounded-lg transition-colors flex items-center gap-2">
             <Save size={16} />
             Save Defaults
           </button>

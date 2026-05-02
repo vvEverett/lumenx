@@ -26,7 +26,7 @@ export default function VideoQueue({ tasks, onRemix }: VideoQueueProps) {
     const processingCount = tasks.filter(t => t.status === "pending" || t.status === "processing").length;
 
     return (
-        <div className="h-full flex flex-col bg-surface backdrop-blur-sm border-l border-border-subtle">
+        <div className="h-full flex flex-col bg-surface border-l border-border-subtle">
             {/* Header & Tabs */}
             <div className="p-4 border-b border-border-subtle">
                 <div className="flex items-center justify-between mb-4">
@@ -155,14 +155,14 @@ function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) 
                                 /* R2V: Show reference video thumbnails */
                                 <div className="w-full h-full grid grid-cols-2 gap-0.5 bg-purple-900/20">
                                     {task.reference_video_urls.slice(0, 4).map((url, idx) => (
-                                        <div key={idx} className="relative bg-overlay overflow-hidden">
+                                        <div key={idx} className="relative bg-surface overflow-hidden">
                                             <video
                                                 src={getAssetUrl(url)}
                                                 className="w-full h-full object-cover"
                                                 muted
                                                 preload="metadata"
                                             />
-                                            <div className="absolute bottom-0.5 left-0.5 bg-purple-600/80 px-1 rounded text-[8px] text-white font-bold">
+                                            <div className="absolute bottom-0.5 left-0.5 bg-purple-600/80 px-1 rounded text-[8px] text-foreground font-bold">
                                                 @{String.fromCharCode(65 + idx)}
                                             </div>
                                         </div>
@@ -173,7 +173,7 @@ function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) 
                                     R2V Input
                                 </div>
                             )}
-                            <div className="absolute top-2 left-2 bg-overlay px-1.5 py-0.5 rounded text-[10px] text-text-secondary">Input</div>
+                            <div className="absolute top-2 left-2 bg-surface px-1.5 py-0.5 rounded text-[10px] text-text-secondary">Input</div>
                         </div>
 
                         {/* Output Video (Right) */}
@@ -189,7 +189,7 @@ function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) 
                                     Error
                                 </div>
                             )}
-                            <div className="absolute top-2 right-2 bg-primary/80 px-1.5 py-0.5 rounded text-[10px] text-white">Result</div>
+                            <div className="absolute top-2 right-2 bg-primary/80 px-1.5 py-0.5 rounded text-[10px] text-foreground">Result</div>
                         </div>
                     </div>
 

@@ -421,7 +421,7 @@ function EpisodeContentPanel({
                   <div className="absolute inset-0 bg-overlay/0 group-hover:bg-overlay transition-colors duration-200 flex items-center justify-center">
                     <Play
                       size={20}
-                      className="text-white opacity-0 group-hover:opacity-80 transition-opacity duration-200"
+                      className="text-foreground opacity-0 group-hover:opacity-80 transition-opacity duration-200"
                     />
                   </div>
                 </div>

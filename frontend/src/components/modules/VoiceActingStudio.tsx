@@ -211,7 +211,7 @@ export default function VoiceActingStudio() {
                     <button
                         onClick={handleGenerateAll}
                         disabled={isGenerating}
-                        className="bg-glass hover:bg-hover-bg border border-primary/50 hover:border-primary text-primary hover:text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 whitespace-nowrap flex-shrink-0 transition-all disabled:opacity-50"
+                        className="bg-glass hover:bg-hover-bg border border-primary/50 hover:border-primary text-primary hover:text-foreground px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 whitespace-nowrap flex-shrink-0 transition-all disabled:opacity-50"
                     >
                         {isGenerating ? <Wand2 className="animate-spin" size={16} /> : <Mic size={16} />}
                         {isGenerating ? tv("generatingAudio") : tv("generateAllAudio")}
@@ -305,7 +305,7 @@ export default function VoiceActingStudio() {
                                                             handleGenerateLine(frame.id);
                                                             setActiveSettingsId(null);
                                                         }}
-                                                        className="w-full bg-glass hover:bg-hover-bg border border-primary/50 hover:border-primary text-primary hover:text-white text-xs py-2 rounded-lg font-bold transition-all"
+                                                        className="w-full bg-glass hover:bg-hover-bg border border-primary/50 hover:border-primary text-primary hover:text-foreground text-xs py-2 rounded-lg font-bold transition-all"
                                                     >
                                                         {tv("regenerateWithSettings")}
                                                     </button>
@@ -324,7 +324,7 @@ export default function VoiceActingStudio() {
                                                     onClick={() => setActiveSettingsId(isSettingsOpen ? null : frame.id)}
                                                     className={clsx(
                                                         "p-1.5 rounded-full hover:bg-hover-bg text-text-secondary transition-colors",
-                                                        isSettingsOpen && "bg-hover-bg text-white"
+                                                        isSettingsOpen && "bg-hover-bg text-foreground"
                                                     )}
                                                 >
                                                     <Settings2 size={14} />

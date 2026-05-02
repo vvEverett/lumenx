@@ -59,8 +59,8 @@ export default function FinalMixStudio() {
             {/* Top Bar: Preview & Mixer */}
             <div className="flex-1 flex border-b border-glass-border min-h-0">
                 {/* Preview Window */}
-                <div className="flex-1 bg-overlay flex items-center justify-center relative p-8">
-                    <div className="aspect-video bg-surface border border-glass-border rounded-lg w-full max-w-4xl flex items-center justify-center relative overflow-hidden shadow-2xl">
+                <div className="flex-1 bg-surface flex items-center justify-center relative p-8">
+                    <div className="aspect-video bg-surface border border-glass-border rounded-lg w-full max-w-4xl flex items-center justify-center relative overflow-hidden shadow-lg">
                         {/* Mock Video Player */}
                         <div className="text-text-muted flex flex-col items-center gap-4">
                             <Video size={48} className="opacity-20" />

@@ -325,7 +325,7 @@ export default function StoryboardComposer() {
     return (
         <div className="flex flex-col h-full text-foreground overflow-hidden">
             {/* Top Toolbar */}
-            <div className="flex-shrink-0 p-4 border-b border-glass-border flex items-center justify-between bg-overlay">
+            <div className="flex-shrink-0 p-4 border-b border-glass-border flex items-center justify-between bg-surface">
                 <h3 className="font-bold text-sm flex items-center gap-2">
                     <Layout size={16} className="text-primary" /> {t("storyboardFrames")}
                 </h3>
@@ -342,7 +342,7 @@ export default function StoryboardComposer() {
                     <button
                         onClick={handleAnalyzeToStoryboard}
                         disabled={isAnalyzing}
-                        className="flex items-center gap-1.5 text-xs bg-primary/80 hover:bg-primary px-3 py-1.5 rounded-lg text-white transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 text-xs bg-primary/80 hover:bg-primary px-3 py-1.5 rounded-lg text-foreground transition-colors disabled:opacity-50"
                         title={t("generateFromScript")}
                     >
                         {isAnalyzing ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
@@ -386,7 +386,7 @@ export default function StoryboardComposer() {
                                     </div>
 
                                     {/* Image Preview */}
-                                    <div className="w-64 aspect-video bg-overlay rounded-lg border border-border-subtle overflow-hidden flex-shrink-0 relative">
+                                    <div className="w-64 aspect-video bg-surface rounded-lg border border-border-subtle overflow-hidden flex-shrink-0 relative">
                                         {frame.rendered_image_url || frame.image_url ? (
                                             <ImageWithRetry
                                                 key={frame.id + (frame.updated_at || 0)} // Force remount on refresh
@@ -419,7 +419,7 @@ export default function StoryboardComposer() {
                                                         console.error("Toggle lock failed:", error);
                                                     }
                                                 }}
-                                                className="p-2 bg-glass hover:bg-hover-bg text-white rounded-lg text-xs font-bold flex items-center gap-1 pointer-events-auto"
+                                                className="p-2 bg-glass hover:bg-hover-bg text-foreground rounded-lg text-xs font-bold flex items-center gap-1 pointer-events-auto"
                                                 title={frame.locked ? t("unlockFrame") : t("lockFrame")}
                                             >
                                                 {frame.locked ? <Unlock size={14} /> : <Lock size={14} />}
@@ -431,7 +431,7 @@ export default function StoryboardComposer() {
                                                     {renderingFrames.has(frame.id) ? (
                                                         <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 rounded-lg">
                                                             <Loader2 size={14} className="animate-spin text-white" />
-                                                            <span className="text-xs text-white">Generating...</span>
+                                                            <span className="text-xs text-foreground">Generating...</span>
                                                         </div>
                                                     ) : (
                                                         <>
@@ -439,7 +439,7 @@ export default function StoryboardComposer() {
                                                                 <button
                                                                     key={size}
                                                                     onClick={(e) => { e.stopPropagation(); handleRenderFrame(frame, size); }}
-                                                                    className="px-2 py-1.5 bg-primary/80 hover:bg-primary text-white rounded text-xs font-bold transition-colors"
+                                                                    className="px-2 py-1.5 bg-primary/80 hover:bg-primary text-foreground rounded text-xs font-bold transition-colors"
                                                                     title={`Generate ${size} variant${size > 1 ? 's' : ''}`}
                                                                 >
                                                                     <div className="flex items-center gap-1">
@@ -573,10 +573,10 @@ export default function StoryboardComposer() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 16 }}
                             transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
-                            className="w-full max-w-2xl max-h-[80vh] bg-surface border border-glass-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                            className="w-full max-w-2xl max-h-[80vh] bg-surface border border-glass-border rounded-2xl shadow-lg overflow-hidden flex flex-col"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="flex items-center justify-between px-6 py-4 border-b border-glass-border bg-overlay">
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-glass-border bg-surface">
                                 <div className="flex items-center gap-3">
                                     <FileText size={18} className="text-primary" />
                                     <h3 className="text-sm font-bold text-foreground">{t("originalScript")}</h3>
@@ -666,9 +666,9 @@ function CreateFrameDialog({ onClose, onCreate, scenes }: { onClose: () => void;
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-surface border border-glass-border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl"
+                className="bg-surface border border-glass-border rounded-2xl w-full max-w-lg overflow-hidden shadow-lg"
             >
-                <div className="p-6 border-b border-glass-border flex justify-between items-center bg-overlay">
+                <div className="p-6 border-b border-glass-border flex justify-between items-center bg-surface">
                     <div className="flex items-center gap-3">
                         <Plus className="text-primary" size={20} />
                         <h2 className="text-lg font-bold text-foreground">Add New Frame</h2>
@@ -684,7 +684,7 @@ function CreateFrameDialog({ onClose, onCreate, scenes }: { onClose: () => void;
                         <select
                             value={sceneId}
                             onChange={(e) => setSceneId(e.target.value)}
-                            className="w-full px-4 py-3 bg-overlay border border-glass-border rounded-lg text-white focus:border-primary/50 focus:outline-none appearance-none"
+                            className="w-full px-4 py-3 bg-input-bg border border-glass-border rounded-lg text-foreground focus:border-primary/50 focus:outline-none appearance-none"
                         >
                             <option value="" disabled>Select a scene</option>
                             {scenes.map((s: any) => (
@@ -699,7 +699,7 @@ function CreateFrameDialog({ onClose, onCreate, scenes }: { onClose: () => void;
                             onChange={(e) => setAction(e.target.value)}
                             placeholder="What is happening in this frame?"
                             rows={3}
-                            className="w-full px-4 py-3 bg-overlay border border-glass-border rounded-lg text-white placeholder-text-muted focus:border-primary/50 focus:outline-none resize-none"
+                            className="w-full px-4 py-3 bg-input-bg border border-glass-border rounded-lg text-foreground placeholder-text-muted focus:border-primary/50 focus:outline-none resize-none"
                         />
                     </div>
                     <div>
@@ -709,7 +709,7 @@ function CreateFrameDialog({ onClose, onCreate, scenes }: { onClose: () => void;
                             onChange={(e) => setDialogue(e.target.value)}
                             placeholder="Character dialogue..."
                             rows={2}
-                            className="w-full px-4 py-3 bg-overlay border border-glass-border rounded-lg text-white placeholder-text-muted focus:border-primary/50 focus:outline-none resize-none"
+                            className="w-full px-4 py-3 bg-input-bg border border-glass-border rounded-lg text-foreground placeholder-text-muted focus:border-primary/50 focus:outline-none resize-none"
                         />
                     </div>
                 </div>
@@ -717,7 +717,7 @@ function CreateFrameDialog({ onClose, onCreate, scenes }: { onClose: () => void;
                 <div className="p-6 border-t border-glass-border flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-glass hover:bg-hover-bg text-white rounded-lg transition-colors"
+                        className="px-6 py-2 bg-glass hover:bg-hover-bg text-foreground rounded-lg transition-colors"
                     >
                         Cancel
                     </button>
@@ -772,8 +772,8 @@ function ImageWithRetry({ src, alt, className, onClick }: { src: string, alt: st
     return (
         <div className={`relative ${className}`}>
             {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-glass backdrop-blur-sm z-10">
-                    <RefreshCw className="animate-spin text-white/50" size={24} />
+                <div className="absolute inset-0 flex items-center justify-center bg-surface z-10">
+                    <RefreshCw className="animate-spin text-foreground/50" size={24} />
                 </div>
             )}
             <img

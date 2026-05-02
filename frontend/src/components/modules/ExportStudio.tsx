@@ -63,8 +63,8 @@ export default function ExportStudio() {
                                     className={clsx(
                                         "py-3 px-4 rounded-xl border text-sm font-bold transition-all",
                                         resolution === res
-                                            ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                                            : "bg-glass border-glass-border text-text-secondary hover:bg-hover-bg"
+                                            ? "bg-primary text-foreground border-primary shadow-lg shadow-primary/20"
+                                            : "bg-surface border-glass-border text-text-secondary hover:bg-hover-bg"
                                     )}
                                 >
                                     {res}
@@ -86,7 +86,7 @@ export default function ExportStudio() {
                                     className={clsx(
                                         "py-3 px-4 rounded-xl border text-sm font-bold uppercase transition-all",
                                         format === fmt
-                                            ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+                                            ? "bg-primary text-foreground border-primary shadow-lg shadow-primary/20"
                                             : "bg-glass border-glass-border text-text-secondary hover:bg-hover-bg"
                                     )}
                                 >
@@ -113,8 +113,8 @@ export default function ExportStudio() {
                                     className={clsx(
                                         "w-full py-3 px-4 rounded-xl border text-sm font-medium text-left transition-all",
                                         subtitles === opt.id
-                                            ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                                            : "bg-glass border-glass-border text-text-secondary hover:bg-hover-bg"
+                                            ? "bg-primary text-foreground border-primary shadow-lg shadow-primary/20"
+                                            : "bg-surface border-glass-border text-text-secondary hover:bg-hover-bg"
                                     )}
                                 >
                                     {opt.label}
@@ -127,7 +127,7 @@ export default function ExportStudio() {
                 <button
                     onClick={handleExport}
                     disabled={isExporting}
-                    className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white py-4 rounded-xl font-bold text-lg shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-8"
+                    className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-foreground py-4 rounded-xl font-bold text-lg shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-8"
                 >
                     {isExporting ? tv("rendering") : tv("startRender")}
                 </button>
@@ -136,17 +136,17 @@ export default function ExportStudio() {
             {/* Right: Preview & Status */}
             <div className="flex-1 flex items-center justify-center relative overflow-hidden">
                 {/* Background Glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-900/10 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-600/10 pointer-events-none" />
 
                 <div className="w-full max-w-2xl p-8 text-center space-y-8 relative z-10">
                     {isExporting ? (
-                        <div className="bg-surface backdrop-blur-xl border border-glass-border rounded-2xl p-12 shadow-2xl">
+                        <div className="bg-surface backdrop-blur-xl border border-glass-border rounded-2xl p-12 shadow-lg">
                             <div className="w-24 h-24 border-4 border-glass-border border-t-primary rounded-full animate-spin mx-auto mb-8" />
                             <h3 className="text-2xl font-bold mb-2 text-foreground">{tv("renderingTitle")}</h3>
                             <p className="text-text-secondary">{tv("renderingDesc")}</p>
                         </div>
                     ) : exportError ? (
-                        <div className="bg-overlay backdrop-blur-xl border border-red-500/30 rounded-2xl p-12 shadow-2xl shadow-red-900/20">
+                        <div className="bg-overlay backdrop-blur-xl border border-red-500/30 rounded-2xl p-12 shadow-lg shadow-red-900/20">
                             <div className="w-20 h-20 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <Film size={40} />
                             </div>
@@ -160,7 +160,7 @@ export default function ExportStudio() {
                             </button>
                         </div>
                     ) : effectiveUrl ? (
-                        <div className="bg-overlay backdrop-blur-xl border border-green-500/30 rounded-2xl p-12 shadow-2xl shadow-green-900/20">
+                        <div className="bg-surface border border-green-500/30 rounded-2xl p-12 shadow-lg shadow-green-900/20">
                             <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <CheckCircle size={40} />
                             </div>
@@ -170,7 +170,7 @@ export default function ExportStudio() {
                             <a
                                 href={getAssetUrl(effectiveUrl)}
                                 target="_blank"
-                                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors shadow-lg shadow-green-600/20"
+                                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-foreground px-8 py-4 rounded-xl font-bold text-lg transition-colors shadow-lg shadow-green-600/20"
                             >
                                 <Download size={20} /> {tv("downloadVideo")}
                             </a>

@@ -242,7 +242,7 @@ export const VariantSelector: React.FC<VariantSelectorProps> = ({
                     onClick={() => setZoomedImage(null)}
                 >
                     <button
-                        className="absolute top-4 right-4 p-3 bg-hover-bg hover:bg-hover-bg rounded-full text-white transition-colors"
+                        className="absolute top-4 right-4 p-3 bg-hover-bg hover:bg-hover-bg rounded-full text-foreground transition-colors"
                         onClick={() => setZoomedImage(null)}
                     >
                         <X size={24} />

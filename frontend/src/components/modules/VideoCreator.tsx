@@ -611,14 +611,14 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                 <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full pb-8">
                     {/* Generation Mode Switcher */}
                     <div className="flex items-center justify-center">
-                        <div className="flex bg-overlay rounded-xl p-1.5 gap-1 border border-glass-border">
+                        <div className="flex bg-surface rounded-xl p-1.5 gap-1 border border-glass-border">
                             <button
                                 onClick={() => {
                                     setGenerationMode("i2v");
                                     onParamsChange({ generationMode: "i2v" });
                                 }}
                                 className={`px-5 py-2.5 text-sm rounded-lg flex items-center gap-2 transition-all font-medium ${generationMode === "i2v"
-                                    ? "bg-primary text-white shadow-lg"
+                                    ? "bg-primary text-foreground shadow-lg"
                                     : "text-text-secondary hover:text-foreground hover:bg-glass"
                                     }`}
                             >
@@ -634,7 +634,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                     });
                                 }}
                                 className={`px-5 py-2.5 text-sm rounded-lg flex items-center gap-2 transition-all font-medium ${generationMode === "r2v"
-                                    ? "bg-purple-600 text-white shadow-lg"
+                                    ? "bg-purple-600 text-foreground shadow-lg"
                                     : "text-text-secondary hover:text-foreground hover:bg-glass"
                                     }`}
                             >
@@ -652,7 +652,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                     <button
                                         onClick={() => setActiveTab("storyboard")}
                                         className={`px-3 py-1.5 text-xs rounded-md flex items-center gap-2 transition-all ${activeTab === "storyboard"
-                                            ? "bg-primary text-white shadow-sm"
+                                            ? "bg-primary text-foreground shadow-sm"
                                             : "text-text-secondary hover:text-foreground hover:bg-glass"
                                             }`}
                                     >
@@ -661,7 +661,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                     <button
                                         onClick={() => setActiveTab("upload")}
                                         className={`px-3 py-1.5 text-xs rounded-md flex items-center gap-2 transition-all ${activeTab === "upload"
-                                            ? "bg-primary text-white shadow-sm"
+                                            ? "bg-primary text-foreground shadow-sm"
                                             : "text-text-secondary hover:text-foreground hover:bg-glass"
                                             }`}
                                     >
@@ -671,7 +671,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                             </div>
 
                             {/* Tab Content */}
-                            <div className="bg-overlay border border-glass-border rounded-xl p-4 min-h-[200px]">
+                            <div className="bg-surface border border-glass-border rounded-xl p-4 min-h-[200px]">
                                 {activeTab === "storyboard" ? (
                                     <div className="space-y-4">
                                         {currentProject?.frames && currentProject.frames.length > 0 ? (() => {
@@ -709,10 +709,10 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                             </div>
                                                         )}
                                                         <div className="absolute inset-0 bg-overlay opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                            <span className="text-xs text-white font-bold">Select</span>
+                                                            <span className="text-xs text-foreground font-bold">Select</span>
                                                         </div>
                                                         {/* Frame Number Badge */}
-                                                        <div className="absolute top-1 left-1 bg-overlay px-1.5 rounded text-[10px] text-text-secondary backdrop-blur-sm">
+                                                        <div className="absolute top-1 left-1 bg-surface px-1.5 rounded text-[10px] text-text-secondary backdrop-blur-sm">
                                                             #{frame.id.slice(0, 4)}
                                                         </div>
                                                         {/* Extract Last Frame Button */}
@@ -766,7 +766,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                                 />
                                                                 <button
                                                                     onClick={() => removeImage(idx)}
-                                                                    className="absolute top-1 right-1 p-0.5 bg-overlay rounded-full text-white hover:bg-red-500"
+                                                                    className="absolute top-1 right-1 p-0.5 bg-surface rounded-full text-foreground hover:bg-red-500"
                                                                 >
                                                                     <X size={10} />
                                                                 </button>
@@ -782,7 +782,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-3 gap-4">
                                             {selectedImages.map((img, idx) => (
-                                                <div key={idx} className="relative aspect-video bg-overlay rounded-xl overflow-hidden border border-glass-border group">
+                                                <div key={idx} className="relative aspect-video bg-surface rounded-xl overflow-hidden border border-glass-border group">
                                                     <img
                                                         src={getAssetUrl(img)}
                                                         alt={`Input ${idx}`}
@@ -790,13 +790,13 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                     />
                                                     <button
                                                         onClick={() => removeImage(idx)}
-                                                        className="absolute top-2 right-2 p-1 bg-overlay rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                                                        className="absolute top-2 right-2 p-1 bg-surface rounded-full text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
                                                     >
                                                         <X size={12} />
                                                     </button>
                                                     {img.startsWith("blob:") && !uploadingPaths[img] && (
                                                         <div className="absolute inset-0 flex items-center justify-center bg-overlay">
-                                                            <Loader2 className="animate-spin text-white" size={20} />
+                                                            <Loader2 className="animate-spin text-foreground" size={20} />
                                                         </div>
                                                     )}
                                                 </div>
@@ -857,12 +857,12 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                 onClick={() => handleR2VFrameSelect(frame)}
                                                 className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedFrameId === frame.id
                                                     ? "border-purple-500 bg-purple-500/10 ring-2 ring-purple-500/30"
-                                                    : "border-glass-border bg-overlay hover:border-glass-border"
+                                                    : "border-glass-border bg-surface hover:border-glass-border"
                                                     }`}
                                             >
                                                 <div className="flex items-start gap-3">
                                                     {/* Frame thumbnail */}
-                                                    <div className="w-16 h-10 rounded overflow-hidden flex-shrink-0 bg-overlay">
+                                                    <div className="w-16 h-10 rounded overflow-hidden flex-shrink-0 bg-surface">
                                                         {frame.image_url ? (
                                                             <img
                                                                 src={getAssetUrlWithTimestamp(frame.image_url, frame.updated_at)}
@@ -923,7 +923,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                         key={slotIndex}
                                                         className={`relative rounded-xl border-2 border-dashed transition-all ${slot?.url
                                                             ? "border-purple-500 bg-purple-500/10"
-                                                            : "border-glass-border bg-overlay hover:border-glass-border"
+                                                            : "border-glass-border bg-surface hover:border-glass-border"
                                                             }`}
                                                     >
                                                         {/* Slot Header */}
@@ -942,11 +942,11 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                                     className="w-full h-full object-cover rounded-xl"
                                                                 />
                                                                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 rounded-b-xl">
-                                                                    <p className="text-xs text-white font-medium truncate">{slot.name}</p>
+                                                                    <p className="text-xs text-foreground font-medium truncate">{slot.name}</p>
                                                                 </div>
                                                                 <button
                                                                     onClick={() => handleClearCastSlot(slotIndex)}
-                                                                    className="absolute top-2 right-2 p-1 bg-overlay rounded-full text-white hover:bg-red-500 transition-colors"
+                                                                    className="absolute top-2 right-2 p-1 bg-surface rounded-full text-foreground hover:bg-red-500 transition-colors"
                                                                 >
                                                                     <X size={12} />
                                                                 </button>
@@ -956,7 +956,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                             <div className="aspect-square flex flex-col items-center justify-center p-3">
                                                                 <ImageIcon size={16} className="text-text-muted mb-1" />
                                                                 <select
-                                                                    className="w-full text-xs bg-overlay border border-glass-border rounded-lg px-2 py-1.5 text-text-secondary focus:border-purple-500 focus:outline-none"
+                                                                    className="w-full text-xs bg-input-bg border border-glass-border rounded-lg px-2 py-1.5 text-text-secondary focus:border-purple-500 focus:outline-none"
                                                                     value=""
                                                                     onChange={(e) => {
                                                                         const selectedImg = availableReferenceImages.find(img => img.url === e.target.value);
@@ -1000,7 +1000,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                         key={slotIndex}
                                                         className={`relative rounded-xl border-2 border-dashed transition-all ${slot?.url
                                                             ? "border-purple-500 bg-purple-500/10"
-                                                            : "border-glass-border bg-overlay hover:border-glass-border"
+                                                            : "border-glass-border bg-surface hover:border-glass-border"
                                                             }`}
                                                     >
                                                         {/* Slot Header */}
@@ -1019,11 +1019,11 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                                     className="w-full h-full object-cover rounded-xl"
                                                                 />
                                                                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 rounded-b-xl">
-                                                                    <p className="text-xs text-white font-medium truncate">{slot.name}</p>
+                                                                    <p className="text-xs text-foreground font-medium truncate">{slot.name}</p>
                                                                 </div>
                                                                 <button
                                                                     onClick={() => handleClearCastSlot(slotIndex)}
-                                                                    className="absolute top-2 right-2 p-1 bg-overlay rounded-full text-white hover:bg-red-500 transition-colors"
+                                                                    className="absolute top-2 right-2 p-1 bg-surface rounded-full text-foreground hover:bg-red-500 transition-colors"
                                                                 >
                                                                     <X size={12} />
                                                                 </button>
@@ -1033,7 +1033,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                             <div className="aspect-video flex flex-col items-center justify-center p-4">
                                                                 <p className="text-xs text-text-secondary mb-2">{slotTitle}</p>
                                                                 <select
-                                                                    className="w-full text-xs bg-overlay border border-glass-border rounded-lg px-2 py-1.5 text-text-secondary focus:border-purple-500 focus:outline-none"
+                                                                    className="w-full text-xs bg-input-bg border border-glass-border rounded-lg px-2 py-1.5 text-text-secondary focus:border-purple-500 focus:outline-none"
                                                                     value=""
                                                                     onChange={(e) => {
                                                                         const selectedVideo = availableReferenceVideos.find(v => v.url === e.target.value);
@@ -1172,12 +1172,12 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                     navigator.clipboard.writeText(polishedPrompt.cn);
                                                     alert("CN prompt copied");
                                                 }}
-                                                className="text-[10px] text-text-secondary hover:text-foreground bg-overlay px-2 py-0.5 rounded"
+                                                className="text-[10px] text-text-secondary hover:text-foreground bg-surface px-2 py-0.5 rounded"
                                             >
                                                 复制
                                             </button>
                                         </div>
-                                        <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-overlay p-2 rounded">
+                                        <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-surface p-2 rounded">
                                             {polishedPrompt.cn}
                                         </p>
                                     </div>
@@ -1192,7 +1192,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                         navigator.clipboard.writeText(polishedPrompt.en);
                                                         alert("English prompt copied");
                                                     }}
-                                                    className="text-[10px] text-text-secondary hover:text-foreground bg-overlay px-2 py-0.5 rounded"
+                                                    className="text-[10px] text-text-secondary hover:text-foreground bg-surface px-2 py-0.5 rounded"
                                                 >
                                                     Copy
                                                 </button>
@@ -1201,13 +1201,13 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                         setSegments([{ type: "text", value: polishedPrompt.en, id: `polished-${Date.now()}` }]);
                                                         setPolishedPrompt(null);
                                                     }}
-                                                    className="text-[10px] text-white bg-purple-600 hover:bg-purple-500 px-2 py-0.5 rounded font-bold"
+                                                    className="text-[10px] text-foreground bg-purple-600 hover:bg-purple-500 px-2 py-0.5 rounded font-bold"
                                                 >
                                                     应用
                                                 </button>
                                             </div>
                                         </div>
-                                        <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-overlay p-2 rounded font-mono">
+                                        <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-surface p-2 rounded font-mono">
                                             {polishedPrompt.en}
                                         </p>
                                     </div>
@@ -1225,12 +1225,12 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
                                                     }
                                                 }}
                                                 placeholder="Feedback for refinement..."
-                                                className="flex-1 text-xs bg-overlay border border-purple-500/20 rounded px-2 py-1.5 text-white placeholder-text-muted focus:outline-none focus:border-purple-500/50"
+                                                className="flex-1 text-xs bg-input-bg border border-purple-500/20 rounded px-2 py-1.5 text-foreground placeholder-text-muted focus:outline-none focus:border-purple-500/50"
                                             />
                                             <button
                                                 onClick={() => handlePolish(feedbackText.trim())}
                                                 disabled={isPolishing || !feedbackText.trim()}
-                                                className="text-xs text-white bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                                className="text-xs text-foreground bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                                             >
                                                 {isPolishing ? <Loader2 size={10} className="animate-spin" /> : <Wand2 size={10} />}
                                                 再润色
@@ -1245,7 +1245,7 @@ export default function VideoCreator({ onTaskCreated, remixData, onRemixClear, p
             </div >
 
             {/* 4. Fixed Action Bar */}
-            < div className="p-6 border-t border-glass-border bg-overlay backdrop-blur-md z-10" >
+            < div className="p-6 border-t border-glass-border bg-surface z-10" >
                 <div className="max-w-4xl mx-auto w-full">
                     <button
                         onClick={handleSubmit}

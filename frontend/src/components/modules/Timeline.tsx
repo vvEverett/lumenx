@@ -7,13 +7,13 @@ export default function Timeline() {
     const [isPlaying, setIsPlaying] = useState(false);
 
     return (
-        <div className="h-64 bg-overlay backdrop-blur-xl border-t border-glass-border flex flex-col">
+        <div className="h-64 bg-surface border-t border-glass-border flex flex-col">
             {/* Toolbar */}
             <div className="h-12 border-b border-glass-border flex items-center px-4 justify-between">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => setIsPlaying(!isPlaying)}
-                        className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white hover:bg-primary/90 transition-colors"
+                        className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-foreground hover:bg-primary/90 transition-colors"
                     >
                         {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
                     </button>

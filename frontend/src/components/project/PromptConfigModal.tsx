@@ -196,7 +196,7 @@ export default function PromptConfigModal({ isOpen, onClose }: PromptConfigModal
                         <button
                             onClick={handleSave}
                             disabled={isSaving || isLoading || !!loadError}
-                            className="px-6 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                            className="px-6 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-500 text-foreground rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
                         >
                             {isSaving && <Loader2 size={14} className="animate-spin" />}
                             {tc("save")}

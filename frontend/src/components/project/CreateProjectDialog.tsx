@@ -109,7 +109,7 @@ export default function CreateProjectDialog({ isOpen, onClose }: CreateProjectDi
                                 <button
                                     onClick={handleCreate}
                                     disabled={isCreating || !title}
-                                    className="flex-1 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 bg-primary hover:bg-primary/90 text-foreground px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isCreating ? t("creating") : t("createProject")}
                                 </button>

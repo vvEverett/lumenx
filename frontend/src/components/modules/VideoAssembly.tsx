@@ -175,7 +175,7 @@ export default function VideoAssembly() {
                                                 </div>
                                             </div>
                                         )}
-                                        <div className="absolute top-2 left-2 bg-overlay backdrop-blur px-2 py-0.5 rounded text-[10px] font-mono text-white">
+                                        <div className="absolute top-2 left-2 bg-surface px-2 py-0.5 rounded text-[10px] font-mono text-foreground">
                                             #{index + 1}
                                         </div>
                                     </div>
@@ -219,11 +219,11 @@ export default function VideoAssembly() {
                     </div>
 
                     {/* Bottom Action Bar */}
-                    <div className="h-20 border-t border-glass-border bg-surface backdrop-blur flex items-center justify-end px-8">
+                    <div className="h-20 border-t border-glass-border bg-surface flex items-center justify-end px-8">
                         <button
                             onClick={handleMerge}
                             disabled={isMerging}
-                            className="bg-glass hover:bg-hover-bg border border-primary/50 hover:border-primary text-primary hover:text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="bg-glass hover:bg-hover-bg border border-primary/50 hover:border-primary text-primary hover:text-foreground px-8 py-3 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                             {isMerging ? <Loader2 className="animate-spin" /> : <Film />}
                             {ta("mergeAndProceed")}
@@ -269,7 +269,7 @@ export default function VideoAssembly() {
                 </div>
 
                 {/* Right Sidebar - Variants */}
-                <div className="w-96 bg-elevated flex flex-col shadow-2xl z-10 border-l border-glass-border">
+                <div className="w-96 bg-elevated flex flex-col shadow-md z-10 border-l border-glass-border">
                     <div className="h-14 border-b border-glass-border flex items-center justify-between px-4 bg-surface">
                         <h3 className="font-bold text-sm">{ta("variants")}</h3>
                         {selectedFrameId && (
@@ -296,7 +296,7 @@ export default function VideoAssembly() {
                                                         controls
                                                     />
                                                     {/* Overlay Info */}
-                                                    <div className="absolute top-2 left-2 bg-overlay backdrop-blur px-1.5 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="absolute top-2 left-2 bg-surface px-1.5 rounded text-[10px] text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                                                         {video.duration}s
                                                     </div>
                                                 </div>
@@ -351,7 +351,7 @@ export default function VideoAssembly() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="border-t border-glass-border bg-elevated shadow-2xl z-20"
+                        className="border-t border-glass-border bg-elevated shadow-md z-20"
                     >
                         <div className="max-w-7xl mx-auto p-6 flex gap-8">
                             {/* Video Player */}

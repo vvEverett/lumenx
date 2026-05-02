@@ -45,7 +45,7 @@ export default function PropertiesPanel({ activeStep }: PropertiesPanelProps) {
         <motion.aside
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="w-64 h-full border-l border-glass-border bg-overlay backdrop-blur-xl flex flex-col z-50"
+            className="w-64 h-full border-l border-glass-border bg-surface flex flex-col z-50"
         >
             <div className="p-4 border-b border-glass-border flex items-center justify-between">
                 <h2 className="font-display font-bold text-foreground flex items-center gap-2">
@@ -130,7 +130,7 @@ function AssetsInspector({ project }: { project: any }) {
     return (
         <div className="space-y-6">
             <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                     <Users size={14} /> {tp("assetOverview")}
                 </h3>
                 <div className="text-xs text-text-secondary">
@@ -226,14 +226,14 @@ function ArtDirectionStyleDisplay({ project }: { project: any }) {
                 <div className="space-y-3">
                     <div>
                         <label className="text-[10px] font-bold text-text-muted uppercase mb-1.5 block">{tp("styleName")}</label>
-                        <div className="text-xs font-bold text-white bg-gradient-to-r from-blue-500/20 to-purple-500/20 p-2.5 rounded-lg border border-glass-border">
+                        <div className="text-xs font-bold text-foreground bg-gradient-to-r from-blue-500/20 to-purple-500/20 p-2.5 rounded-lg border border-glass-border">
                             {artDirectionStyle.name}
                         </div>
                     </div>
 
                     <div>
                         <label className="text-[10px] font-bold text-text-muted uppercase mb-1.5 block">{tp("positivePrompt")}</label>
-                        <div className="bg-overlay border border-border-subtle rounded-lg p-2.5 text-[10px] text-text-secondary leading-relaxed max-h-20 overflow-y-auto">
+                        <div className="bg-surface border border-border-subtle rounded-lg p-2.5 text-[10px] text-text-secondary leading-relaxed max-h-20 overflow-y-auto">
                             {artDirectionStyle.positive_prompt || tp('noPositivePrompt')}
                         </div>
                     </div>
@@ -241,7 +241,7 @@ function ArtDirectionStyleDisplay({ project }: { project: any }) {
                     {artDirectionStyle.negative_prompt && (
                         <div>
                             <label className="text-[10px] font-bold text-text-muted uppercase mb-1.5 block">{tp("negativePromptLabel")}</label>
-                            <div className="bg-overlay border border-border-subtle rounded-lg p-2.5 text-[10px] text-text-secondary leading-relaxed max-h-16 overflow-y-auto">
+                            <div className="bg-surface border border-border-subtle rounded-lg p-2.5 text-[10px] text-text-secondary leading-relaxed max-h-16 overflow-y-auto">
                                 {artDirectionStyle.negative_prompt}
                             </div>
                         </div>
@@ -437,7 +437,7 @@ function StoryboardInspector() {
             <div className="space-y-2">
                 <label className="text-xs font-bold text-text-muted uppercase">{tp("actionDesc")}</label>
                 <textarea
-                    className="w-full h-24 bg-overlay border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50"
+                    className="w-full h-24 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50"
                     value={selectedFrame.action_description || ""}
                     onChange={(e) => updateFrame({ action_description: e.target.value })}
                     placeholder="Describe the action..."
@@ -448,7 +448,7 @@ function StoryboardInspector() {
             <div className="space-y-2">
                 <label className="text-xs font-bold text-text-muted uppercase">{tp("dialogueContent")}</label>
                 <textarea
-                    className="w-full h-16 bg-overlay border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50"
+                    className="w-full h-16 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50"
                     value={selectedFrame.dialogue || ""}
                     onChange={(e) => updateFrame({ dialogue: e.target.value })}
                     placeholder="Speaker: Content"
@@ -488,7 +488,7 @@ function StoryboardInspector() {
                             <div className="mb-2 space-y-2">
                                 <label className="text-[10px] font-bold text-text-muted uppercase">Scene</label>
                                 <select
-                                    className="w-full bg-overlay border border-glass-border rounded p-2 text-xs text-text-secondary focus:outline-none"
+                                    className="w-full bg-input-bg border border-glass-border rounded p-2 text-xs text-text-secondary focus:outline-none"
                                     value={selectedFrame.scene_id || ""}
                                     onChange={(e) => {
                                         // Check if selecting this scene would exceed limit
@@ -545,10 +545,10 @@ function StoryboardInspector() {
                                                     toggleCharacter(char.id);
                                                 }}
                                                 className={`flex items-center gap-2 p-2 rounded border text-xs transition-all ${isSelected
-                                                    ? "bg-primary/20 border-primary text-white"
+                                                    ? "bg-primary/20 border-primary text-foreground"
                                                     : isDisabled
-                                                        ? "bg-overlay border-border-subtle text-text-muted cursor-not-allowed opacity-50"
-                                                        : "bg-overlay border-glass-border text-text-secondary hover:bg-glass"
+                                                        ? "bg-surface border-border-subtle text-text-muted cursor-not-allowed opacity-50"
+                                                        : "bg-surface border-glass-border text-text-secondary hover:bg-glass"
                                                     }`}
                                             >
                                                 <div className="w-4 h-4 rounded-full bg-elevated overflow-hidden">
@@ -597,10 +597,10 @@ function StoryboardInspector() {
                                                         updateFrame({ prop_ids: newProps });
                                                     }}
                                                     className={`flex items-center gap-2 p-2 rounded border text-xs transition-all ${isSelected
-                                                        ? "bg-primary/20 border-primary text-white"
+                                                        ? "bg-primary/20 border-primary text-foreground"
                                                         : isDisabled
-                                                            ? "bg-overlay border-border-subtle text-text-muted cursor-not-allowed opacity-50"
-                                                            : "bg-overlay border-glass-border text-text-secondary hover:bg-glass"
+                                                            ? "bg-surface border-border-subtle text-text-muted cursor-not-allowed opacity-50"
+                                                            : "bg-surface border-glass-border text-text-secondary hover:bg-glass"
                                                         }`}
                                                 >
                                                     <div className="w-4 h-4 rounded bg-elevated overflow-hidden flex-shrink-0">
@@ -642,7 +642,7 @@ function StoryboardInspector() {
                 <label className="text-xs font-bold text-text-muted uppercase">{tp("sceneContext")}</label>
                 <div className="grid grid-cols-1 gap-2">
                     <select
-                        className="bg-overlay border border-glass-border rounded p-2 text-xs text-text-secondary focus:outline-none"
+                        className="bg-input-bg border border-glass-border rounded p-2 text-xs text-text-secondary focus:outline-none"
                         value={selectedFrame.camera_angle || ""}
                         onChange={(e) => updateFrame({ camera_angle: e.target.value })}
                     >
@@ -663,7 +663,7 @@ function StoryboardInspector() {
                     <label className="text-xs font-bold text-text-muted uppercase">{tp("imagePrompt")}</label>
                     <button
                         onClick={handleComposePrompt}
-                        className="flex items-center gap-1 text-[10px] bg-glass hover:bg-hover-bg px-2 py-1 rounded text-white transition-colors"
+                        className="flex items-center gap-1 text-[10px] bg-glass hover:bg-hover-bg px-2 py-1 rounded text-foreground transition-colors"
                         title="Auto-generate prompt from metadata"
                     >
                         <Wand2 size={10} /> Auto-Compose
@@ -678,7 +678,7 @@ function StoryboardInspector() {
                     </button>
                 </div>
                 <textarea
-                    className="w-full h-32 bg-overlay border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50"
+                    className="w-full h-32 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50"
                     value={selectedFrame.image_prompt || ""}
                     onChange={(e) => updateFrame({ image_prompt: e.target.value })}
                     placeholder="Full image generation prompt..."
@@ -705,7 +705,7 @@ function StoryboardInspector() {
                                     });
                                     setFeedbackText("");
                                 }}
-                                className="text-[10px] text-text-secondary hover:text-white"
+                                className="text-[10px] text-text-secondary hover:text-foreground"
                             >
                                 ✕
                             </button>
@@ -720,12 +720,12 @@ function StoryboardInspector() {
                                         navigator.clipboard.writeText(polishedPrompt.cn);
                                         alert("CN prompt copied");
                                     }}
-                                    className="text-[10px] text-text-secondary hover:text-white bg-overlay px-2 py-0.5 rounded"
+                                    className="text-[10px] text-text-secondary hover:text-foreground bg-surface px-2 py-0.5 rounded"
                                 >
                                     复制
                                 </button>
                             </div>
-                            <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-overlay p-2 rounded">
+                            <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-surface p-2 rounded">
                                 {polishedPrompt.cn}
                             </p>
                         </div>
@@ -740,7 +740,7 @@ function StoryboardInspector() {
                                             navigator.clipboard.writeText(polishedPrompt.en);
                                             alert("English prompt copied");
                                         }}
-                                        className="text-[10px] text-text-secondary hover:text-white bg-overlay px-2 py-0.5 rounded"
+                                        className="text-[10px] text-text-secondary hover:text-foreground bg-surface px-2 py-0.5 rounded"
                                     >
                                         Copy
                                     </button>
@@ -763,7 +763,7 @@ function StoryboardInspector() {
                                     </button>
                                 </div>
                             </div>
-                            <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-overlay p-2 rounded font-mono">
+                            <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-surface p-2 rounded font-mono">
                                 {polishedPrompt.en}
                             </p>
                         </div>
@@ -781,7 +781,7 @@ function StoryboardInspector() {
                                         }
                                     }}
                                     placeholder="Feedback for refinement..."
-                                    className="flex-1 text-[10px] bg-overlay border border-purple-500/20 rounded px-2 py-1.5 text-white placeholder-text-muted focus:outline-none focus:border-purple-500/50"
+                                    className="flex-1 text-[10px] bg-input-bg border border-purple-500/20 rounded px-2 py-1.5 text-foreground placeholder-text-muted focus:outline-none focus:border-purple-500/50"
                                 />
                                 <button
                                     onClick={() => handlePolish(feedbackText.trim())}

@@ -93,7 +93,7 @@ export default function StoryboardFrameEditor({ frame: initialFrame, onClose }: 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-elevated border border-glass-border rounded-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden shadow-2xl"
+                className="bg-elevated border border-glass-border rounded-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden shadow-lg"
             >
                 {/* Header */}
                 <div className="h-16 border-b border-glass-border flex justify-between items-center px-6 bg-surface">

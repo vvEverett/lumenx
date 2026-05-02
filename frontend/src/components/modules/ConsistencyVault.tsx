@@ -356,10 +356,10 @@ export default function ConsistencyVault() {
             activeTab === "prop" ? currentProject?.props : [];
 
     return (
-        <div className="flex flex-col h-full text-white">
+        <div className="flex flex-col h-full text-foreground">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-glass-border bg-overlay">
-                <div className="flex gap-2 bg-overlay p-1 rounded-xl border border-border-subtle">
+            <div className="flex items-center justify-between p-6 border-b border-glass-border bg-surface">
+                <div className="flex gap-2 bg-surface p-1 rounded-xl border border-border-subtle">
                     <TabButton
                         active={activeTab === "character"}
                         onClick={() => setActiveTab("character")}
@@ -433,7 +433,7 @@ export default function ConsistencyVault() {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             onClick={() => setIsCreateDialogOpen(true)}
-                            className="group relative aspect-[3/4] bg-overlay rounded-2xl border-2 border-dashed border-glass-border hover:border-primary/50 overflow-hidden transition-all cursor-pointer flex items-center justify-center hover:bg-glass"
+                            className="group relative aspect-[3/4] bg-surface rounded-2xl border-2 border-dashed border-glass-border hover:border-primary/50 overflow-hidden transition-all cursor-pointer flex items-center justify-center hover:bg-glass"
                         >
                             <div className="flex flex-col items-center gap-3 text-text-secondary group-hover:text-primary transition-colors">
                                 <Plus size={40} />
@@ -582,21 +582,21 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-surface border border-glass-border rounded-2xl w-full max-w-5xl h-[85vh] flex overflow-hidden shadow-2xl"
+                className="bg-surface border border-glass-border rounded-2xl w-full max-w-5xl h-[85vh] flex overflow-hidden shadow-lg"
             >
                 {/* Left: Variant Selector */}
-                <div className="w-1/2 bg-overlay relative border-r border-glass-border flex flex-col overflow-hidden">
+                <div className="w-1/2 bg-surface relative border-r border-glass-border flex flex-col overflow-hidden">
                     {/* Tab Switcher */}
-                    <div className="flex border-b border-glass-border bg-overlay">
+                    <div className="flex border-b border-glass-border bg-surface">
                         <button
                             onClick={() => setActiveTab("image")}
-                            className={`flex-1 p-3 text-sm font-bold transition-colors ${activeTab === "image" ? "text-white border-b-2 border-primary bg-glass" : "text-text-muted hover:text-text-secondary"}`}
+                            className={`flex-1 p-3 text-sm font-bold transition-colors ${activeTab === "image" ? "text-foreground border-b-2 border-primary bg-glass" : "text-text-muted hover:text-text-secondary"}`}
                         >
                             Image Reference
                         </button>
                         <button
                             onClick={() => setActiveTab("video")}
-                            className={`flex-1 p-3 text-sm font-bold transition-colors ${activeTab === "video" ? "text-white border-b-2 border-primary bg-glass" : "text-text-muted hover:text-text-secondary"}`}
+                            className={`flex-1 p-3 text-sm font-bold transition-colors ${activeTab === "video" ? "text-foreground border-b-2 border-primary bg-glass" : "text-text-muted hover:text-text-secondary"}`}
                         >
                             Video Reference
                         </button>
@@ -630,9 +630,9 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                 {/* Right: Details */}
                 <div className="w-1/2 flex flex-col">
                     {/* Header */}
-                    <div className="p-6 border-b border-glass-border flex justify-between items-center bg-overlay">
-                        <h2 className="text-2xl font-bold text-white">{asset.name}</h2>
-                        <button onClick={onClose} className="p-2 hover:bg-hover-bg rounded-full text-text-secondary hover:text-white">
+                    <div className="p-6 border-b border-glass-border flex justify-between items-center bg-surface">
+                        <h2 className="text-2xl font-bold text-foreground">{asset.name}</h2>
+                        <button onClick={onClose} className="p-2 hover:bg-hover-bg rounded-full text-text-secondary hover:text-foreground">
                             <X size={24} />
                         </button>
                     </div>
@@ -654,10 +654,10 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                                     <textarea
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
-                                        className="w-full h-32 bg-overlay border border-glass-border rounded-lg p-3 text-sm text-text-secondary resize-none focus:border-primary focus:outline-none"
+                                        className="w-full h-32 bg-input-bg border border-glass-border rounded-lg p-3 text-sm text-text-secondary resize-none focus:border-primary focus:outline-none"
                                     />
                                     <div className="flex justify-end gap-2">
-                                        <button onClick={() => { setIsEditing(false); setDescription(asset.description); }} className="px-3 py-1.5 text-xs text-text-secondary hover:text-white">Cancel</button>
+                                        <button onClick={() => { setIsEditing(false); setDescription(asset.description); }} className="px-3 py-1.5 text-xs text-text-secondary hover:text-foreground">Cancel</button>
                                         <button onClick={handleSave} className="px-3 py-1.5 bg-primary text-white text-xs rounded hover:bg-primary/90">Save Description</button>
                                     </div>
                                 </div>
@@ -675,7 +675,7 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                                 <textarea
                                     value={videoPrompt}
                                     onChange={(e) => setVideoPrompt(e.target.value)}
-                                    className="w-full h-24 bg-overlay border border-glass-border rounded-lg p-3 text-sm text-text-secondary resize-none focus:border-primary focus:outline-none"
+                                    className="w-full h-24 bg-input-bg border border-glass-border rounded-lg p-3 text-sm text-text-secondary resize-none focus:border-primary focus:outline-none"
                                     placeholder="Describe the motion..."
                                 />
                             </div>
@@ -700,7 +700,7 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                                     </div>
 
                                     {stylePrompt && (
-                                        <div className="text-xs text-text-muted font-mono bg-overlay p-2 rounded border border-border-subtle">
+                                        <div className="text-xs text-text-muted font-mono bg-surface p-2 rounded border border-border-subtle">
                                             <span className="text-primary font-bold">Style:</span> {stylePrompt}
                                         </div>
                                     )}
@@ -713,7 +713,7 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                             <div className="space-y-2">
                                 <button
                                     onClick={() => setShowAdvanced(!showAdvanced)}
-                                    className="flex items-center gap-2 text-xs font-bold text-text-muted hover:text-white transition-colors uppercase"
+                                    className="flex items-center gap-2 text-xs font-bold text-text-muted hover:text-foreground transition-colors uppercase"
                                 >
                                     <span>Advanced Settings (Negative Prompt)</span>
                                     <ChevronRight size={12} className={`transform transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
@@ -730,7 +730,7 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                                             <textarea
                                                 value={negativePrompt}
                                                 onChange={(e) => setNegativePrompt(e.target.value)}
-                                                className="w-full h-24 bg-overlay border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50 font-mono"
+                                                className="w-full h-24 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50 font-mono"
                                                 placeholder="Enter negative prompt..."
                                             />
                                         </motion.div>
@@ -741,10 +741,10 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="p-6 border-t border-glass-border bg-overlay flex gap-4">
+                    <div className="p-6 border-t border-glass-border bg-surface flex gap-4">
                         <button
                             onClick={onClose}
-                            className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-900/20"
+                            className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-500/20"
                         >
                             <Check size={18} />
                             Done
@@ -761,7 +761,7 @@ function TabButton({ active, onClick, icon, label, count }: any) {
         <button
             onClick={onClick}
             className={`flex items-center justify-between w-full p-3 rounded-xl transition-all ${active
-                ? "bg-glass text-white border border-glass-border shadow-sm"
+                ? "bg-glass text-foreground border border-glass-border shadow-sm"
                 : "text-text-muted hover:bg-glass hover:text-text-secondary"
                 }`}
         >
@@ -769,7 +769,7 @@ function TabButton({ active, onClick, icon, label, count }: any) {
                 {icon}
                 <span className="font-bold text-sm">{label}</span>
             </div>
-            <span className="text-xs bg-overlay px-2 py-0.5 rounded-full">{count}</span>
+            <span className="text-xs bg-surface px-2 py-0.5 rounded-full">{count}</span>
         </button>
     );
 }
@@ -802,8 +802,8 @@ function ImageWithRetry({ src, alt, className }: { src: string, alt: string, cla
     return (
         <div className={`relative ${className}`}>
             {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-glass backdrop-blur-sm z-10">
-                    <RefreshCw className="animate-spin text-white/50" size={24} />
+                <div className="absolute inset-0 flex items-center justify-center bg-surface z-10">
+                    <RefreshCw className="animate-spin text-foreground/50" size={24} />
                 </div>
             )}
             <img
@@ -826,6 +826,7 @@ function ImageWithRetry({ src, alt, className }: { src: string, alt: string, cla
 }
 
 function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClick, onDelete, onUpload }: any) {
+    const tv = useTranslations("vault");
     const isLocked = asset.locked || false;
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
@@ -858,11 +859,11 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={onClick}
-            className={`group relative aspect-[3/4] bg-overlay rounded-2xl border overflow-hidden transition-colors cursor-pointer ${isLocked ? 'border-yellow-500/50' : 'border-glass-border hover:border-primary/50'
+            className={`group relative aspect-[3/4] bg-surface rounded-2xl border overflow-hidden transition-colors cursor-pointer ${isLocked ? 'border-yellow-500/50' : 'border-glass-border hover:border-primary/50'
                 }`}
         >
             {/* Image Area */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 z-10" />
 
             {imageUrl ? (
                 <ImageWithRetry
@@ -872,7 +873,7 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
                 />
             ) : (
                 <div className="w-full h-full flex items-center justify-center bg-glass">
-                    <ImageIcon className="text-white/10" size={48} />
+                    <ImageIcon className="text-foreground/20" size={48} />
                 </div>
             )}
 
@@ -903,7 +904,7 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
                     }}
                     className={`p-2 rounded-full backdrop-blur-md transition-colors ${isLocked
                         ? "bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30"
-                        : "bg-overlay text-white hover:bg-hover-bg"
+                        : "bg-surface text-foreground hover:bg-hover-bg"
                         }`}
                 >
                     {isLocked ? <Lock size={14} /> : <Unlock size={14} />}
@@ -912,8 +913,8 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
 
             {/* Bottom Info */}
             <div className="absolute bottom-0 left-0 right-0 p-4 z-30">
-                <h3 className="text-lg font-bold text-foreground mb-1 truncate">{asset.name}</h3>
-                <p className="text-xs text-text-secondary line-clamp-2 mb-3 h-8">
+                <h3 className="text-lg font-bold text-white mb-1 truncate">{asset.name}</h3>
+                <p className="text-xs text-white/70 line-clamp-2 mb-3 h-8">
                     {asset.description || "No description"}
                 </p>
 
@@ -976,9 +977,9 @@ function CreateAssetDialog({ type, onClose, onCreate }: { type: string; onClose:
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-surface border border-glass-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+                className="bg-surface border border-glass-border rounded-2xl w-full max-w-md overflow-hidden shadow-lg"
             >
-                <div className="p-6 border-b border-glass-border flex justify-between items-center bg-overlay">
+                <div className="p-6 border-b border-glass-border flex justify-between items-center bg-surface">
                     <div className="flex items-center gap-3">
                         <Plus className="text-primary" size={20} />
                         <h2 className="text-lg font-bold text-foreground">Create New {typeLabel}</h2>
@@ -996,7 +997,7 @@ function CreateAssetDialog({ type, onClose, onCreate }: { type: string; onClose:
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder={`Enter ${type} name`}
-                            className="w-full px-4 py-3 bg-overlay border border-glass-border rounded-lg text-white placeholder-text-muted focus:border-primary/50 focus:outline-none"
+                            className="w-full px-4 py-3 bg-input-bg border border-glass-border rounded-lg text-foreground placeholder-text-muted focus:border-primary/50 focus:outline-none"
                         />
                     </div>
                     <div>
@@ -1006,7 +1007,7 @@ function CreateAssetDialog({ type, onClose, onCreate }: { type: string; onClose:
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder={`Describe the ${type}...`}
                             rows={4}
-                            className="w-full px-4 py-3 bg-overlay border border-glass-border rounded-lg text-white placeholder-text-muted focus:border-primary/50 focus:outline-none resize-none"
+                            className="w-full px-4 py-3 bg-input-bg border border-glass-border rounded-lg text-foreground placeholder-text-muted focus:border-primary/50 focus:outline-none resize-none"
                         />
                     </div>
                 </div>
@@ -1014,7 +1015,7 @@ function CreateAssetDialog({ type, onClose, onCreate }: { type: string; onClose:
                 <div className="p-6 border-t border-glass-border flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-glass hover:bg-hover-bg text-white rounded-lg transition-colors"
+                        className="px-6 py-2 bg-glass hover:bg-hover-bg text-foreground rounded-lg transition-colors"
                     >
                         Cancel
                     </button>

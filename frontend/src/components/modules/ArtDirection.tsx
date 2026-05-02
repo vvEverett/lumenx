@@ -185,7 +185,7 @@ export default function ArtDirection() {
             <div className="h-20 border-b border-glass-border bg-surface flex items-center px-8 justify-between">
                 <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
-                        <Palette className="text-white" size={20} />
+                        <Palette className="text-foreground" size={20} />
                     </div>
                     <div>
                         <h2 className="text-xl font-display font-bold text-foreground">Art Direction</h2>
@@ -196,7 +196,7 @@ export default function ArtDirection() {
                 <button
                     onClick={handleApply}
                     disabled={!selectedStyle || isSaving}
-                    className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-6 py-2 bg-primary hover:bg-primary/90 text-foreground rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                     {isSaving ? (
                         <>
@@ -214,7 +214,7 @@ export default function ArtDirection() {
 
             <div className="flex-1 flex overflow-hidden">
                 {/* Left Panel: AI + Presets */}
-                <div className="w-2/3 flex flex-col p-8 overflow-y-auto gap-8 border-r border-glass-border">
+                <div className="w-2/3 flex flex-col p-8 overflow-y-auto gap-8 border-r border-glass-border bg-surface">
                     {/* AI Recommendations */}
                     <div>
                         <div className="flex items-center justify-between mb-4">
@@ -225,7 +225,7 @@ export default function ArtDirection() {
                             <button
                                 onClick={handleAnalyze}
                                 disabled={isAnalyzingArtStyle}
-                                className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
+                                className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-foreground text-sm rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
                             >
                                 {isAnalyzingArtStyle ? (
                                     <>
@@ -321,12 +321,12 @@ function StyleRecommendationCard({ style, isSelected, onSelect }: any) {
             onClick={onSelect}
             className={`p-6 rounded-xl border-2 cursor-pointer transition-all ${isSelected
                 ? "bg-purple-500/20 border-purple-500 shadow-lg shadow-purple-500/20"
-                : "bg-glass border-glass-border hover:border-glass-border hover:bg-hover-bg"
+                : "bg-surface border-glass-border hover:border-glass-border hover:bg-hover-bg"
                 }`}
         >
             <div className="flex items-start gap-4">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isSelected ? 'bg-purple-500' : 'bg-hover-bg'}`}>
-                    {isSelected ? <Check size={16} className="text-white" /> : <Sparkles size={16} className="text-text-secondary" />}
+                    {isSelected ? <Check size={16} className=": text-foreground" /> : <Sparkles size={16} className="text-text-secondary" />}
                 </div>
                 <div className="flex-1">
                     <h4 className="font-bold text-foreground mb-1">{style.name}</h4>
@@ -359,12 +359,12 @@ function StylePresetCard({ style, isSelected, onSelect }: any) {
             onClick={onSelect}
             className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${isSelected
                 ? "bg-blue-500/20 border-blue-500 shadow-lg shadow-blue-500/20"
-                : "bg-glass border-glass-border hover:border-glass-border hover:bg-hover-bg"
+                : "bg-surface border-glass-border hover:border-glass-border hover:bg-hover-bg"
                 }`}
         >
             <div className="flex items-center gap-3 mb-2">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? 'bg-blue-500' : 'bg-hover-bg'}`}>
-                    {isSelected && <Check size={12} className="text-white" />}
+                    {isSelected && <Check size={12} className=": text-foreground" />}
                 </div>
                 <h4 className="font-bold text-foreground text-sm">{style.name}</h4>
             </div>
@@ -413,7 +413,7 @@ function StyleEditor({ name, positivePrompt, negativePrompt, onNameChange, onPos
                     onChange={(e) => onPositiveChange(e.target.value)}
                     placeholder={ta("positivePromptPlaceholder")}
                     rows={6}
-                    className="w-full bg-glass border border-glass-border rounded-lg p-3 text-sm text-foreground placeholder-text-muted focus:border-primary focus:outline-none resize-none"
+                    className="w-full bg-input-bg border border-glass-border rounded-lg p-3 text-sm text-foreground placeholder-text-muted focus:border-primary focus:outline-none resize-none"
                 />
                 <p className="text-xs text-text-muted mt-1">
                     {ta("positivePromptHint")}
@@ -429,7 +429,7 @@ function StyleEditor({ name, positivePrompt, negativePrompt, onNameChange, onPos
                     onChange={(e) => onNegativeChange(e.target.value)}
                     placeholder={ta("negativePromptPlaceholder")}
                     rows={4}
-                    className="w-full bg-glass border border-glass-border rounded-lg p-3 text-sm text-foreground placeholder-text-muted focus:border-primary focus:outline-none resize-none"
+                    className="w-full bg-input-bg border border-glass-border rounded-lg p-3 text-sm text-foreground placeholder-text-muted focus:border-primary focus:outline-none resize-none"
                 />
                 <p className="text-xs text-text-muted mt-1">
                     {ta("negativePromptHint")}
@@ -449,7 +449,7 @@ function StyleEditor({ name, positivePrompt, negativePrompt, onNameChange, onPos
 
             {/* Preview */}
             {positivePrompt && (
-                <div className="bg-glass border border-glass-border rounded-lg p-4">
+                <div className="bg-surface border border-glass-border rounded-lg p-4">
                     <p className="text-xs text-text-muted mb-2">{ta("previewLabel")}</p>
                     <p className="text-xs text-blue-400 font-mono">
                         &quot;{positivePrompt}, [user description]&quot;

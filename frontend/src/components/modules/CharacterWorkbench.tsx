@@ -296,16 +296,16 @@ export default function CharacterWorkbench({ asset, onClose, onUpdateDescription
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-surface border border-glass-border rounded-2xl w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+                className="bg-surface border border-glass-border rounded-2xl w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden shadow-lg"
             >
-                <div className="h-16 border-b border-glass-border flex justify-between items-center px-6 bg-overlay">
+                <div className="h-16 border-b border-glass-border flex justify-between items-center px-6 bg-surface">
                     <div className="flex items-center gap-4">
                         <h2 className="text-xl font-bold text-foreground">{asset.name} <span className="text-text-muted font-normal text-sm ml-2">{tc("workbench")}</span></h2>
                         <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full">
                             <span className="text-xs text-blue-400 font-medium">{tc("tipConsistency")}</span>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-hover-bg rounded-full text-text-secondary hover:text-white transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-hover-bg rounded-full text-text-secondary hover:text-foreground transition-colors">
                         <X size={24} />
                     </button>
                 </div>
@@ -438,14 +438,14 @@ export default function CharacterWorkbench({ asset, onClose, onUpdateDescription
                             <textarea
                                 value={negativePrompt}
                                 onChange={(e) => setNegativePrompt(e.target.value)}
-                                className="w-full h-16 bg-overlay border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50 font-mono"
+                                className="w-full h-16 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50 font-mono"
                                 placeholder="Enter your negative prompt (avoid unwanted elements)..."
                             />
                         </div>
 
                         {/* Apply Style Toggle */}
                         <div className="pt-6">
-                            <div className="flex items-center gap-2 bg-overlay px-4 py-2 rounded-lg border border-glass-border">
+                            <div className="flex items-center gap-2 bg-surface px-4 py-2 rounded-lg border border-glass-border">
                                 <input
                                     type="checkbox"
                                     id="applyStyleFooter"
@@ -487,7 +487,7 @@ export default function CharacterWorkbench({ asset, onClose, onUpdateDescription
                                                 {stylePrompt && (
                                                     <div className="mb-3">
                                                         <span className="text-xs font-bold text-green-400 block mb-1">+ Style Prompt:</span>
-                                                        <p className="text-xs text-text-secondary font-mono bg-overlay p-2 rounded border border-border-subtle leading-relaxed">
+                                                        <p className="text-xs text-text-secondary font-mono bg-surface p-2 rounded border border-border-subtle leading-relaxed">
                                                             {stylePrompt}
                                                         </p>
                                                     </div>
@@ -496,7 +496,7 @@ export default function CharacterWorkbench({ asset, onClose, onUpdateDescription
                                                 {styleNegativePrompt && (
                                                     <div>
                                                         <span className="text-xs font-bold text-red-400 block mb-1">+ Negative Prompt:</span>
-                                                        <p className="text-xs text-text-secondary font-mono bg-overlay p-2 rounded border border-border-subtle leading-relaxed">
+                                                        <p className="text-xs text-text-secondary font-mono bg-surface p-2 rounded border border-border-subtle leading-relaxed">
                                                             {styleNegativePrompt}
                                                         </p>
                                                     </div>
@@ -561,6 +561,7 @@ function WorkbenchPanel({
     reverseGenerationMode = false,
     reverseReferenceUrl = null
 }: any) {
+    const tc = useTranslations("character");
 
     return (
         <div
@@ -576,12 +577,12 @@ function WorkbenchPanel({
 
                     {/* Mode Switcher (Asset Activation v2) */}
                     {supportsMotion && (
-                        <div className="flex items-center gap-1 bg-overlay p-1 rounded-lg border border-glass-border">
+                        <div className="flex items-center gap-1 bg-surface p-1 rounded-lg border border-glass-border">
                             <button
                                 onClick={(e) => { e.stopPropagation(); onModeChange?.('static'); }}
                                 className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${mode === 'static'
                                     ? 'bg-primary/20 text-primary'
-                                    : 'text-text-secondary hover:text-white'
+                                    : 'text-text-secondary hover:text-foreground'
                                     }`}
                             >
                                 <PhotoIcon size={12} />
@@ -598,7 +599,7 @@ function WorkbenchPanel({
                                 }}
                                 className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${mode === 'motion'
                                     ? 'bg-purple-500/20 text-purple-400'
-                                    : 'text-text-secondary hover:text-white'
+                                    : 'text-text-secondary hover:text-foreground'
                                     }`}
                             >
                                 <Video size={12} />
@@ -611,7 +612,7 @@ function WorkbenchPanel({
             </div>
 
             {/* Image Area with Variant Selector */}
-            <div className="flex-1 relative bg-overlay p-4 flex flex-col overflow-y-auto group">
+            <div className="flex-1 relative bg-surface p-4 flex flex-col overflow-y-auto group">
 
                 {/* Locked Overlay */}
                 {isLocked && (
@@ -659,7 +660,7 @@ function WorkbenchPanel({
                             </div>
 
                             {/* Video Player with glassmorphism */}
-                            <div className={`relative w-full ${aspectRatio === '9:16' ? 'aspect-[9/16] max-h-[40vh]' : aspectRatio === '1:1' ? 'aspect-square max-h-[35vh]' : 'aspect-video'} bg-gradient-to-br from-gray-900/80 to-black rounded-xl overflow-hidden border border-border-subtle shadow-xl backdrop-blur-sm`}>
+                            <div className={`relative w-full ${aspectRatio === '9:16' ? 'aspect-[9/16] max-h-[40vh]' : aspectRatio === '1:1' ? 'aspect-square max-h-[35vh]' : 'aspect-video'} bg-gradient-to-br from-overlay to-black/60 rounded-xl overflow-hidden border border-border-subtle shadow-xl backdrop-blur-sm`}>
                                 {isGeneratingMotion ? (
                                     <div className="absolute inset-0 z-10 bg-overlay backdrop-blur-md flex flex-col items-center justify-center gap-4">
                                         <div className="relative">
@@ -667,7 +668,7 @@ function WorkbenchPanel({
                                             <div className="absolute inset-0 blur-xl bg-purple-500/30 animate-pulse"></div>
                                         </div>
                                         <div className="flex flex-col items-center">
-                                            <span className="text-sm font-bold text-white uppercase tracking-widest animate-pulse">Generating Video</span>
+                                            <span className="text-sm font-bold text-foreground uppercase tracking-widest animate-pulse">Generating Video</span>
                                             <span className="text-[10px] text-purple-300/60 mt-1">AI is processing motion...</span>
                                         </div>
                                     </div>
@@ -699,7 +700,7 @@ function WorkbenchPanel({
                                 )}
                             </div>
 
-                            <div className="bg-overlay rounded-lg border border-glass-border p-3">
+                            <div className="bg-surface rounded-lg border border-glass-border p-3">
                                 <label className="text-xs font-bold text-text-muted uppercase mb-2 block">Audio Input (Optional)</label>
                                 <p className="text-xs text-text-muted mb-3">Upload audio to drive lip-sync or body rhythm</p>
 
@@ -755,7 +756,7 @@ function WorkbenchPanel({
                                 <textarea
                                     value={motionPrompt}
                                     onChange={(e) => setMotionPrompt?.(e.target.value)}
-                                    className="w-full h-24 bg-overlay border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50 font-mono leading-relaxed"
+                                    className="w-full h-24 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50 font-mono leading-relaxed"
                                     placeholder="Describe the motion you want..."
                                 />
                             </div>
@@ -766,7 +767,7 @@ function WorkbenchPanel({
                                 disabled={isGeneratingMotion}
                                 className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${isGeneratingMotion
                                     ? 'bg-gray-700 text-text-muted cursor-not-allowed'
-                                    : 'bg-primary hover:bg-primary/90 text-white shadow-lg'
+                                    : 'bg-primary hover:bg-primary/90 text-foreground shadow-lg'
                                     }`}
                             >
                                 <Video size={16} />
@@ -811,7 +812,7 @@ function WorkbenchPanel({
 
             {/* Prompt Editor (Bottom) */}
             <div className="h-1/3 border-t border-glass-border flex flex-col bg-surface">
-                <div className="p-2 border-b border-border-subtle flex justify-between items-center bg-overlay">
+                <div className="p-2 border-b border-border-subtle flex justify-between items-center bg-surface">
                     <span className="text-xs font-bold text-text-muted uppercase px-2">Prompt</span>
                 </div>
                 <textarea

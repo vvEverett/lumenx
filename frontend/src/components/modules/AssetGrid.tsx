@@ -148,11 +148,11 @@ export default function AssetGrid({ projectId }: AssetGridProps) {
                             </div>
                         )}
 
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                        <div className="absolute inset-0 bg-gradient-to-t from-overlay via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
                             <h3 className="text-sm font-bold text-foreground">{asset.title}</h3>
                             <div className="flex items-center justify-between mt-2">
                                 <span className="text-[10px] font-mono bg-hover-bg px-2 py-1 rounded">{asset.type.toUpperCase()}</span>
-                                <button className="p-1.5 rounded-full bg-hover-bg hover:bg-hover-bg text-white transition-colors">
+                                <button className="p-1.5 rounded-full bg-hover-bg hover:bg-hover-bg text-foreground transition-colors">
                                     <Download size={12} />
                                 </button>
                             </div>

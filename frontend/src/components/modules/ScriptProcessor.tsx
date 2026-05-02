@@ -156,7 +156,7 @@ export default function ScriptProcessor() {
                     </div>
                 </div>
 
-                <div className="flex-1 relative p-6">
+                <div className="flex-1 relative p-6 bg-surface">
                     <textarea
                         value={script}
                         onChange={(e) => {
@@ -180,7 +180,7 @@ export default function ScriptProcessor() {
                         initial={{ width: 0, opacity: 0 }}
                         animate={{ width: 400, opacity: 1 }}
                         exit={{ width: 0, opacity: 0 }}
-                        className="border-l border-glass-border bg-surface backdrop-blur-md flex flex-col h-full"
+                        className="border-l border-glass-border bg-surface flex flex-col h-full"
                     >
                         <div className="p-4 border-b border-glass-border flex justify-between items-center">
                             <div>
@@ -210,9 +210,9 @@ export default function ScriptProcessor() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.05 }}
                                     onClick={() => setSelectedNode(node)}
-                                    className={`group p-3 rounded-lg border cursor-pointer transition-all hover:bg-glass ${selectedNode?.name === node.name
+                                    className={`group p-3 rounded-lg border cursor-pointer transition-all hover:bg-hover-bg ${selectedNode?.name === node.name
                                         ? "border-primary bg-primary/5"
-                                        : "border-border-subtle bg-glass"
+                                        : "border-border-subtle bg-surface"
                                         }`}
                                 >
                                     <div className="flex items-center justify-between mb-1">
@@ -256,7 +256,7 @@ export default function ScriptProcessor() {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             onClick={e => e.stopPropagation()}
-                            className="w-[500px] bg-elevated border border-glass-border rounded-xl shadow-2xl overflow-hidden"
+                            className="w-[500px] bg-elevated border border-glass-border rounded-xl shadow-lg overflow-hidden"
                         >
                             <div className="p-6 border-b border-glass-border flex justify-between items-start">
                                 <div>
@@ -328,7 +328,7 @@ export default function ScriptProcessor() {
                                                     key={w}
                                                     onClick={() => handleNodeUpdate({ ...selectedNode, visual_weight: w })}
                                                     className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${(selectedNode.visual_weight || 3) === w
-                                                        ? "bg-primary text-white"
+                                                        ? "bg-primary text-foreground"
                                                         : "bg-glass text-text-muted hover:bg-hover-bg"
                                                         }`}
                                                 >
@@ -379,7 +379,7 @@ export default function ScriptProcessor() {
                                             setSelectedNode(null);
                                         }
                                     }}
-                                    className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold flex items-center gap-2"
+                                    className="px-6 py-2 bg-primary hover:bg-primary/90 text-foreground rounded-lg text-sm font-bold flex items-center gap-2"
                                 >
                                     <Save size={14} /> {ts("saveConfig")}
                                 </button>
@@ -423,7 +423,7 @@ function CreateEntityDialog({ onClose, onCreate }: { onClose: () => void; onCrea
                         <button
                             key={t}
                             onClick={() => setType(t)}
-                            className={`flex-1 py-1.5 text-xs font-bold rounded capitalize ${type === t ? "bg-primary text-white" : "text-text-muted hover:text-foreground"}`}
+                            className={`flex-1 py-1.5 text-xs font-bold rounded capitalize ${type === t ? "bg-primary text-foreground" : "text-text-muted hover:text-foreground"}`}
                         >
                             {t}
                         </button>
@@ -452,7 +452,7 @@ function CreateEntityDialog({ onClose, onCreate }: { onClose: () => void; onCrea
 
                 <div className="flex justify-end gap-2 pt-2">
                     <button onClick={onClose} className="px-4 py-2 text-xs text-text-secondary hover:text-foreground">{tc("cancel")}</button>
-                    <button onClick={handleSubmit} className="px-4 py-2 bg-primary text-white rounded text-xs font-bold">{tc("create")}</button>
+                    <button onClick={handleSubmit} className="px-4 py-2 bg-primary text-foreground rounded text-xs font-bold">{tc("create")}</button>
                 </div>
             </div>
         </div>

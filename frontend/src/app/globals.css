@@ -41,7 +41,7 @@ html.light {
   --color-text-primary: #1a1a1a;
   --color-text-secondary: #6b7280;
   --color-text-muted: #9ca3af;
-  --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-overlay: rgba(0, 0, 0, 0.2);
   --color-bg-inset: rgba(0, 0, 0, 0.02);
   --foreground-rgb: 26, 26, 26;
   --background-start-rgb: 248, 249, 250;

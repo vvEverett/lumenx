@@ -158,7 +158,7 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
 
   const inputClass = "w-full bg-surface border border-glass-border rounded-lg px-4 py-2 text-foreground placeholder-text-muted focus:outline-none focus:border-primary/50 transition-colors";
   const modeButtonClass = (active: boolean) =>
-    `px-3 py-1.5 text-xs rounded-md border transition-colors ${active ? "border-amber-500/60 bg-amber-500/15 text-amber-200" : "border-glass-border bg-glass text-text-secondary hover:text-foreground"}`;
+    `px-3 py-1.5 text-xs rounded-md border transition-colors font-medium ${active ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "border-glass-border bg-surface text-text-secondary hover:text-foreground"}`;
 
   return (
     <AnimatePresence>
@@ -387,7 +387,7 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                     <h3 className="text-sm font-bold text-foreground">Vidu Provider</h3>
                     <span className="text-[10px] text-text-muted">{t("chooseProvider")}</span>
                   </div>
-                  <div className="bg-glass border border-glass-border rounded-lg p-4 space-y-4">
+                  <div className="bg-input-bg border border-glass-border rounded-lg p-4 space-y-4">
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -474,7 +474,7 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
             <button
               onClick={handleSave}
               disabled={saving || loading || !!loadError}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-foreground text-sm font-medium rounded-lg transition-all disabled:opacity-50"
             >
               {saving ? (
                 <>

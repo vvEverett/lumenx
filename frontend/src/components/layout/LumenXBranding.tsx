@@ -1,22 +1,35 @@
 "use client";
 
+import { useSettingsStore } from "@/store/settingsStore";
+
 interface LumenXBrandingProps {
   size?: "sm" | "md";
   showSlogan?: boolean;
 }
 
 export default function LumenXBranding({ size = "md", showSlogan = true }: LumenXBrandingProps) {
+  const { theme } = useSettingsStore();
   const logoSize = size === "sm" ? "w-10 h-10" : "w-16 h-16";
   const titleSize = size === "sm" ? "text-2xl" : "text-3xl";
   const xSize = size === "sm" ? "text-3xl" : "text-4xl";
   const studioSize = size === "sm" ? "text-2xl" : "text-3xl";
+
+  const isProduction = typeof window !== "undefined" && process.env.NODE_ENV === "production";
+  const logoSrc =
+    theme === "light"
+      ? isProduction
+        ? "/static/LumenX_亮色.png"
+        : "/LumenX_亮色.png"
+      : isProduction
+        ? "/static/LumenX.png"
+        : "/LumenX.png";
 
   return (
     <div>
       <div className="flex gap-4 items-center">
         <div className="flex-shrink-0">
           <img
-            src={typeof window !== "undefined" && process.env.NODE_ENV === "production" ? "/static/LumenX.png" : "/LumenX.png"}
+            src={logoSrc}
             alt="LumenX"
             className={`${logoSize} object-contain`}
           />
