@@ -54,6 +54,12 @@ class WanxModel(VideoGenModel):
         # `wan2.5-i2v` follows the same DashScope media transport profile as `wan2.6-i2v`.
         if (model_name or "").strip().lower() == "wan2.5-i2v":
             return "wan2.6-i2v"
+        # Wan2.7 I2V follows the same media transport profile as Wan2.6 I2V.
+        if (model_name or "").strip().lower() == "wan2.7-i2v":
+            return "wan2.6-i2v"
+        # Wan2.7 R2V follows the same media transport profile as Wan2.6 R2V.
+        if (model_name or "").strip().lower() == "wan2.7-r2v":
+            return "wan2.6-r2v"
         return model_name
 
     def _build_dashscope_temp_url_resolver(self, model_name: str) -> Callable[[str], str]:
@@ -217,10 +223,10 @@ class WanxModel(VideoGenModel):
             final_model_name = kwargs.get('model')
             logger.info(f"Using model from kwargs: {final_model_name}")
         elif img_path or kwargs.get('img_url'):
-            final_model_name = self.params.get('i2v_model_name', 'wan2.6-i2v')  # Default to I2V model
+            final_model_name = self.params.get('i2v_model_name', 'wan2.7-i2v')  # Default to I2V model
             logger.info(f"Using I2V model: {final_model_name}")
         else:
-            final_model_name = self.params.get('model_name', 'wan2.5-t2v-preview')
+            final_model_name = self.params.get('model_name', 'wan2.7-i2v')
             logger.info(f"Using T2V model: {final_model_name}")
 
         size = self.params.get('size', '1280*720')
@@ -257,8 +263,8 @@ class WanxModel(VideoGenModel):
             uploader = OSSImageUploader()
             extra_media_headers: Dict[str, str] = {}
 
-            # Use HTTP API for wan2.6-i2v, wan2.5-i2v, or wan2.6-r2v
-            if final_model_name in ['wan2.6-i2v', 'wan2.6-i2v-flash', 'wan2.5-i2v']:
+            # Use HTTP API for wan2.7-i2v, wan2.6-i2v, wan2.5-i2v, or wan2.6-r2v
+            if final_model_name in ['wan2.7-i2v', 'wan2.6-i2v', 'wan2.6-i2v-flash', 'wan2.5-i2v']:
                 resolver_model = self._resolver_model_for_media(final_model_name)
                 backend = self._resolve_provider_backend_for_model(resolver_model)
                 temp_url_resolver = self._build_dashscope_temp_url_resolver(resolver_model)
@@ -302,11 +308,15 @@ class WanxModel(VideoGenModel):
 
                 # Get shot_type from kwargs (only for wan I2V models)
                 shot_type = kwargs.get('shot_type', 'single')
+                # Wan2.7 uses ratio instead of resolution
+                ratio = kwargs.get('ratio')
+                is_wan27_i2v = final_model_name.startswith('wan2.7-')
                 video_url = self._generate_wan_i2v_http(
                     prompt=prompt,
                     img_url=img_url,
                     model_name=final_model_name,
-                    resolution=resolution,
+                    resolution=resolution if not is_wan27_i2v else None,
+                    ratio=ratio if is_wan27_i2v else None,
                     duration=duration,
                     prompt_extend=prompt_extend,
                     negative_prompt=negative_prompt,
@@ -316,39 +326,172 @@ class WanxModel(VideoGenModel):
                     shot_type=shot_type,
                     extra_headers=extra_media_headers,
                 )
-            elif final_model_name == 'wan2.6-r2v':
+            elif final_model_name in ('wan2.6-r2v', 'wan2.7-r2v'):
                 # R2V generation
-                ref_video_urls = kwargs.get('ref_video_urls', [])
-                if not ref_video_urls:
-                    raise ValueError("ref_video_urls is required for wan2.6-r2v")
+                is_wan27_r2v = final_model_name == 'wan2.7-r2v'
+                ref_key = 'ref_image_urls' if is_wan27_r2v else 'ref_video_urls'
+                ref_urls = kwargs.get(ref_key, [])
+                if not ref_urls:
+                    raise ValueError(f"{ref_key} is required for {final_model_name}")
 
                 resolver_model = self._resolver_model_for_media(final_model_name)
                 backend = self._resolve_provider_backend_for_model(resolver_model)
                 temp_url_resolver = self._build_dashscope_temp_url_resolver(resolver_model)
 
+                modality = "image" if is_wan27_r2v else "reference_video"
                 resolved_ref_urls = resolve_media_inputs(
-                    ref_video_urls,
+                    ref_urls,
                     model_name=resolver_model,
-                    modality="reference_video",
+                    modality=modality,
                     backend=backend,
                     uploader=uploader,
                     dashscope_temp_url_resolver=temp_url_resolver,
                 )
-                ref_video_urls = [item.value for item in resolved_ref_urls]
+                ref_urls_resolved = [item.value for item in resolved_ref_urls]
                 for resolved_item in resolved_ref_urls:
                     self._merge_media_headers(extra_media_headers, resolved_item.headers)
-                
+
                 shot_type = kwargs.get('shot_type', 'multi') # Default to multi for R2V as per PRD
-                
+                ratio = kwargs.get('ratio')
+
                 video_url = self._generate_wan_r2v_http(
                     prompt=prompt,
-                    ref_video_urls=ref_video_urls,
+                    ref_video_urls=ref_urls_resolved,
                     model_name=final_model_name,
-                    size=size, # R2V uses size (e.g. 1280*720)
+                    size=size if not is_wan27_r2v else None,
+                    ratio=ratio if is_wan27_r2v else None,
                     duration=duration,
                     audio=kwargs.get('audio', True), # Default to True for R2V
                     shot_type=shot_type,
                     seed=seed,
+                    extra_headers=extra_media_headers,
+                )
+            elif final_model_name in ('wan2.7-t2v', 'wan2.7-videoedit'):
+                # Wan2.7 T2V and VideoEdit via HTTP API
+                ratio = kwargs.get('ratio')
+                media = None
+                resolver_model = self._resolver_model_for_media(final_model_name)
+                backend = self._resolve_provider_backend_for_model(resolver_model)
+                temp_url_resolver = self._build_dashscope_temp_url_resolver(resolver_model)
+
+                if final_model_name == 'wan2.7-videoedit':
+                    # VideoEdit: video + optional reference images
+                    video_input = kwargs.get('video_url')
+                    if video_input:
+                        resolved_video = resolve_media_input(
+                            video_input,
+                            model_name=resolver_model,
+                            modality="reference_video",
+                            backend=backend,
+                            uploader=uploader,
+                            dashscope_temp_url_resolver=temp_url_resolver,
+                        )
+                        media = [{"type": "video", "url": resolved_video.value}]
+                        self._merge_media_headers(extra_media_headers, resolved_video.headers)
+                    ref_image_urls = kwargs.get('ref_image_urls', [])
+                    if ref_image_urls:
+                        resolved_imgs = resolve_media_inputs(
+                            ref_image_urls,
+                            model_name=resolver_model,
+                            modality="image",
+                            backend=backend,
+                            uploader=uploader,
+                            dashscope_temp_url_resolver=temp_url_resolver,
+                        )
+                        for r in resolved_imgs:
+                            media.append({"type": "reference_image", "url": r.value})
+                            self._merge_media_headers(extra_media_headers, r.headers)
+
+                video_url = self._generate_hh_http(
+                    prompt=prompt,
+                    model_name=final_model_name,
+                    media=media,
+                    duration=duration,
+                    ratio=ratio,
+                    seed=seed,
+                    watermark=watermark,
+                    extra_headers=extra_media_headers,
+                )
+            elif final_model_name.startswith('happyhorse-1.0-'):
+                # HappyHorse model family (I2V, R2V, T2V, V2V)
+                resolver_model = final_model_name
+                backend = self._resolve_provider_backend_for_model(resolver_model)
+                temp_url_resolver = self._build_dashscope_temp_url_resolver(resolver_model)
+
+                # Build media array based on model type
+                media = None
+                if final_model_name == 'happyhorse-1.0-i2v':
+                    # I2V: first_frame image
+                    image_ref = img_path or img_url
+                    if image_ref:
+                        resolved = resolve_media_input(
+                            image_ref,
+                            model_name=resolver_model,
+                            modality="image",
+                            backend=backend,
+                            uploader=uploader,
+                            dashscope_temp_url_resolver=temp_url_resolver,
+                        )
+                        media = [{"type": "first_frame", "url": resolved.value}]
+                        self._merge_media_headers(extra_media_headers, resolved.headers)
+
+                elif final_model_name == 'happyhorse-1.0-r2v':
+                    # R2V: reference images (1-9)
+                    ref_image_urls = kwargs.get('ref_image_urls', [])
+                    if not ref_image_urls:
+                        raise ValueError("ref_image_urls is required for happyhorse-1.0-r2v")
+                    resolved_refs = resolve_media_inputs(
+                        ref_image_urls,
+                        model_name=resolver_model,
+                        modality="image",
+                        backend=backend,
+                        uploader=uploader,
+                        dashscope_temp_url_resolver=temp_url_resolver,
+                    )
+                    media = [{"type": "reference_image", "url": r.value} for r in resolved_refs]
+                    for r in resolved_refs:
+                        self._merge_media_headers(extra_media_headers, r.headers)
+
+                elif final_model_name == 'happyhorse-1.0-video-edit':
+                    # V2V: video + optional reference images (reserved for future)
+                    ref_image_urls = kwargs.get('ref_image_urls', [])
+                    video_input = kwargs.get('video_url')
+                    if video_input:
+                        resolved_video = resolve_media_input(
+                            video_input,
+                            model_name=resolver_model,
+                            modality="reference_video",
+                            backend=backend,
+                            uploader=uploader,
+                            dashscope_temp_url_resolver=temp_url_resolver,
+                        )
+                        media = [{"type": "video", "url": resolved_video.value}]
+                        self._merge_media_headers(extra_media_headers, resolved_video.headers)
+                        # Add reference images if provided
+                        if ref_image_urls:
+                            resolved_imgs = resolve_media_inputs(
+                                ref_image_urls,
+                                model_name=resolver_model,
+                                modality="image",
+                                backend=backend,
+                                uploader=uploader,
+                                dashscope_temp_url_resolver=temp_url_resolver,
+                            )
+                            for r in resolved_imgs:
+                                media.append({"type": "reference_image", "url": r.value})
+                                self._merge_media_headers(extra_media_headers, r.headers)
+                # T2V: no media needed
+
+                video_url = self._generate_hh_http(
+                    prompt=prompt,
+                    model_name=final_model_name,
+                    media=media,
+                    resolution=resolution,
+                    duration=duration,
+                    ratio=kwargs.get('ratio'),
+                    seed=seed,
+                    watermark=watermark,
+                    audio_setting=kwargs.get('audio_setting'),
                     extra_headers=extra_media_headers,
                 )
             else:
@@ -390,13 +533,13 @@ class WanxModel(VideoGenModel):
             raise
 
     def _generate_wan_i2v_http(self, prompt: str, img_url: str, model_name: str = "wan2.6-i2v",
-                                  resolution: str = "720P", 
+                                  resolution: str = "720P", ratio: Optional[str] = None,
                                   duration: int = 5, prompt_extend: bool = True,
                                   negative_prompt: str = None, audio_url: str = None,
                                   watermark: bool = False, seed: int = None,
                                   shot_type: str = "single",
                                   extra_headers: Optional[Mapping[str, str]] = None) -> str:
-        """Generate video using Wan I2V (2.5 or 2.6) via HTTP API (asynchronous with polling)."""
+        """Generate video using Wan I2V (2.5/2.6/2.7) via HTTP API (asynchronous with polling)."""
         base = get_provider_base_url("DASHSCOPE")
         create_url = f"{base}/api/v1/services/aigc/video-generation/video-synthesis"
         
@@ -409,13 +552,12 @@ class WanxModel(VideoGenModel):
             headers.update(dict(extra_headers))
         
         payload = {
-            "model": model_name,  # Use passed model name (wan2.5-i2v or wan2.6-i2v)
+            "model": model_name,  # Use passed model name (wan2.5-i2v, wan2.6-i2v, or wan2.7-i2v)
             "input": {
                 "prompt": prompt,
                 "img_url": img_url
             },
             "parameters": {
-                "resolution": resolution,
                 "duration": duration,
                 "prompt_extend": prompt_extend,
                 "watermark": watermark,
@@ -423,6 +565,12 @@ class WanxModel(VideoGenModel):
                 "shot_type": shot_type  # single or multi (only works when prompt_extend=True)
             }
         }
+
+        # Wan2.7 uses ratio; older models use resolution
+        if ratio:
+            payload["parameters"]["ratio"] = ratio
+        elif resolution:
+            payload["parameters"]["resolution"] = resolution
         
         # Add optional parameters
         if negative_prompt:
@@ -500,14 +648,14 @@ class WanxModel(VideoGenModel):
         raise RuntimeError(f"{model_name} task timed out after {max_wait_time}s")
 
     def _generate_wan_r2v_http(self, prompt: str, ref_video_urls: list, model_name: str = "wan2.6-r2v",
-                                  size: str = "1280*720", 
+                                  size: Optional[str] = "1280*720", ratio: Optional[str] = None,
                                   duration: int = 5, audio: bool = True,
                                   shot_type: str = "multi", seed: int = None,
                                   extra_headers: Optional[Mapping[str, str]] = None) -> str:
-        """Generate video using Wan R2V via HTTP API (asynchronous with polling)."""
+        """Generate video using Wan R2V (2.6/2.7) via HTTP API (asynchronous with polling)."""
         base = get_provider_base_url("DASHSCOPE")
         create_url = f"{base}/api/v1/services/aigc/video-generation/video-synthesis"
-        
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
@@ -515,20 +663,26 @@ class WanxModel(VideoGenModel):
         }
         if extra_headers:
             headers.update(dict(extra_headers))
-        
+
+        input_key = "reference_image_urls" if model_name.startswith("wan2.7-") else "reference_video_urls"
         payload = {
             "model": model_name,
             "input": {
                 "prompt": prompt,
-                "reference_video_urls": ref_video_urls
+                input_key: ref_video_urls
             },
             "parameters": {
-                "size": size,
                 "duration": duration,
                 "audio": audio,
                 "shot_type": shot_type
             }
         }
+
+        # Wan2.7 uses ratio; older models use size
+        if ratio:
+            payload["parameters"]["ratio"] = ratio
+        elif size:
+            payload["parameters"]["size"] = size
         
         if seed:
             payload["parameters"]["seed"] = seed
@@ -595,6 +749,115 @@ class WanxModel(VideoGenModel):
             elif task_status in ['CANCELED', 'UNKNOWN']:
                 raise RuntimeError(f"{model_name} task {task_status}: {poll_result}")
             
+        raise RuntimeError(f"{model_name} task timed out after {max_wait_time}s")
+
+    def _generate_hh_http(self, *, prompt: str, model_name: str,
+                           media: Optional[List[Dict[str, str]]] = None,
+                           resolution: str = "1080P", duration: int = 5,
+                           ratio: Optional[str] = None, seed: Optional[int] = None,
+                           watermark: bool = False, audio_setting: Optional[str] = None,
+                           extra_headers: Optional[Mapping[str, str]] = None) -> str:
+        """Generate video using HappyHorse models via HTTP API (asynchronous with polling)."""
+        base = get_provider_base_url("DASHSCOPE")
+        create_url = f"{base}/api/v1/services/aigc/video-generation/video-synthesis"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "X-DashScope-Async": "enable"
+        }
+        if extra_headers:
+            headers.update(dict(extra_headers))
+
+        payload = {
+            "model": model_name,
+            "input": {
+                "prompt": prompt,
+            },
+            "parameters": {
+                "resolution": resolution,
+                "duration": duration,
+                "watermark": watermark,
+            }
+        }
+
+        # Add media array if provided (I2V/R2V/V2V)
+        if media:
+            payload["input"]["media"] = media
+
+        # Model-specific parameters
+        if ratio and model_name != "happyhorse-1.0-i2v":
+            # I2V doesn't support ratio parameter
+            payload["parameters"]["ratio"] = ratio
+        if seed:
+            payload["parameters"]["seed"] = seed
+        if audio_setting and model_name == "happyhorse-1.0-video-edit":
+            payload["parameters"]["audio_setting"] = audio_setting
+
+        logger.info(f"Calling HappyHorse {model_name} HTTP API (async)...")
+        logger.info(f"Payload: {payload}")
+
+        # Step 1: Create task
+        response = requests.post(create_url, headers=headers, json=payload, timeout=120)
+
+        logger.info(f"Create task response status: {response.status_code}")
+        logger.info(f"Create task response body: {response.text[:500] if response.text else 'empty'}")
+
+        if response.status_code != 200:
+            error_data = response.json() if response.text else {}
+            error_msg = error_data.get('message', response.text)
+            raise RuntimeError(f"{model_name} task creation failed: {error_msg}")
+
+        result = response.json()
+        task_id = result.get('output', {}).get('task_id')
+        if not task_id:
+            raise RuntimeError(f"No task_id in response: {result}")
+
+        logger.info(f"HappyHorse task created: {task_id}")
+
+        # Step 2: Poll for task completion
+        poll_url = f"{base}/api/v1/tasks/{task_id}"
+        poll_headers = {
+            "Authorization": f"Bearer {self.api_key}"
+        }
+
+        max_wait_time = 900  # 15 minutes max wait
+        poll_interval = 15   # Poll every 15 seconds
+        elapsed = 0
+
+        while elapsed < max_wait_time:
+            time.sleep(poll_interval)
+            elapsed += poll_interval
+
+            poll_response = requests.get(poll_url, headers=poll_headers, timeout=30)
+
+            if poll_response.status_code != 200:
+                logger.warning(f"Poll request failed: {poll_response.status_code}")
+                continue
+
+            poll_result = poll_response.json()
+            task_status = poll_result.get('output', {}).get('task_status')
+
+            logger.info(f"Task {task_id} status: {task_status} (elapsed: {elapsed}s)")
+
+            if task_status == 'SUCCEEDED':
+                video_url = poll_result.get('output', {}).get('video_url')
+                if not video_url:
+                    raise RuntimeError(f"No video_url in completed task: {poll_result}")
+
+                logger.info(f"HappyHorse task completed. Video URL: {video_url}")
+                return video_url
+
+            elif task_status == 'FAILED':
+                error_msg = poll_result.get('output', {}).get('message', 'Unknown error')
+                code = poll_result.get('output', {}).get('code', '')
+                raise RuntimeError(f"{model_name} task failed: {code} - {error_msg}")
+
+            elif task_status in ['CANCELED', 'UNKNOWN']:
+                raise RuntimeError(f"{model_name} task {task_status}: {poll_result}")
+
+            # PENDING or RUNNING - continue polling
+
         raise RuntimeError(f"{model_name} task timed out after {max_wait_time}s")
 
     def _generate_sdk(self, prompt: str, model_name: str, img_url: str = None, size: str = "1280*720",

@@ -1,9 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, Loader2, Key, ChevronDown, ChevronRight, Settings, MessageSquareCode } from "lucide-react";
+import { Save, Loader2, Key, ChevronDown, ChevronRight, Settings, MessageSquareCode, Palette, Globe } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { api, type EnvConfigPayload, type ProviderMode } from "@/lib/api";
-import { T2I_MODELS, I2I_MODELS, I2V_MODELS, ASPECT_RATIOS } from "@/store/projectStore";
+import { ASPECT_RATIOS } from "@/store/projectStore";
+import {
+  DEFAULT_MODEL_SETTINGS,
+  GLOBAL_I2V_MODELS,
+  GLOBAL_IMAGE_MODELS,
+  normalizeModelSettings,
+} from "@/lib/modelCatalog";
+import { useSettingsStore, type Locale, type Theme } from "@/store/settingsStore";
 import { Image, Video, Layout, Check, User, Building, Box } from "lucide-react";
 
 type EnvConfig = EnvConfigPayload & {
@@ -106,6 +114,9 @@ function loadFromLS<T>(key: string, fallback: T): T {
 }
 
 export default function SettingsPage() {
+  const t = useTranslations("settings");
+  const { locale, theme, setLocale, setTheme } = useSettingsStore();
+
   // ── API Config ──
   const [config, setConfig] = useState<EnvConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(false);
@@ -115,15 +126,10 @@ export default function SettingsPage() {
 
   // ── Default Model Settings ──
   const [modelSettings, setModelSettings] = useState<DefaultModelSettings>(() =>
-    loadFromLS(LS_KEY_MODEL, {
-      t2i_model: "wan2.5-t2i-preview",
-      i2i_model: "wan2.5-i2i-preview",
-      i2v_model: "wan2.5-i2v-preview",
-      character_aspect_ratio: "9:16",
-      scene_aspect_ratio: "16:9",
-      prop_aspect_ratio: "1:1",
-      storyboard_aspect_ratio: "16:9",
-    })
+    normalizeModelSettings(
+      loadFromLS(LS_KEY_MODEL, DEFAULT_MODEL_SETTINGS),
+      "global_settings"
+    )
   );
 
   // ── Default Prompt Config ──
@@ -178,7 +184,10 @@ export default function SettingsPage() {
   };
 
   const handleSaveModelDefaults = () => {
-    localStorage.setItem(LS_KEY_MODEL, JSON.stringify(modelSettings));
+    localStorage.setItem(
+      LS_KEY_MODEL,
+      JSON.stringify(normalizeModelSettings(modelSettings, "global_settings"))
+    );
     alert("Default model settings saved!");
   };
 
@@ -188,13 +197,73 @@ export default function SettingsPage() {
   };
 
   const inputClass =
-    "w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 transition-colors";
+    "w-full bg-input-bg border border-glass-border rounded-lg px-4 py-2 text-foreground placeholder-text-muted focus:outline-none focus:border-primary/50 transition-colors";
   const modeButtonClass = (active: boolean) =>
-    `px-3 py-1.5 text-xs rounded-md border transition-colors ${active ? "border-amber-500/60 bg-amber-500/15 text-amber-200" : "border-white/10 bg-white/5 text-gray-400 hover:text-gray-200"}`;
+    `px-3 py-1.5 text-xs rounded-md border transition-colors font-medium ${active ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "border-glass-border bg-surface text-text-secondary hover:text-foreground"}`;
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-4xl space-y-8">
-      <h1 className="text-2xl font-display font-bold text-white">设置</h1>
+      <h1 className="text-2xl font-display font-bold text-foreground">{t("title")}</h1>
+
+      {/* ── Section 0: Appearance ── */}
+      <section className="glass-panel rounded-xl p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 rounded-lg">
+            <Palette size={20} className="text-violet-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-foreground">{t("appearance")}</h2>
+          </div>
+        </div>
+
+        {/* Language */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Globe size={14} className="text-text-secondary" />
+            <label className="text-sm font-medium text-foreground">{t("language")}</label>
+          </div>
+          <p className="text-xs text-text-secondary">{t("languageDesc")}</p>
+          <div className="flex gap-2 mt-2">
+            {([["zh", t("chinese")], ["en", t("english")]] as [Locale, string][]).map(([loc, label]) => (
+              <button
+                key={loc}
+                onClick={() => setLocale(loc)}
+                className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
+                  locale === loc
+                    ? "border-primary/60 bg-primary/15 text-foreground"
+                    : "border-glass-border bg-hover-bg text-text-secondary hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Theme */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Palette size={14} className="text-text-secondary" />
+            <label className="text-sm font-medium text-foreground">{t("theme")}</label>
+          </div>
+          <p className="text-xs text-text-secondary">{t("themeDesc")}</p>
+          <div className="flex gap-2 mt-2">
+            {([["dark", t("themeDark")], ["light", t("themeLight")]] as [Theme, string][]).map(([th, label]) => (
+              <button
+                key={th}
+                onClick={() => setTheme(th)}
+                className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
+                  theme === th
+                    ? "border-primary/60 bg-primary/15 text-foreground"
+                    : "border-glass-border bg-hover-bg text-text-secondary hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── Section 1: API Configuration ── */}
       <section className="glass-panel rounded-xl p-6 space-y-6">
@@ -203,15 +272,15 @@ export default function SettingsPage() {
             <Key size={20} className="text-amber-400" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">API 配置</h2>
-            <p className="text-xs text-gray-500">DashScope-first setup with optional OSS mirror and provider-direct routing</p>
+            <h2 className="text-lg font-bold text-foreground">{t("apiConfig")}</h2>
+            <p className="text-xs text-text-secondary">DashScope-first setup with optional OSS mirror and provider-direct routing</p>
           </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 size={24} className="animate-spin text-amber-400" />
-            <span className="ml-2 text-gray-400">Loading configuration...</span>
+            <span className="ml-2 text-text-secondary">Loading configuration...</span>
           </div>
         ) : loadError ? (
           <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-sm text-red-300">
@@ -220,51 +289,51 @@ export default function SettingsPage() {
         ) : (
           <>
             <div>
-              <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
+              <label className="flex items-center justify-between text-sm font-medium text-text-secondary mb-2">
                 <span>DashScope API Key <span className="text-red-500">*</span></span>
-                <span className="text-gray-600 font-normal text-xs">e.g. sk-xxx</span>
+                <span className="text-text-muted font-normal text-xs">e.g. sk-xxx</span>
               </label>
               <input type="password" value={config.DASHSCOPE_API_KEY} onChange={(e) => handleChange("DASHSCOPE_API_KEY", e.target.value)} placeholder="Required for DashScope-first model routing" className={inputClass} />
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-4">
-              <p className="text-xs text-gray-400">Storage is local-first by default. These credentials are only needed when enabling OSS mirror.</p>
+            <div className="bg-input-bg border border-glass-border rounded-lg p-4 space-y-4">
+              <p className="text-xs text-text-secondary">Storage is local-first by default. These credentials are only needed when enabling OSS mirror.</p>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Alibaba Cloud Access Key ID</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Alibaba Cloud Access Key ID</label>
                 <input type="password" value={config.ALIBABA_CLOUD_ACCESS_KEY_ID} onChange={(e) => handleChange("ALIBABA_CLOUD_ACCESS_KEY_ID", e.target.value)} placeholder="Optional, for OSS mirror" className={inputClass} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Alibaba Cloud Access Key Secret</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Alibaba Cloud Access Key Secret</label>
                 <input type="password" value={config.ALIBABA_CLOUD_ACCESS_KEY_SECRET} onChange={(e) => handleChange("ALIBABA_CLOUD_ACCESS_KEY_SECRET", e.target.value)} placeholder="Optional, for OSS mirror" className={inputClass} />
               </div>
             </div>
 
-            <div className="pt-4 border-t border-white/10">
-              <h3 className="text-sm font-bold text-white mb-2">OSS Mirror (Optional)</h3>
-              <p className="text-[10px] text-gray-500 mb-4">Generated assets always save locally first. Configure OSS to keep an optional cloud mirror.</p>
+            <div className="pt-4 border-t border-glass-border">
+              <h3 className="text-sm font-bold text-foreground mb-2">OSS Mirror (Optional)</h3>
+              <p className="text-[10px] text-text-muted mb-4">Generated assets always save locally first. Configure OSS to keep an optional cloud mirror.</p>
               <div className="space-y-4">
                 <div>
-                  <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
+                  <label className="flex items-center justify-between text-sm font-medium text-text-secondary mb-2">
                     <span>OSS Bucket Name</span>
                   </label>
                   <input type="text" value={config.OSS_BUCKET_NAME} onChange={(e) => handleChange("OSS_BUCKET_NAME", e.target.value)} placeholder="your_bucket_name (optional)" className={inputClass} />
                 </div>
                 <div>
-                  <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
+                  <label className="flex items-center justify-between text-sm font-medium text-text-secondary mb-2">
                     <span>OSS Endpoint</span>
                   </label>
                   <input type="text" value={config.OSS_ENDPOINT} onChange={(e) => handleChange("OSS_ENDPOINT", e.target.value)} placeholder="oss-cn-beijing.aliyuncs.com (optional)" className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">OSS Base Path</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">OSS Base Path</label>
                   <input type="text" value={config.OSS_BASE_PATH} onChange={(e) => handleChange("OSS_BASE_PATH", e.target.value)} placeholder="lumenx" className={inputClass} />
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-white/10">
-              <h3 className="text-sm font-bold text-white mb-4">Kling Provider</h3>
-              <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-4">
+            <div className="pt-4 border-t border-glass-border">
+              <h3 className="text-sm font-bold text-foreground mb-4">Kling Provider</h3>
+              <div className="bg-surface border border-glass-border rounded-lg p-4 space-y-4">
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => handleChange("KLING_PROVIDER_MODE", "dashscope")} className={modeButtonClass(config.KLING_PROVIDER_MODE === "dashscope")}>
                     DashScope
@@ -273,17 +342,17 @@ export default function SettingsPage() {
                     Vendor Direct
                   </button>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-text-muted">
                   DashScope mode uses your DashScope API key. Vendor-direct mode requires Kling Access Key and Secret Key.
                 </p>
                 {config.KLING_PROVIDER_MODE === "vendor" && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Kling Access Key <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">Kling Access Key <span className="text-red-500">*</span></label>
                       <input type="password" value={config.KLING_ACCESS_KEY} onChange={(e) => handleChange("KLING_ACCESS_KEY", e.target.value)} placeholder="Kling API Access Key" className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Kling Secret Key <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">Kling Secret Key <span className="text-red-500">*</span></label>
                       <input type="password" value={config.KLING_SECRET_KEY} onChange={(e) => handleChange("KLING_SECRET_KEY", e.target.value)} placeholder="Kling API Secret Key" className={inputClass} />
                     </div>
                   </>
@@ -291,9 +360,9 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-white/10">
-              <h3 className="text-sm font-bold text-white mb-4">Vidu Provider</h3>
-              <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-4">
+            <div className="pt-4 border-t border-glass-border">
+              <h3 className="text-sm font-bold text-foreground mb-4">Vidu Provider</h3>
+              <div className="bg-input-bg border border-glass-border rounded-lg p-4 space-y-4">
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => handleChange("VIDU_PROVIDER_MODE", "dashscope")} className={modeButtonClass(config.VIDU_PROVIDER_MODE === "dashscope")}>
                     DashScope
@@ -302,31 +371,31 @@ export default function SettingsPage() {
                     Vendor Direct
                   </button>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-text-muted">
                   DashScope mode uses your DashScope API key. Vendor-direct mode requires a Vidu API key.
                 </p>
                 {config.VIDU_PROVIDER_MODE === "vendor" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Vidu API Key <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Vidu API Key <span className="text-red-500">*</span></label>
                     <input type="password" value={config.VIDU_API_KEY} onChange={(e) => handleChange("VIDU_API_KEY", e.target.value)} placeholder="Vidu API Key" className={inputClass} />
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="pt-4 border-t border-white/10">
-              <button type="button" onClick={() => setEndpointsOpen(!endpointsOpen)} className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors">
+            <div className="pt-4 border-t border-glass-border">
+              <button type="button" onClick={() => setEndpointsOpen(!endpointsOpen)} className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-foreground transition-colors">
                 {endpointsOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 Advanced: API Endpoints
               </button>
               {endpointsOpen && (
                 <div className="mt-4 space-y-4">
-                  <p className="text-xs text-gray-500">Custom API endpoint URLs. Leave empty to use defaults. Overrides are preserved regardless of provider mode.</p>
+                  <p className="text-xs text-text-muted">Custom API endpoint URLs. Leave empty to use defaults. Overrides are preserved regardless of provider mode.</p>
                   {ENDPOINT_PROVIDERS.map(({ key, label, placeholder }) => (
                     <div key={key}>
-                      <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
+                      <label className="flex items-center justify-between text-sm font-medium text-text-secondary mb-2">
                         <span>{label} Base URL</span>
-                        <span className="text-gray-600 font-normal text-xs">{placeholder}</span>
+                        <span className="text-text-muted font-normal text-xs">{placeholder}</span>
                       </label>
                       <input type="text" value={config.endpoint_overrides[key] || ""} onChange={(e) => handleEndpointChange(key, e.target.value)} placeholder={placeholder} className={inputClass + " text-sm"} />
                     </div>
@@ -339,7 +408,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleSaveApiConfig}
                 disabled={saving || loading}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-foreground text-sm font-medium rounded-lg transition-all disabled:opacity-50"
               >
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                 {saving ? "Saving..." : "Save Configuration"}
@@ -356,26 +425,26 @@ export default function SettingsPage() {
             <Settings size={20} className="text-blue-400" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">默认模型设置</h2>
-            <p className="text-xs text-gray-500">Default models and aspect ratios for new projects</p>
+            <h2 className="text-lg font-bold text-foreground">{t("defaultModels")}</h2>
+            <p className="text-xs text-text-secondary">Default models and aspect ratios for new projects</p>
           </div>
         </div>
 
         <div className="space-y-5">
-          <div className="flex items-center gap-2 text-sm font-bold text-white">
+          <div className="flex items-center gap-2 text-sm font-bold text-foreground">
             <Image size={16} className="text-green-400" />
             <span>Text-to-Image Model</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {T2I_MODELS.map((model) => (
+            {GLOBAL_IMAGE_MODELS.map((model) => (
               <button
                 key={model.id}
                 onClick={() => setModelSettings((s) => ({ ...s, t2i_model: model.id }))}
-                className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${modelSettings.t2i_model === model.id ? "border-green-500/50 bg-green-500/10" : "border-white/10 hover:border-white/20 bg-white/5"}`}
+                className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${modelSettings.t2i_model === model.id ? "border-green-500/50 bg-green-500/10" : "border-glass-border hover:border-glass-border bg-glass"}`}
               >
                 {modelSettings.t2i_model === model.id && <div className="absolute top-2 right-2"><Check size={14} className="text-green-400" /></div>}
-                <span className="text-sm font-medium text-white">{model.name}</span>
-                <span className="text-xs text-gray-500">{model.description}</span>
+                <span className="text-sm font-medium text-foreground">{model.name}</span>
+                <span className="text-xs text-text-muted">{model.description}</span>
               </button>
             ))}
           </div>
@@ -389,11 +458,11 @@ export default function SettingsPage() {
               ] as const
             ).map(({ key, label, icon: Icon }) => (
               <div key={key} className="space-y-2">
-                <div className="flex items-center gap-1 text-xs text-gray-400"><Icon size={12} /><label>{label}</label></div>
+                <div className="flex items-center gap-1 text-xs text-text-secondary"><Icon size={12} /><label>{label}</label></div>
                 <div className="space-y-1">
                   {ASPECT_RATIOS.map((ratio) => (
-                    <button key={ratio.id} onClick={() => setModelSettings((s) => ({ ...s, [key]: ratio.id }))} className={`w-full flex flex-col items-center py-2 px-2 rounded border transition-all ${modelSettings[key] === ratio.id ? "border-green-500/50 bg-green-500/10" : "border-white/10 hover:border-white/20 bg-white/5"}`}>
-                      <span className="text-xs font-medium text-white">{ratio.name}</span>
+                    <button key={ratio.id} onClick={() => setModelSettings((s) => ({ ...s, [key]: ratio.id }))} className={`w-full flex flex-col items-center py-2 px-2 rounded border transition-all ${modelSettings[key] === ratio.id ? "border-green-500/50 bg-green-500/10" : "border-glass-border hover:border-glass-border bg-glass"}`}>
+                      <span className="text-xs font-medium text-foreground">{ratio.name}</span>
                     </button>
                   ))}
                 </div>
@@ -401,43 +470,43 @@ export default function SettingsPage() {
             ))}
           </div>
 
-          <div className="border-t border-white/10 pt-4">
-            <div className="flex items-center gap-2 text-sm font-bold text-white">
+          <div className="border-t border-glass-border pt-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
               <Layout size={16} className="text-blue-400" />
               <span>Storyboard (Image-to-Image)</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {I2I_MODELS.map((model) => (
-                <button key={model.id} onClick={() => setModelSettings((s) => ({ ...s, i2i_model: model.id }))} className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${modelSettings.i2i_model === model.id ? "border-blue-500/50 bg-blue-500/10" : "border-white/10 hover:border-white/20 bg-white/5"}`}>
+              {GLOBAL_IMAGE_MODELS.map((model) => (
+                <button key={model.id} onClick={() => setModelSettings((s) => ({ ...s, i2i_model: model.id }))} className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${modelSettings.i2i_model === model.id ? "border-blue-500/50 bg-blue-500/10" : "border-glass-border hover:border-glass-border bg-glass"}`}>
                   {modelSettings.i2i_model === model.id && <div className="absolute top-2 right-2"><Check size={14} className="text-blue-400" /></div>}
-                  <span className="text-sm font-medium text-white">{model.name}</span>
-                  <span className="text-xs text-gray-500">{model.description}</span>
+                  <span className="text-sm font-medium text-foreground">{model.name}</span>
+                  <span className="text-xs text-text-muted">{model.description}</span>
                 </button>
               ))}
             </div>
             <div className="mt-3 space-y-2">
-              <label className="text-xs text-gray-400">Storyboard Aspect Ratio</label>
+              <label className="text-xs text-text-secondary">Storyboard Aspect Ratio</label>
               <div className="grid grid-cols-3 gap-2">
                 {ASPECT_RATIOS.map((ratio) => (
-                  <button key={ratio.id} onClick={() => setModelSettings((s) => ({ ...s, storyboard_aspect_ratio: ratio.id }))} className={`flex flex-col items-center p-3 rounded-lg border transition-all ${modelSettings.storyboard_aspect_ratio === ratio.id ? "border-blue-500/50 bg-blue-500/10" : "border-white/10 hover:border-white/20 bg-white/5"}`}>
-                    <span className="text-sm font-medium text-white">{ratio.name}</span>
+                  <button key={ratio.id} onClick={() => setModelSettings((s) => ({ ...s, storyboard_aspect_ratio: ratio.id }))} className={`flex flex-col items-center p-3 rounded-lg border transition-all ${modelSettings.storyboard_aspect_ratio === ratio.id ? "border-blue-500/50 bg-blue-500/10" : "border-glass-border hover:border-glass-border bg-glass"}`}>
+                    <span className="text-sm font-medium text-foreground">{ratio.name}</span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="border-t border-white/10 pt-4">
-            <div className="flex items-center gap-2 text-sm font-bold text-white">
+          <div className="border-t border-glass-border pt-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
               <Video size={16} className="text-purple-400" />
               <span>Motion (Image-to-Video)</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {I2V_MODELS.map((model) => (
-                <button key={model.id} onClick={() => setModelSettings((s) => ({ ...s, i2v_model: model.id }))} className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${modelSettings.i2v_model === model.id ? "border-purple-500/50 bg-purple-500/10" : "border-white/10 hover:border-white/20 bg-white/5"}`}>
+              {GLOBAL_I2V_MODELS.map((model) => (
+                <button key={model.id} onClick={() => setModelSettings((s) => ({ ...s, i2v_model: model.id }))} className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${modelSettings.i2v_model === model.id ? "border-purple-500/50 bg-purple-500/10" : "border-glass-border hover:border-glass-border bg-glass"}`}>
                   {modelSettings.i2v_model === model.id && <div className="absolute top-2 right-2"><Check size={14} className="text-purple-400" /></div>}
-                  <span className="text-sm font-medium text-white">{model.name}</span>
-                  <span className="text-xs text-gray-500">{model.description}</span>
+                  <span className="text-sm font-medium text-foreground">{model.name}</span>
+                  <span className="text-xs text-text-muted">{model.description}</span>
                 </button>
               ))}
             </div>
@@ -445,7 +514,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex justify-end">
-          <button onClick={handleSaveModelDefaults} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm font-medium rounded-lg transition-all">
+          <button onClick={handleSaveModelDefaults} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-foreground text-sm font-medium rounded-lg transition-all">
             <Save size={16} />
             Save Defaults
           </button>
@@ -459,8 +528,8 @@ export default function SettingsPage() {
             <MessageSquareCode size={20} className="text-purple-400" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">默认提示词配置</h2>
-            <p className="text-xs text-gray-500">Default system prompts for new projects (leave empty for built-in defaults)</p>
+            <h2 className="text-lg font-bold text-foreground">{t("defaultPrompts")}</h2>
+            <p className="text-xs text-text-secondary">Default system prompts for new projects (leave empty for built-in defaults)</p>
           </div>
         </div>
 
@@ -472,19 +541,19 @@ export default function SettingsPage() {
           ] as const
         ).map((section) => (
           <div key={section.key} className="space-y-2">
-            <h3 className="text-sm font-bold text-white">{section.label}</h3>
-            <p className="text-[10px] text-gray-500">{section.desc}</p>
+            <h3 className="text-sm font-bold text-foreground">{section.label}</h3>
+            <p className="text-[10px] text-text-muted">{section.desc}</p>
             <textarea
               value={promptConfig[section.key]}
               onChange={(e) => setPromptConfig((prev) => ({ ...prev, [section.key]: e.target.value }))}
               placeholder="Leave empty to use system default..."
-              className="w-full h-32 bg-black/30 border border-white/10 rounded-lg p-3 text-xs text-gray-300 resize-y focus:outline-none focus:border-purple-500/50 font-mono placeholder-gray-600"
+              className="w-full h-32 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-y focus:outline-none focus:border-purple-500/50 font-mono placeholder-text-muted"
             />
           </div>
         ))}
 
         <div className="flex justify-end">
-          <button onClick={handleSavePromptDefaults} className="px-6 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors flex items-center gap-2">
+          <button onClick={handleSavePromptDefaults} className="px-6 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-500 text-foreground rounded-lg transition-colors flex items-center gap-2">
             <Save size={16} />
             Save Defaults
           </button>

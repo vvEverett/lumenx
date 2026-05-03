@@ -1,5 +1,6 @@
 import base64
 import mimetypes
+import os
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Callable, Dict, List, Mapping, Optional, Sequence
@@ -10,6 +11,7 @@ from .media_refs import (
     MEDIA_REF_LOCAL_PATH,
     MEDIA_REF_OBJECT_KEY,
     MEDIA_REF_REMOTE_URL,
+    MEDIA_REF_UNKNOWN,
     classify_media_ref,
     resolve_local_media_path,
 )
@@ -131,6 +133,12 @@ def _resolve_dashscope_image(
         return _resolved(_encode_image_as_data_uri(local_path), source_ref=ref, media_ref_type=ref_type)
     if ref_type == MEDIA_REF_BLOB_URL:
         raise ValueError("Blob URLs are ephemeral and unsupported for backend media resolution.")
+    # Fallback: treat unknown ref types as local file paths if the file exists on disk.
+    if ref_type == MEDIA_REF_UNKNOWN and os.path.isfile(ref):
+        signed_url = _upload_then_sign(ref, uploader)
+        if signed_url:
+            return _resolved(signed_url, source_ref=ref, media_ref_type=MEDIA_REF_LOCAL_PATH)
+        return _resolved(_encode_image_as_data_uri(ref), source_ref=ref, media_ref_type=MEDIA_REF_LOCAL_PATH)
     raise ValueError(f"Unsupported media reference for DashScope image input: '{ref}'")
 
 
@@ -172,6 +180,19 @@ def _resolve_dashscope_temp_url(
         if temp_url.startswith("oss://"):
             headers[RESOLVE_HEADER_DASHSCOPE_OSS_RESOURCE] = "enable"
         return _resolved(temp_url, source_ref=ref, media_ref_type=ref_type, headers=headers)
+    # Fallback: treat unknown ref types as local file paths if the file exists on disk.
+    # This handles cases like /var/folders/... temp files that are outside the project output root.
+    if ref_type == MEDIA_REF_UNKNOWN and os.path.isfile(ref):
+        signed_url = _upload_then_sign(ref, uploader)
+        if signed_url:
+            return _resolved(signed_url, source_ref=ref, media_ref_type=MEDIA_REF_LOCAL_PATH)
+        if dashscope_temp_url_resolver is not None:
+            temp_url = dashscope_temp_url_resolver(ref)
+            if isinstance(temp_url, str) and temp_url.strip():
+                headers = {}
+                if temp_url.startswith("oss://"):
+                    headers[RESOLVE_HEADER_DASHSCOPE_OSS_RESOURCE] = "enable"
+                return _resolved(temp_url, source_ref=ref, media_ref_type=MEDIA_REF_LOCAL_PATH, headers=headers)
     if ref_type == MEDIA_REF_BLOB_URL:
         raise ValueError("Blob URLs are ephemeral and unsupported for backend media resolution.")
     if ref_type == MEDIA_REF_DATA_URI:

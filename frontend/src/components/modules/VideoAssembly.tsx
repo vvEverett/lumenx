@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Check, ChevronRight, Loader2, Film, AlertTriangle, Layout, Clock, FileText, Download } from "lucide-react";
 import { useProjectStore } from "@/store/projectStore";
@@ -8,6 +9,7 @@ import { api, API_URL } from "@/lib/api";
 import { getAssetUrl, extractErrorDetail } from "@/lib/utils";
 
 export default function VideoAssembly() {
+    const ta = useTranslations("assembly");
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
 
@@ -60,7 +62,7 @@ export default function VideoAssembly() {
             setMergeError(errorDetail);
 
             // Also show alert for immediate feedback
-            alert(`Failed to merge videos:\n\n${errorDetail}`);
+            alert(`${ta("mergeFailedAlert")}:\n\n${errorDetail}`);
         } finally {
             setIsMerging(false);
         }
@@ -90,7 +92,7 @@ export default function VideoAssembly() {
             setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
         } catch (error) {
             console.error("Failed to download video:", error);
-            alert("Failed to download video. Please try again.");
+            alert(ta("downloadFailed"));
         } finally {
             setIsDownloading(false);
         }
@@ -103,20 +105,20 @@ export default function VideoAssembly() {
     const variants = selectedFrameId ? videosByFrame[selectedFrameId] || [] : [];
 
     return (
-        <div className="h-full flex flex-col bg-black/20 overflow-hidden">
+        <div className="h-full flex flex-col bg-surface overflow-hidden">
             {/* Top Section: Split View (Timeline + Variants) */}
             <div className="flex-1 flex flex-row min-h-0">
                 {/* Left Column: Vertical List + Action Bar */}
-                <div className="flex-1 flex flex-col min-w-0 border-r border-white/10">
+                <div className="flex-1 flex flex-col min-w-0 border-r border-glass-border">
                     {/* Header */}
-                    <div className="h-14 border-b border-white/10 flex items-center justify-between px-6 bg-black/20">
+                    <div className="h-14 border-b border-glass-border flex items-center justify-between px-6 bg-surface">
                         <h2 className="font-bold text-lg flex items-center gap-2">
                             <Film className="text-primary" size={20} />
-                            Assembly Timeline
+                            {ta("assemblyTimeline")}
                         </h2>
-                        <div className="text-sm text-gray-400">
-                            <span className="text-white font-bold">{currentProject?.frames?.filter((f: any) => f.selected_video_id).length}</span>
-                            /{currentProject?.frames?.length} frames ready
+                        <div className="text-sm text-text-secondary">
+                            <span className="text-foreground font-bold">{currentProject?.frames?.filter((f: any) => f.selected_video_id).length}</span>
+                            /{currentProject?.frames?.length} {ta("framesReady")}
                         </div>
                     </div>
 
@@ -133,12 +135,12 @@ export default function VideoAssembly() {
                                     key={frame.id}
                                     layoutId={`frame-${frame.id}`}
                                     onClick={() => setSelectedFrameId(frame.id)}
-                                    className={`group relative flex rounded-xl overflow-hidden cursor-pointer border transition-all bg-white/5 hover:bg-white/10 ${isSelected ? "border-primary ring-1 ring-primary/50" :
-                                        selectedVideoId ? "border-green-500/30" : "border-white/10"
+                                    className={`group relative flex rounded-xl overflow-hidden cursor-pointer border transition-all bg-glass hover:bg-hover-bg ${isSelected ? "border-primary ring-1 ring-primary/50" :
+                                        selectedVideoId ? "border-green-500/30" : "border-glass-border"
                                         }`}
                                 >
                                     {/* Left: Preview */}
-                                    <div className="w-48 aspect-video relative flex-shrink-0 border-r border-white/10 bg-black">
+                                    <div className="w-48 aspect-video relative flex-shrink-0 border-r border-glass-border bg-elevated">
                                         {selectedVideo ? (
                                             <video
                                                 src={getAssetUrl(selectedVideo.video_url)}
@@ -158,22 +160,22 @@ export default function VideoAssembly() {
                                                         className="w-full h-full object-cover opacity-50 grayscale"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full bg-white/5" />
+                                                    <div className="w-full h-full bg-glass" />
                                                 )}
                                                 <div className="absolute inset-0 flex items-center justify-center">
                                                     {hasVideos ? (
                                                         <div className="bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded text-xs font-bold border border-yellow-500/50">
-                                                            Select Video
+                                                            {ta("selectVideo")}
                                                         </div>
                                                     ) : (
                                                         <div className="bg-red-500/20 text-red-500 px-2 py-1 rounded text-xs font-bold border border-red-500/50">
-                                                            No Videos
+                                                            {ta("noVideos")}
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
                                         )}
-                                        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur px-2 py-0.5 rounded text-[10px] font-mono text-white">
+                                        <div className="absolute top-2 left-2 bg-surface px-2 py-0.5 rounded text-[10px] font-mono text-foreground">
                                             #{index + 1}
                                         </div>
                                     </div>
@@ -182,25 +184,25 @@ export default function VideoAssembly() {
                                     <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
                                         <div className="space-y-2">
                                             <div className="flex items-start gap-2">
-                                                <FileText size={14} className="text-gray-500 mt-0.5 flex-shrink-0" />
-                                                <p className="text-sm text-gray-300 line-clamp-2 leading-relaxed">
-                                                    {frame.image_prompt || frame.action_description || "No prompt available"}
+                                                <FileText size={14} className="text-text-muted mt-0.5 flex-shrink-0" />
+                                                <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">
+                                                    {frame.image_prompt || frame.action_description || ta("noPrompt")}
                                                 </p>
                                             </div>
                                             {frame.dialogue && (
-                                                <div className="flex items-start gap-2 pl-6 border-l-2 border-white/10 ml-1">
-                                                    <p className="text-xs text-gray-400 italic">"{frame.dialogue}"</p>
+                                                <div className="flex items-start gap-2 pl-6 border-l-2 border-glass-border ml-1">
+                                                    <p className="text-xs text-text-secondary italic">"{frame.dialogue}"</p>
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
-                                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-border-subtle">
+                                            <div className="flex items-center gap-4 text-xs text-text-muted">
                                                 <span className="flex items-center gap-1">
                                                     <Clock size={12} /> {selectedVideo ? `${selectedVideo.duration}s` : "--"}
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    <Film size={12} /> {videosByFrame[frame.id]?.length || 0} variants
+                                                    <Film size={12} /> {videosByFrame[frame.id]?.length || 0} {ta("variants")}
                                                 </span>
                                             </div>
 
@@ -217,14 +219,14 @@ export default function VideoAssembly() {
                     </div>
 
                     {/* Bottom Action Bar */}
-                    <div className="h-20 border-t border-white/10 bg-black/40 backdrop-blur flex items-center justify-end px-8">
+                    <div className="h-20 border-t border-glass-border bg-surface flex items-center justify-end px-8">
                         <button
                             onClick={handleMerge}
                             disabled={isMerging}
-                            className="bg-white/5 hover:bg-white/10 border border-primary/50 hover:border-primary text-primary hover:text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="bg-glass hover:bg-hover-bg border border-primary/50 hover:border-primary text-primary hover:text-foreground px-8 py-3 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                             {isMerging ? <Loader2 className="animate-spin" /> : <Film />}
-                            Merge & Proceed
+                            {ta("mergeAndProceed")}
                         </button>
                     </div>
 
@@ -239,7 +241,7 @@ export default function VideoAssembly() {
                                 <div className="flex items-start gap-3">
                                     <AlertTriangle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
                                     <div className="flex-1">
-                                        <h4 className="text-sm font-bold text-red-400 mb-1">Merge Failed</h4>
+                                        <h4 className="text-sm font-bold text-red-400 mb-1">{ta("mergeFailed")}</h4>
                                         <p className="text-xs text-red-300/90 whitespace-pre-wrap leading-relaxed font-mono">
                                             {mergeError}
                                         </p>
@@ -255,9 +257,9 @@ export default function VideoAssembly() {
                                         )}
                                         <button
                                             onClick={() => setMergeError(null)}
-                                            className="mt-3 text-xs text-gray-400 hover:text-white underline"
+                                            className="mt-3 text-xs text-text-secondary hover:text-foreground underline"
                                         >
-                                            Dismiss
+                                            {ta("dismiss")}
                                         </button>
                                     </div>
                                 </div>
@@ -267,11 +269,11 @@ export default function VideoAssembly() {
                 </div>
 
                 {/* Right Sidebar - Variants */}
-                <div className="w-96 bg-[#0f0f0f] flex flex-col shadow-2xl z-10 border-l border-white/10">
-                    <div className="h-14 border-b border-white/10 flex items-center justify-between px-4 bg-black/20">
-                        <h3 className="font-bold text-sm">Variants</h3>
+                <div className="w-96 bg-elevated flex flex-col shadow-md z-10 border-l border-glass-border">
+                    <div className="h-14 border-b border-glass-border flex items-center justify-between px-4 bg-surface">
+                        <h3 className="font-bold text-sm">{ta("variants")}</h3>
                         {selectedFrameId && (
-                            <span className="text-xs text-gray-500">Frame #{(currentProject?.frames?.findIndex((f: any) => f.id === selectedFrameId) ?? -1) + 1}</span>
+                            <span className="text-xs text-text-muted">Frame #{(currentProject?.frames?.findIndex((f: any) => f.id === selectedFrameId) ?? -1) + 1}</span>
                         )}
                     </div>
 
@@ -284,7 +286,7 @@ export default function VideoAssembly() {
                                         return (
                                             <div
                                                 key={video.id}
-                                                className={`rounded-xl overflow-hidden border transition-all group ${isSelected ? "border-green-500 ring-1 ring-green-500/50 bg-green-500/5" : "border-white/10 bg-white/5 hover:border-white/30"
+                                                className={`rounded-xl overflow-hidden border transition-all group ${isSelected ? "border-green-500 ring-1 ring-green-500/50 bg-green-500/5" : "border-glass-border bg-glass hover:border-glass-border"
                                                     }`}
                                             >
                                                 <div className="aspect-video relative bg-black">
@@ -294,30 +296,30 @@ export default function VideoAssembly() {
                                                         controls
                                                     />
                                                     {/* Overlay Info */}
-                                                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur px-1.5 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="absolute top-2 left-2 bg-surface px-1.5 rounded text-[10px] text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                                                         {video.duration}s
                                                     </div>
                                                 </div>
                                                 <div className="p-3">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <div className="text-xs text-gray-400">
+                                                        <div className="text-xs text-text-secondary">
                                                             Variant #{idx + 1}
                                                         </div>
-                                                        <div className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-gray-400">
+                                                        <div className="text-[10px] px-1.5 py-0.5 rounded bg-hover-bg text-text-secondary">
                                                             {video.model}
                                                         </div>
                                                     </div>
 
                                                     {isSelected ? (
                                                         <div className="w-full py-2 bg-green-500/10 text-green-500 rounded-lg text-xs font-bold flex items-center justify-center gap-2 border border-green-500/20">
-                                                            <Check size={14} /> Selected
+                                                            <Check size={14} /> {ta("selected")}
                                                         </div>
                                                     ) : (
                                                         <button
                                                             onClick={() => handleSelectVideo(selectedFrameId, video.id)}
-                                                            className="w-full py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors text-white"
+                                                            className="w-full py-2 bg-hover-bg hover:bg-hover-bg rounded-lg text-xs font-medium transition-colors text-foreground"
                                                         >
-                                                            Select This Variant
+                                                            {ta("selectThisVariant")}
                                                         </button>
                                                     )}
                                                 </div>
@@ -325,17 +327,17 @@ export default function VideoAssembly() {
                                         );
                                     })
                                 ) : (
-                                    <div className="text-center py-12 text-gray-500 flex flex-col items-center">
+                                    <div className="text-center py-12 text-text-muted flex flex-col items-center">
                                         <AlertTriangle className="mb-3 opacity-50" size={32} />
-                                        <p className="text-sm font-medium">No videos generated</p>
-                                        <p className="text-xs mt-1 max-w-[200px]">Go back to the Motion step to generate videos for this frame.</p>
+                                        <p className="text-sm font-medium">{ta("noVideosGenerated")}</p>
+                                        <p className="text-xs mt-1 max-w-[200px]">{ta("noVideosHint")}</p>
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-3">
+                            <div className="h-full flex flex-col items-center justify-center text-text-muted gap-3">
                                 <Layout size={48} className="opacity-10" />
-                                <p className="text-sm">Select a frame from the timeline<br />to view video variants</p>
+                                <p className="text-sm">{ta("selectFrameHint")}</p>
                             </div>
                         )}
                     </div>
@@ -349,11 +351,11 @@ export default function VideoAssembly() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="border-t border-white/10 bg-[#050505] shadow-2xl z-20"
+                        className="border-t border-glass-border bg-elevated shadow-md z-20"
                     >
                         <div className="max-w-7xl mx-auto p-6 flex gap-8">
                             {/* Video Player */}
-                            <div className="w-1/3 aspect-video bg-black rounded-xl overflow-hidden border border-white/10 shadow-lg relative group">
+                            <div className="w-1/3 aspect-video bg-black rounded-xl overflow-hidden border border-glass-border shadow-lg relative group">
                                 <video
                                     src={getAssetUrl(currentProject.merged_video_url)}
                                     className="w-full h-full object-contain"
@@ -365,11 +367,11 @@ export default function VideoAssembly() {
                             {/* Info & Actions */}
                             <div className="flex-1 flex flex-col justify-center space-y-4">
                                 <div>
-                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                        <Check className="text-green-500" /> Merged Video Ready
+                                    <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                                        <Check className="text-green-500" /> {ta("mergedVideoReady")}
                                     </h3>
-                                    <p className="text-gray-400 mt-1">
-                                        All selected clips have been stitched together. You can now proceed to add voiceovers and sound effects.
+                                    <p className="text-text-secondary mt-1">
+                                        {ta("mergedVideoDesc")}
                                     </p>
                                 </div>
 
@@ -377,10 +379,10 @@ export default function VideoAssembly() {
                                     <button
                                         onClick={handleDownload}
                                         disabled={isDownloading}
-                                        className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-6 py-3 bg-hover-bg hover:bg-hover-bg text-foreground rounded-lg font-bold flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Download size={18} />
-                                        {isDownloading ? "Downloading..." : "Download MP4"}
+                                        {isDownloading ? ta("downloading") : ta("downloadMP4")}
                                     </button>
                                     {/* Optional: Proceed Button if needed, or user uses sidebar */}
                                 </div>

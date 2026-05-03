@@ -3,8 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Image, Video, Layout, Check, User, Building, Box, Loader2 } from 'lucide-react';
-import { T2I_MODELS, I2I_MODELS, I2V_MODELS, ASPECT_RATIOS } from '@/store/projectStore';
+import { ASPECT_RATIOS } from '@/store/projectStore';
+import {
+    SERIES_IMAGE_MODELS,
+    SERIES_I2V_MODELS,
+    resolveModelSettings,
+} from '@/lib/modelCatalog';
 import { api } from '@/lib/api';
+import { useTranslations } from "next-intl";
 
 interface SeriesModelSettingsModalProps {
     isOpen: boolean;
@@ -14,13 +20,16 @@ interface SeriesModelSettingsModalProps {
 }
 
 export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, onSaved }: SeriesModelSettingsModalProps) {
-    const [t2iModel, setT2iModel] = useState('wan2.5-t2i-preview');
-    const [i2iModel, setI2iModel] = useState('wan2.5-i2i-preview');
-    const [i2vModel, setI2vModel] = useState('wan2.5-i2v-preview');
-    const [characterAspectRatio, setCharacterAspectRatio] = useState('9:16');
-    const [sceneAspectRatio, setSceneAspectRatio] = useState('16:9');
-    const [propAspectRatio, setPropAspectRatio] = useState('1:1');
-    const [storyboardAspectRatio, setStoryboardAspectRatio] = useState('16:9');
+    const t = useTranslations("models");
+    const tc = useTranslations("common");
+    const defaultSettings = resolveModelSettings(undefined, 'series_settings');
+    const [t2iModel, setT2iModel] = useState(defaultSettings.t2i_model);
+    const [i2iModel, setI2iModel] = useState(defaultSettings.i2i_model);
+    const [i2vModel, setI2vModel] = useState(defaultSettings.i2v_model);
+    const [characterAspectRatio, setCharacterAspectRatio] = useState(defaultSettings.character_aspect_ratio);
+    const [sceneAspectRatio, setSceneAspectRatio] = useState(defaultSettings.scene_aspect_ratio);
+    const [propAspectRatio, setPropAspectRatio] = useState(defaultSettings.prop_aspect_ratio);
+    const [storyboardAspectRatio, setStoryboardAspectRatio] = useState(defaultSettings.storyboard_aspect_ratio);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -31,19 +40,18 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
             setLoadError(null);
             api.getSeriesModelSettings(seriesId)
                 .then((data) => {
-                    if (data) {
-                        setT2iModel(data.t2i_model || 'wan2.5-t2i-preview');
-                        setI2iModel(data.i2i_model || 'wan2.5-i2i-preview');
-                        setI2vModel(data.i2v_model || 'wan2.5-i2v-preview');
-                        setCharacterAspectRatio(data.character_aspect_ratio || '9:16');
-                        setSceneAspectRatio(data.scene_aspect_ratio || '16:9');
-                        setPropAspectRatio(data.prop_aspect_ratio || '1:1');
-                        setStoryboardAspectRatio(data.storyboard_aspect_ratio || '16:9');
-                    }
+                    const resolvedSettings = resolveModelSettings(data, 'series_settings');
+                    setT2iModel(resolvedSettings.t2i_model);
+                    setI2iModel(resolvedSettings.i2i_model);
+                    setI2vModel(resolvedSettings.i2v_model);
+                    setCharacterAspectRatio(resolvedSettings.character_aspect_ratio);
+                    setSceneAspectRatio(resolvedSettings.scene_aspect_ratio);
+                    setPropAspectRatio(resolvedSettings.prop_aspect_ratio);
+                    setStoryboardAspectRatio(resolvedSettings.storyboard_aspect_ratio);
                 })
                 .catch((err) => {
                     console.error("Failed to load series model settings:", err);
-                    setLoadError("Failed to load settings. Is the backend running?");
+                    setLoadError(t("loadSettingsFailed"));
                 })
                 .finally(() => setIsLoading(false));
         }
@@ -65,7 +73,7 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
             onClose();
         } catch (error) {
             console.error("Failed to save series model settings:", error);
-            alert("Failed to save settings");
+            alert(t("saveSettingsFailed"));
         } finally {
             setIsSaving(false);
         }
@@ -79,29 +87,29 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm flex items-center justify-center p-4"
                 onClick={onClose}
             >
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-[#1a1a1a] rounded-2xl border border-white/10 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+                    className="bg-elevated rounded-2xl border border-glass-border w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-5 border-b border-white/10">
+                    <div className="flex items-center justify-between p-5 border-b border-glass-border">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg">
                                 <Settings size={20} className="text-blue-400" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-white">Series Generation Settings</h2>
-                                <p className="text-xs text-gray-500">Configure models and aspect ratios for all episodes</p>
+                                <h2 className="text-lg font-bold text-foreground">{t("seriesGenSettings")}</h2>
+                                <p className="text-xs text-text-secondary">{t("seriesGenSettingsDesc")}</p>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                            <X size={20} className="text-gray-400" />
+                        <button onClick={onClose} className="p-2 hover:bg-hover-bg rounded-lg transition-colors">
+                            <X size={20} className="text-text-secondary" />
                         </button>
                     </div>
 
@@ -110,7 +118,7 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                         {isLoading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 size={24} className="animate-spin text-blue-400" />
-                                <span className="ml-2 text-gray-400">Loading settings...</span>
+                                <span className="ml-2 text-text-secondary">{t("loadingSettings")}</span>
                             </div>
                         ) : loadError ? (
                             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-sm text-red-300">
@@ -120,21 +128,21 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                             <>
                                 {/* Assets Section */}
                                 <div className="space-y-5">
-                                    <div className="flex items-center gap-2 text-sm font-bold text-white">
+                                    <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                                         <Image size={16} className="text-green-400" />
-                                        <span>Assets (Text-to-Image)</span>
+                                        <span>{t("assetsT2I")}</span>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs text-gray-400">Model</label>
+                                        <label className="text-xs text-text-secondary">{t("model")}</label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {T2I_MODELS.map((model) => (
+                                            {SERIES_IMAGE_MODELS.map((model) => (
                                                 <button
                                                     key={model.id}
                                                     onClick={() => setT2iModel(model.id)}
                                                     className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${t2iModel === model.id
                                                         ? 'border-green-500/50 bg-green-500/10'
-                                                        : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                        : 'border-glass-border hover:border-glass-border bg-glass'
                                                     }`}
                                                 >
                                                     {t2iModel === model.id && (
@@ -142,8 +150,8 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                                             <Check size={14} className="text-green-400" />
                                                         </div>
                                                     )}
-                                                    <span className="text-sm font-medium text-white">{model.name}</span>
-                                                    <span className="text-xs text-gray-500">{model.description}</span>
+                                                    <span className="text-sm font-medium text-foreground">{model.name}</span>
+                                                    <span className="text-xs text-text-secondary">{model.description}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -151,12 +159,12 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
 
                                     <div className="grid grid-cols-3 gap-4">
                                         {([
-                                            { key: 'character', label: 'Character', icon: User, value: characterAspectRatio, setter: setCharacterAspectRatio },
-                                            { key: 'scene', label: 'Scene', icon: Building, value: sceneAspectRatio, setter: setSceneAspectRatio },
-                                            { key: 'prop', label: 'Prop', icon: Box, value: propAspectRatio, setter: setPropAspectRatio },
-                                        ] as const).map(({ key, label, icon: Icon, value, setter }) => (
+                                            { key: 'character', label: t("character"), icon: User, value: characterAspectRatio, setter: setCharacterAspectRatio },
+                                            { key: 'scene', label: t("scene"), icon: Building, value: sceneAspectRatio, setter: setSceneAspectRatio },
+                                            { key: 'prop', label: t("prop"), icon: Box, value: propAspectRatio, setter: setPropAspectRatio },
+                                        ]).map(({ key, label, icon: Icon, value, setter }) => (
                                             <div key={key} className="space-y-2">
-                                                <div className="flex items-center gap-1 text-xs text-gray-400">
+                                                <div className="flex items-center gap-1 text-xs text-text-secondary">
                                                     <Icon size={12} />
                                                     <label>{label}</label>
                                                 </div>
@@ -167,10 +175,10 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                                             onClick={() => setter(ratio.id)}
                                                             className={`w-full flex flex-col items-center py-2 px-2 rounded border transition-all ${value === ratio.id
                                                                 ? 'border-green-500/50 bg-green-500/10'
-                                                                : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                                : 'border-glass-border hover:border-glass-border bg-glass'
                                                             }`}
                                                         >
-                                                            <span className="text-xs font-medium text-white">{ratio.name}</span>
+                                                            <span className="text-xs font-medium text-foreground">{ratio.name}</span>
                                                         </button>
                                                     ))}
                                                 </div>
@@ -179,25 +187,25 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                     </div>
                                 </div>
 
-                                <div className="border-t border-white/10" />
+                                <div className="border-t border-glass-border" />
 
                                 {/* Storyboard Section */}
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-2 text-sm font-bold text-white">
+                                    <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                                         <Layout size={16} className="text-blue-400" />
-                                        <span>Storyboard (Image-to-Image)</span>
+                                        <span>{t("storyboardI2I")}</span>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs text-gray-400">Model</label>
+                                        <label className="text-xs text-text-secondary">{t("model")}</label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {I2I_MODELS.map((model) => (
+                                            {SERIES_IMAGE_MODELS.map((model) => (
                                                 <button
                                                     key={model.id}
                                                     onClick={() => setI2iModel(model.id)}
                                                     className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${i2iModel === model.id
                                                         ? 'border-blue-500/50 bg-blue-500/10'
-                                                        : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                        : 'border-glass-border hover:border-glass-border bg-glass'
                                                     }`}
                                                 >
                                                     {i2iModel === model.id && (
@@ -205,15 +213,15 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                                             <Check size={14} className="text-blue-400" />
                                                         </div>
                                                     )}
-                                                    <span className="text-sm font-medium text-white">{model.name}</span>
-                                                    <span className="text-xs text-gray-500">{model.description}</span>
+                                                    <span className="text-sm font-medium text-foreground">{model.name}</span>
+                                                    <span className="text-xs text-text-secondary">{model.description}</span>
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs text-gray-400">Aspect Ratio</label>
+                                        <label className="text-xs text-text-secondary">{t("aspectRatio")}</label>
                                         <div className="grid grid-cols-3 gap-2">
                                             {ASPECT_RATIOS.map((ratio) => (
                                                 <button
@@ -221,37 +229,37 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                                     onClick={() => setStoryboardAspectRatio(ratio.id)}
                                                     className={`flex flex-col items-center p-3 rounded-lg border transition-all ${storyboardAspectRatio === ratio.id
                                                         ? 'border-blue-500/50 bg-blue-500/10'
-                                                        : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                        : 'border-glass-border hover:border-glass-border bg-glass'
                                                     }`}
                                                 >
-                                                    <span className="text-sm font-medium text-white">{ratio.name}</span>
-                                                    <span className="text-[10px] text-gray-500">{ratio.description}</span>
+                                                    <span className="text-sm font-medium text-foreground">{ratio.name}</span>
+                                                    <span className="text-[10px] text-text-secondary">{ratio.description}</span>
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="border-t border-white/10" />
+                                <div className="border-t border-glass-border" />
 
                                 {/* Motion Section */}
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-2 text-sm font-bold text-white">
+                                    <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                                         <Video size={16} className="text-purple-400" />
-                                        <span>Motion (Image-to-Video)</span>
+                                        <span>{t("motionI2V")}</span>
                                     </div>
-                                    <p className="text-xs text-gray-500">Motion follows storyboard aspect ratio automatically.</p>
+                                    <p className="text-xs text-text-secondary">{t("motionFollowsAR")}</p>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs text-gray-400">Model</label>
+                                        <label className="text-xs text-text-secondary">{t("model")}</label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {I2V_MODELS.map((model) => (
+                                            {SERIES_I2V_MODELS.map((model) => (
                                                 <button
                                                     key={model.id}
                                                     onClick={() => setI2vModel(model.id)}
                                                     className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${i2vModel === model.id
                                                         ? 'border-purple-500/50 bg-purple-500/10'
-                                                        : 'border-white/10 hover:border-white/20 bg-white/5'
+                                                        : 'border-glass-border hover:border-glass-border bg-glass'
                                                     }`}
                                                 >
                                                     {i2vModel === model.id && (
@@ -259,8 +267,8 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                                             <Check size={14} className="text-purple-400" />
                                                         </div>
                                                     )}
-                                                    <span className="text-sm font-medium text-white">{model.name}</span>
-                                                    <span className="text-xs text-gray-500">{model.description}</span>
+                                                    <span className="text-sm font-medium text-foreground">{model.name}</span>
+                                                    <span className="text-xs text-text-secondary">{model.description}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -271,27 +279,27 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                     </div>
 
                     {/* Footer */}
-                    <div className="flex justify-end gap-3 p-5 border-t border-white/10 bg-black/20">
+                    <div className="flex justify-end gap-3 p-5 border-t border-glass-border bg-surface">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                            className="px-4 py-2 text-sm text-text-secondary hover:text-foreground transition-colors"
                         >
-                            Cancel
+                            {tc("cancel")}
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={isSaving || isLoading || !!loadError}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-foreground text-sm font-medium rounded-lg transition-all disabled:opacity-50"
                         >
                             {isSaving ? (
                                 <>
                                     <Loader2 size={16} className="animate-spin" />
-                                    Saving...
+                                    {t("saving")}
                                 </>
                             ) : (
                                 <>
                                     <Check size={16} />
-                                    Save Settings
+                                    {t("saveSettings")}
                                 </>
                             )}
                         </button>

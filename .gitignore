@@ -96,19 +96,36 @@ static/
 # Internal development tools (not for public repo)
 .agent/
 .claude/
+!.claude/
+.claude/*
+!.claude/commands/
+.claude/commands/*
+!.claude/commands/*.md
 .codex/
+!.codex/
+.codex/*
+!.codex/workflows/
+.codex/workflows/*
+!.codex/workflows/*.md
 .superset/
 GITHUB_RELEASE_CHECKLIST.md
 CLAUDE.md
 AGENTS.md
+!AGENTS.md
 demand/
 
 # Local docs scratchpads
 docs/api-reference/
 docs/plans/
+!docs/api-reference/
+docs/api-reference/*
+!docs/api-reference/*.md
+!docs/plans/
+docs/plans/*
+!docs/plans/*.md
 
 # Build/packaging configs (keep templates only)
 *.spec
 !build.spec.template
 
-
+.omx/

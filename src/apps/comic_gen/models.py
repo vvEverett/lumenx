@@ -3,6 +3,11 @@ from enum import Enum
 import time
 from pydantic import BaseModel, Field
 
+from ...utils.model_catalog import get_default_model_settings
+
+
+_DEFAULT_MODEL_SETTINGS = get_default_model_settings()
+
 class AspectRatio(str, Enum):
     SQUARE = "1:1"
     PORTRAIT = "9:16"
@@ -96,8 +101,8 @@ class VideoTask(BaseModel):
     audio_url: Optional[str] = Field(None, description="URL of generated/uploaded audio")
     prompt_extend: bool = Field(True, description="Whether to use prompt extension")
     negative_prompt: Optional[str] = Field(None, description="Negative prompt")
-    model: str = Field("wan2.6-i2v", description="Model used for generation")
-    shot_type: str = Field("single", description="Shot type: 'single' or 'multi' (only for wan2.6-i2v)")
+    model: str = Field("wan2.7-i2v", description="Model used for generation")
+    shot_type: str = Field("single", description="Shot type: 'single' or 'multi' (only for wan I2V models)")
     generation_mode: str = Field("i2v", description="Generation mode: 'i2v' (image-to-video) or 'r2v' (reference-to-video)")
     reference_video_urls: List[str] = Field(default_factory=list, description="Reference video URLs for R2V generation (max 3)")
     # Kling params
@@ -107,6 +112,10 @@ class VideoTask(BaseModel):
     # Vidu params
     vidu_audio: Optional[bool] = Field(None, description="Vidu audio output")
     movement_amplitude: Optional[str] = Field(None, description="Vidu movement amplitude: auto/small/medium/large")
+    # HappyHorse params
+    reference_image_urls: List[str] = Field(default_factory=list, description="Reference image URLs for HappyHorse R2V (max 9)")
+    ratio: Optional[str] = Field(None, description="Aspect ratio for HappyHorse T2V/R2V: 16:9, 9:16, 1:1, 4:3, 3:4")
+    audio_setting: Optional[str] = Field(None, description="Audio setting for HappyHorse V2V: auto/origin")
     created_at: float = Field(default_factory=time.time)
 
 class Character(BaseModel):
@@ -252,9 +261,10 @@ class StoryboardFrame(BaseModel):
 
 class ModelSettings(BaseModel):
     """Model selection settings for different generation stages"""
-    t2i_model: str = Field("wan2.6-t2i", description="Text-to-Image model for Assets")
-    i2i_model: str = Field("wan2.6-image", description="Image-to-Image model for Storyboard")
-    i2v_model: str = Field("wan2.6-i2v", description="Image-to-Video model for Motion")
+    t2i_model: str = Field(_DEFAULT_MODEL_SETTINGS.t2i_model, description="Text-to-Image model for Assets")
+    i2i_model: str = Field(_DEFAULT_MODEL_SETTINGS.i2i_model, description="Image-to-Image model for Storyboard")
+    image_model: str = Field(_DEFAULT_MODEL_SETTINGS.image_model, description="Image generation model (T2I+I2I unified)")
+    i2v_model: str = Field(_DEFAULT_MODEL_SETTINGS.i2v_model, description="Image-to-Video model for Motion")
     character_aspect_ratio: str = Field("9:16", description="Aspect ratio for Characters (9:16, 16:9, 1:1)")
     scene_aspect_ratio: str = Field("16:9", description="Aspect ratio for Scenes (9:16, 16:9, 1:1)")
     prop_aspect_ratio: str = Field("1:1", description="Aspect ratio for Props (9:16, 16:9, 1:1)")

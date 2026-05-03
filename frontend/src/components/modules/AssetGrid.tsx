@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { RefreshCw, Download, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { api, API_URL } from "@/lib/api";
 import { useProjectStore } from "@/store/projectStore";
@@ -20,6 +21,8 @@ interface AssetGridProps {
 }
 
 export default function AssetGrid({ projectId }: AssetGridProps) {
+    const ts = useTranslations("storyboard");
+    const ta = useTranslations("assets");
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
 
@@ -68,7 +71,7 @@ export default function AssetGrid({ projectId }: AssetGridProps) {
     const handleGenerate = async () => {
         if (!projectId) {
             // Try to find the latest project or alert user
-            alert("请先创建脚本！");
+            alert(ts("createScriptFirst"));
             return;
         }
         setIsGenerating(true);
@@ -108,10 +111,10 @@ export default function AssetGrid({ projectId }: AssetGridProps) {
     return (
         <div className="h-full p-6 overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-display font-bold text-white">生成的资源</h2>
+                <h2 className="text-xl font-display font-bold text-foreground">{ts("generatedAssets")}</h2>
                 <div className="flex gap-2">
                     <button className="glass-button text-xs flex items-center gap-2">
-                        <Plus size={14} /> 上传
+                        <Plus size={14} /> {ts("upload")}
                     </button>
                     <button
                         onClick={handleGenerate}
@@ -119,7 +122,7 @@ export default function AssetGrid({ projectId }: AssetGridProps) {
                         className="glass-button text-xs flex items-center gap-2 text-primary border-primary/30"
                     >
                         <RefreshCw size={14} className={isGenerating ? "animate-spin" : ""} />
-                        {isGenerating ? "生成中..." : "生成全部"}
+                        {isGenerating ? ta("generating") : ts("generateAll")}
                     </button>
                 </div>
             </div>
@@ -131,7 +134,7 @@ export default function AssetGrid({ projectId }: AssetGridProps) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
-                        className="break-inside-avoid group relative rounded-xl overflow-hidden bg-white/5 border border-white/5 hover:border-primary/50 transition-all duration-300"
+                        className="break-inside-avoid group relative rounded-xl overflow-hidden bg-glass border border-border-subtle hover:border-primary/50 transition-all duration-300"
                     >
                         {asset.url ? (
                             <img
@@ -140,16 +143,16 @@ export default function AssetGrid({ projectId }: AssetGridProps) {
                                 className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                         ) : (
-                            <div className="w-full h-48 bg-white/5 flex items-center justify-center text-xs text-gray-500">
-                                生成中...
+                            <div className="w-full h-48 bg-glass flex items-center justify-center text-xs text-text-muted">
+                                {ta("generating")}
                             </div>
                         )}
 
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                            <h3 className="text-sm font-bold text-white">{asset.title}</h3>
+                        <div className="absolute inset-0 bg-gradient-to-t from-overlay via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                            <h3 className="text-sm font-bold text-foreground">{asset.title}</h3>
                             <div className="flex items-center justify-between mt-2">
-                                <span className="text-[10px] font-mono bg-white/10 px-2 py-1 rounded">{asset.type.toUpperCase()}</span>
-                                <button className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                                <span className="text-[10px] font-mono bg-hover-bg px-2 py-1 rounded">{asset.type.toUpperCase()}</span>
+                                <button className="p-1.5 rounded-full bg-hover-bg hover:bg-hover-bg text-foreground transition-colors">
                                     <Download size={12} />
                                 </button>
                             </div>

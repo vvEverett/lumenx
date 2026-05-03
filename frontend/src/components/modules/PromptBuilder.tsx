@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef, useLayoutEffect } from "react";
+import { useTranslations } from "next-intl";
 import { X, ChevronDown, Video, User } from "lucide-react";
 
 export type PromptSegment =
@@ -54,6 +57,7 @@ const findCameraOption = (value: string) => {
 };
 
 const PromptBuilder = forwardRef<PromptBuilderRef, PromptBuilderProps>(({ segments, onChange, onSubmit, placeholder }, ref) => {
+    const ts = useTranslations("storyboard");
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     // Local state to manage the textarea value directly, avoiding cursor jumps from prop sync
     const [value, setValue] = useState("");
@@ -217,7 +221,7 @@ const PromptBuilder = forwardRef<PromptBuilderRef, PromptBuilderProps>(({ segmen
         <div className="relative group w-full h-full">
             <textarea
                 ref={textareaRef}
-                className="glass-input w-full min-h-[8rem] h-full p-4 text-base leading-relaxed outline-none focus:ring-1 focus:ring-primary/30 transition-all resize-none bg-transparent text-white placeholder-gray-500 font-mono"
+                className="glass-input w-full min-h-[8rem] h-full p-4 text-base leading-relaxed outline-none focus:ring-1 focus:ring-primary/30 transition-all resize-none bg-transparent text-foreground placeholder-text-muted font-mono"
                 value={value}
                 onChange={handleChange}
                 onCompositionStart={handleCompositionStart}
@@ -228,7 +232,7 @@ const PromptBuilder = forwardRef<PromptBuilderRef, PromptBuilderProps>(({ segmen
                         onSubmit?.();
                     }
                 }}
-                placeholder={placeholder || "输入提示词... \n插入角色格式: [character1:名称]\n插入运镜格式: (camera: 运镜指令)"}
+                placeholder={placeholder || ts("promptBuilderPlaceholder")}
             />
         </div>
     );

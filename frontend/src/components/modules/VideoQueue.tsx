@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, RefreshCw, Copy, Download, Trash2, AlertCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { VideoTask, API_URL } from "@/lib/api";
 import { getAssetUrl } from "@/lib/utils";
@@ -13,6 +14,7 @@ interface VideoQueueProps {
 }
 
 export default function VideoQueue({ tasks, onRemix }: VideoQueueProps) {
+    const tv = useTranslations("video");
     const [filter, setFilter] = useState<"all" | "processing" | "completed" | "failed">("all");
 
     const filteredTasks = tasks.filter(t => {
@@ -24,29 +26,29 @@ export default function VideoQueue({ tasks, onRemix }: VideoQueueProps) {
     const processingCount = tasks.filter(t => t.status === "pending" || t.status === "processing").length;
 
     return (
-        <div className="h-full flex flex-col bg-black/40 backdrop-blur-sm border-l border-white/5">
+        <div className="h-full flex flex-col bg-surface border-l border-border-subtle">
             {/* Header & Tabs */}
-            <div className="p-4 border-b border-white/5">
+            <div className="p-4 border-b border-border-subtle">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-display font-bold text-white">任务队列</h3>
-                    <div className="text-xs font-mono text-gray-500 flex items-center gap-2">
+                    <h3 className="font-display font-bold text-foreground">{tv("taskQueue")}</h3>
+                    <div className="text-xs font-mono text-text-muted flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${processingCount > 0 ? "bg-green-500 animate-pulse" : "bg-gray-600"}`} />
                         GPU: {processingCount > 0 ? "Running" : "Idle"}
                     </div>
                 </div>
 
-                <div className="flex bg-white/5 rounded-lg p-1 gap-1">
+                <div className="flex bg-glass rounded-lg p-1 gap-1">
                     {[
-                        { id: "all", label: "全部" },
-                        { id: "processing", label: "进行中" },
-                        { id: "completed", label: "已完成" },
+                        { id: "all", label: tv("all") },
+                        { id: "processing", label: tv("processing") },
+                        { id: "completed", label: tv("completed") },
                     ].map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setFilter(tab.id as any)}
                             className={`flex-1 py-1.5 text-xs rounded-md transition-colors ${filter === tab.id
-                                ? "bg-white/10 text-white font-medium shadow-sm"
-                                : "text-gray-500 hover:text-gray-300"
+                                ? "bg-hover-bg text-foreground font-medium shadow-sm"
+                                : "text-text-muted hover:text-text-secondary"
                                 }`}
                         >
                             {tab.label}
@@ -63,8 +65,8 @@ export default function VideoQueue({ tasks, onRemix }: VideoQueueProps) {
                     ))}
 
                     {filteredTasks.length === 0 && (
-                        <div className="text-center py-10 text-gray-600 text-sm">
-                            暂无任务
+                        <div className="text-center py-10 text-text-muted text-sm">
+                            {tv("noTasks")}
                         </div>
                     )}
                 </AnimatePresence>
@@ -74,6 +76,7 @@ export default function VideoQueue({ tasks, onRemix }: VideoQueueProps) {
 }
 
 function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) => void }) {
+    const tv = useTranslations("video");
     const isCompleted = task.status === "completed";
     const isProcessing = task.status === "processing" || task.status === "pending";
     const isFailed = task.status === "failed";
@@ -89,15 +92,15 @@ function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className={`rounded-xl overflow-hidden border transition-all ${isProcessing ? "bg-white/5 border-white/10" :
+            className={`rounded-xl overflow-hidden border transition-all ${isProcessing ? "bg-glass border-glass-border" :
                 isFailed ? "bg-red-500/5 border-red-500/20" :
-                    "bg-black/40 border-white/10 hover:border-white/20"
+                    "bg-surface border-glass-border hover:border-glass-border"
                 }`}
         >
             {/* Processing State (Compact) */}
             {isProcessing && (
                 <div className="p-3 flex gap-3 items-center">
-                    <div className="w-12 h-12 rounded bg-black/50 relative overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 rounded bg-surface/50 relative overflow-hidden flex-shrink-0">
                         {task.image_url ? (
                             <img
                                 src={getDisplayUrl(task.image_url)}
@@ -115,12 +118,12 @@ function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) 
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-mono text-gray-400">#{task.id.slice(0, 6)}</span>
+                            <span className="text-xs font-mono text-text-secondary">#{task.id.slice(0, 6)}</span>
                             <span className="text-xs text-primary animate-pulse">
-                                {task.status === "pending" ? "排队中" : "生成中..."}
+                                {task.status === "pending" ? tv("queued") : tv("generating")}
                             </span>
                         </div>
-                        <p className="text-xs text-gray-300 truncate">{task.prompt}</p>
+                        <p className="text-xs text-text-secondary truncate">{task.prompt}</p>
                     </div>
                 </div>
             )}
@@ -129,13 +132,13 @@ function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) 
             {isCompleted && (
                 <div>
                     {/* Header */}
-                    <div className="px-3 py-2 border-b border-white/5 flex justify-between items-center bg-white/5">
-                        <span className="text-xs font-mono text-gray-500">#{task.id.slice(0, 6)}</span>
+                    <div className="px-3 py-2 border-b border-border-subtle flex justify-between items-center bg-glass">
+                        <span className="text-xs font-mono text-text-muted">#{task.id.slice(0, 6)}</span>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => onRemix(task)}
-                                className="text-xs flex items-center gap-1 text-gray-400 hover:text-white transition-colors"
-                                title="使用此参数重做"
+                                className="text-xs flex items-center gap-1 text-text-secondary hover:text-foreground transition-colors"
+                                title={tv("remixTitle")}
                             >
                                 <RefreshCw size={12} /> Remix
                             </button>
@@ -145,21 +148,21 @@ function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) 
                     {/* Visual Comparison */}
                     <div className="flex h-32 relative group">
                         {/* Input Image/Videos (Left) */}
-                        <div className="w-1/2 relative border-r border-white/10">
+                        <div className="w-1/2 relative border-r border-glass-border">
                             {task.image_url ? (
                                 <img src={getDisplayUrl(task.image_url)} alt="Input" className="w-full h-full object-cover" />
                             ) : task.reference_video_urls && task.reference_video_urls.length > 0 ? (
                                 /* R2V: Show reference video thumbnails */
                                 <div className="w-full h-full grid grid-cols-2 gap-0.5 bg-purple-900/20">
                                     {task.reference_video_urls.slice(0, 4).map((url, idx) => (
-                                        <div key={idx} className="relative bg-black/50 overflow-hidden">
+                                        <div key={idx} className="relative bg-surface overflow-hidden">
                                             <video
                                                 src={getAssetUrl(url)}
                                                 className="w-full h-full object-cover"
                                                 muted
                                                 preload="metadata"
                                             />
-                                            <div className="absolute bottom-0.5 left-0.5 bg-purple-600/80 px-1 rounded text-[8px] text-white font-bold">
+                                            <div className="absolute bottom-0.5 left-0.5 bg-purple-600/80 px-1 rounded text-[8px] text-foreground font-bold">
                                                 @{String.fromCharCode(65 + idx)}
                                             </div>
                                         </div>
@@ -170,7 +173,7 @@ function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) 
                                     R2V Input
                                 </div>
                             )}
-                            <div className="absolute top-2 left-2 bg-black/60 px-1.5 py-0.5 rounded text-[10px] text-gray-300">Input</div>
+                            <div className="absolute top-2 left-2 bg-surface px-1.5 py-0.5 rounded text-[10px] text-text-secondary">Input</div>
                         </div>
 
                         {/* Output Video (Right) */}
@@ -186,26 +189,26 @@ function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) 
                                     Error
                                 </div>
                             )}
-                            <div className="absolute top-2 right-2 bg-primary/80 px-1.5 py-0.5 rounded text-[10px] text-white">Result</div>
+                            <div className="absolute top-2 right-2 bg-primary/80 px-1.5 py-0.5 rounded text-[10px] text-foreground">Result</div>
                         </div>
                     </div>
 
                     {/* Prompt & Actions */}
                     <div className="p-3">
-                        <p className="text-xs text-gray-400 line-clamp-2 mb-3 hover:line-clamp-none transition-all cursor-help">
+                        <p className="text-xs text-text-secondary line-clamp-2 mb-3 hover:line-clamp-none transition-all cursor-help">
                             {task.prompt}
                         </p>
 
                         <div className="flex justify-between items-center">
                             <div className="flex gap-2">
-                                <button className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-white">
+                                <button className="p-1.5 hover:bg-hover-bg rounded text-text-secondary hover:text-foreground">
                                     <Copy size={14} />
                                 </button>
-                                <button className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-white">
+                                <button className="p-1.5 hover:bg-hover-bg rounded text-text-secondary hover:text-foreground">
                                     <Download size={14} />
                                 </button>
                             </div>
-                            <button className="p-1.5 hover:bg-red-500/20 rounded text-gray-500 hover:text-red-400">
+                            <button className="p-1.5 hover:bg-red-500/20 rounded text-text-muted hover:text-red-400">
                                 <Trash2 size={14} />
                             </button>
                         </div>
@@ -218,14 +221,14 @@ function TaskCard({ task, onRemix }: { task: VideoTask; onRemix: (t: VideoTask) 
                 <div className="p-3">
                     <div className="flex items-center gap-2 text-red-400 mb-2">
                         <AlertCircle size={16} />
-                        <span className="text-sm font-medium">生成失败</span>
+                        <span className="text-sm font-medium">{tv("genFailed")}</span>
                     </div>
-                    <p className="text-xs text-gray-500 mb-3">未知错误，请重试</p>
+                    <p className="text-xs text-text-muted mb-3">{tv("unknownError")}</p>
                     <button
                         onClick={() => onRemix(task)}
-                        className="w-full py-1.5 bg-white/5 hover:bg-white/10 rounded text-xs text-gray-300 transition-colors"
+                        className="w-full py-1.5 bg-glass hover:bg-hover-bg rounded text-xs text-text-secondary transition-colors"
                     >
-                        重试任务
+                        {tv("retryTask")}
                     </button>
                 </div>
             )}

@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Settings, Sliders, Image as ImageIcon, Type, FileText, Users, Layout, Video, Mic, Music, Film, Info, StickyNote, Paintbrush, Wand2, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Settings, Sliders, Image as ImageIcon, Type, FileText, Users, Layout, Video, Mic, Music, Film, Info, Paintbrush, Wand2, Sparkles } from "lucide-react";
 import { useProjectStore } from "@/store/projectStore";
 import { useState, useEffect } from "react";
 import { api, API_URL } from "@/lib/api";
+import { getMaxReferenceImages } from "@/lib/modelCatalog";
 import { getAssetUrl } from "@/lib/utils";
 
 interface PropertiesPanelProps {
@@ -12,6 +14,7 @@ interface PropertiesPanelProps {
 }
 
 export default function PropertiesPanel({ activeStep }: PropertiesPanelProps) {
+    const tp = useTranslations("properties");
     const currentProject = useProjectStore((state) => state.currentProject);
 
     // Hide panel for Motion step as it has its own sidebar
@@ -34,7 +37,7 @@ export default function PropertiesPanel({ activeStep }: PropertiesPanelProps) {
             case "export":
                 return <ExportInspector />;
             default:
-                return <div className="p-4 text-gray-500">Select a step to view properties.</div>;
+                return <div className="p-4 text-text-muted">{tp("selectStep")}</div>;
         }
     };
 
@@ -42,13 +45,13 @@ export default function PropertiesPanel({ activeStep }: PropertiesPanelProps) {
         <motion.aside
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="w-64 h-full border-l border-glass-border bg-black/40 backdrop-blur-xl flex flex-col z-50"
+            className="w-64 h-full border-l border-glass-border bg-surface flex flex-col z-50"
         >
             <div className="p-4 border-b border-glass-border flex items-center justify-between">
-                <h2 className="font-display font-bold text-white flex items-center gap-2">
-                    <Info size={16} className="text-primary" /> Context
+                <h2 className="font-display font-bold text-foreground flex items-center gap-2">
+                    <Info size={16} className="text-primary" /> {tp("context")}
                 </h2>
-                <span className="text-xs font-mono text-gray-500 uppercase">{activeStep}</span>
+                <span className="text-xs font-mono text-text-muted uppercase">{activeStep}</span>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -61,6 +64,7 @@ export default function PropertiesPanel({ activeStep }: PropertiesPanelProps) {
 // --- Sub-Inspectors ---
 
 function ScriptInspector({ project }: { project: any }) {
+    const tp = useTranslations("properties");
     if (!project) return null;
     const wordCount = project.originalText?.length || 0;
     const charCount = project.characters?.length || 0;
@@ -69,28 +73,18 @@ function ScriptInspector({ project }: { project: any }) {
     return (
         <div className="space-y-6">
             <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <FileText size={14} /> Project Stats
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <FileText size={14} /> {tp("projectStats")}
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
-                    <StatBox label="Words" value={wordCount} />
-                    <StatBox label="Chars" value={charCount} />
-                    <StatBox label="Scenes" value={sceneCount} />
-                    <StatBox label="Est. Dur" value="~2m" />
+                    <StatBox label={tp("words")} value={wordCount} />
+                    <StatBox label={tp("chars")} value={charCount} />
+                    <StatBox label={tp("scenes")} value={sceneCount} />
+                    <StatBox label={tp("estDur")} value="~2m" />
                 </div>
             </div>
 
-            <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <StickyNote size={14} /> Quick Notes
-                </h3>
-                <textarea
-                    className="w-full h-32 bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-gray-300 resize-none focus:outline-none focus:border-primary/50"
-                    placeholder="Jot down ideas here..."
-                />
-            </div>
-
-            <div className="pt-4 border-t border-white/10">
+            <div className="pt-4 border-t border-glass-border">
                 <ArtDirectionStyleDisplay project={project} />
             </div>
         </div>
@@ -98,6 +92,7 @@ function ScriptInspector({ project }: { project: any }) {
 }
 
 function AssetsInspector({ project }: { project: any }) {
+    const tp = useTranslations("properties");
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
 
@@ -135,24 +130,24 @@ function AssetsInspector({ project }: { project: any }) {
     return (
         <div className="space-y-6">
             <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Users size={14} /> Asset Overview
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Users size={14} /> {tp("assetOverview")}
                 </h3>
-                <div className="text-xs text-gray-400">
-                    Manage aspect ratios and view global style settings.
+                <div className="text-xs text-text-secondary">
+                    {tp("assetOverviewDesc")}
                 </div>
             </div>
 
             {/* Aspect Ratio Controls */}
-            <div className="space-y-4 pt-4 border-t border-white/10">
+            <div className="space-y-4 pt-4 border-t border-glass-border">
                 <div className="flex items-center gap-2 mb-2">
                     <Layout className="text-primary" size={14} />
-                    <h3 className="font-bold text-white text-xs">Aspect Ratios</h3>
+                    <h3 className="font-bold text-foreground text-xs">{tp("aspectRatios")}</h3>
                 </div>
 
                 {/* Character Aspect Ratio */}
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase">Character</label>
+                    <label className="text-[10px] font-bold text-text-muted uppercase">Character</label>
                     <div className="grid grid-cols-3 gap-1.5">
                         {['9:16', '16:9', '1:1'].map((ratio) => (
                             <button
@@ -160,7 +155,7 @@ function AssetsInspector({ project }: { project: any }) {
                                 onClick={() => handleUpdateAspectRatio('character', ratio)}
                                 className={`px-2 py-1.5 rounded text-[10px] border transition-all font-medium ${characterAspectRatio === ratio
                                     ? 'bg-primary/20 text-primary border-primary/30'
-                                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                                    : 'bg-glass text-text-secondary border-glass-border hover:bg-hover-bg'
                                     }`}
                             >
                                 {ratio}
@@ -171,7 +166,7 @@ function AssetsInspector({ project }: { project: any }) {
 
                 {/* Scene Aspect Ratio */}
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase">Scene</label>
+                    <label className="text-[10px] font-bold text-text-muted uppercase">Scene</label>
                     <div className="grid grid-cols-3 gap-1.5">
                         {['9:16', '16:9', '1:1'].map((ratio) => (
                             <button
@@ -179,7 +174,7 @@ function AssetsInspector({ project }: { project: any }) {
                                 onClick={() => handleUpdateAspectRatio('scene', ratio)}
                                 className={`px-2 py-1.5 rounded text-[10px] border transition-all font-medium ${sceneAspectRatio === ratio
                                     ? 'bg-primary/20 text-primary border-primary/30'
-                                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                                    : 'bg-glass text-text-secondary border-glass-border hover:bg-hover-bg'
                                     }`}
                             >
                                 {ratio}
@@ -190,7 +185,7 @@ function AssetsInspector({ project }: { project: any }) {
 
                 {/* Prop Aspect Ratio */}
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase">Prop</label>
+                    <label className="text-[10px] font-bold text-text-muted uppercase">Prop</label>
                     <div className="grid grid-cols-3 gap-1.5">
                         {['9:16', '16:9', '1:1'].map((ratio) => (
                             <button
@@ -198,7 +193,7 @@ function AssetsInspector({ project }: { project: any }) {
                                 onClick={() => handleUpdateAspectRatio('prop', ratio)}
                                 className={`px-2 py-1.5 rounded text-[10px] border transition-all font-medium ${propAspectRatio === ratio
                                     ? 'bg-primary/20 text-primary border-primary/30'
-                                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                                    : 'bg-glass text-text-secondary border-glass-border hover:bg-hover-bg'
                                     }`}
                             >
                                 {ratio}
@@ -209,7 +204,7 @@ function AssetsInspector({ project }: { project: any }) {
             </div>
 
             {/* Art Direction Style Display (Read-only) */}
-            <div className="pt-4 border-t border-white/10">
+            <div className="pt-4 border-t border-glass-border">
                 <ArtDirectionStyleDisplay project={currentProject} />
             </div>
         </div>
@@ -217,51 +212,52 @@ function AssetsInspector({ project }: { project: any }) {
 }
 
 function ArtDirectionStyleDisplay({ project }: { project: any }) {
+    const tp = useTranslations("properties");
     const artDirectionStyle = project?.art_direction?.style_config;
 
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
                 <Paintbrush className="text-primary" size={14} />
-                <h3 className="font-bold text-white text-xs">Art Direction Style</h3>
+                <h3 className="font-bold text-foreground text-xs">{tp("artDirectionStyle")}</h3>
             </div>
 
             {artDirectionStyle ? (
                 <div className="space-y-3">
                     <div>
-                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1.5 block">Style Name</label>
-                        <div className="text-xs font-bold text-white bg-gradient-to-r from-blue-500/20 to-purple-500/20 p-2.5 rounded-lg border border-white/10">
+                        <label className="text-[10px] font-bold text-text-muted uppercase mb-1.5 block">{tp("styleName")}</label>
+                        <div className="text-xs font-bold text-foreground bg-gradient-to-r from-blue-500/20 to-purple-500/20 p-2.5 rounded-lg border border-glass-border">
                             {artDirectionStyle.name}
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1.5 block">Positive Prompt</label>
-                        <div className="bg-black/40 border border-white/5 rounded-lg p-2.5 text-[10px] text-gray-400 leading-relaxed max-h-20 overflow-y-auto">
-                            {artDirectionStyle.positive_prompt || 'No positive prompt defined'}
+                        <label className="text-[10px] font-bold text-text-muted uppercase mb-1.5 block">{tp("positivePrompt")}</label>
+                        <div className="bg-surface border border-border-subtle rounded-lg p-2.5 text-[10px] text-text-secondary leading-relaxed max-h-20 overflow-y-auto">
+                            {artDirectionStyle.positive_prompt || tp('noPositivePrompt')}
                         </div>
                     </div>
 
                     {artDirectionStyle.negative_prompt && (
                         <div>
-                            <label className="text-[10px] font-bold text-gray-500 uppercase mb-1.5 block">Negative Prompt</label>
-                            <div className="bg-black/40 border border-white/5 rounded-lg p-2.5 text-[10px] text-gray-400 leading-relaxed max-h-16 overflow-y-auto">
+                            <label className="text-[10px] font-bold text-text-muted uppercase mb-1.5 block">{tp("negativePromptLabel")}</label>
+                            <div className="bg-surface border border-border-subtle rounded-lg p-2.5 text-[10px] text-text-secondary leading-relaxed max-h-16 overflow-y-auto">
                                 {artDirectionStyle.negative_prompt}
                             </div>
                         </div>
                     )}
 
                     <div className="pt-2">
-                        <p className="text-[9px] text-gray-500 leading-relaxed">
-                            💡 Tip: Edit style in Step 2 (Art Direction)
+                        <p className="text-[9px] text-text-muted leading-relaxed">
+                            {tp("tipEditStyle")}
                         </p>
                     </div>
                 </div>
             ) : (
-                <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-500 mb-2">No style configured</p>
-                    <p className="text-[9px] text-gray-600">
-                        Go to Step 2 (Art Direction) to set up your project's visual style
+                <div className="bg-glass border border-glass-border rounded-lg p-3 text-center">
+                    <p className="text-xs text-text-muted mb-2">{tp("noStyleConfigured")}</p>
+                    <p className="text-[9px] text-text-muted">
+                        {tp("goToArtDirection")}
                     </p>
                 </div>
             )}
@@ -270,6 +266,7 @@ function ArtDirectionStyleDisplay({ project }: { project: any }) {
 }
 
 function StoryboardInspector() {
+    const tp = useTranslations("properties");
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
     const selectedFrameId = useProjectStore((state) => state.selectedFrameId);
@@ -415,11 +412,11 @@ function StoryboardInspector() {
     if (!selectedFrame) {
         return (
             <div className="space-y-6">
-                <div className="p-4 bg-white/5 rounded-lg border border-white/10 text-center text-gray-500 text-xs">
-                    Select a frame to edit its details.
+                <div className="p-4 bg-glass rounded-lg border border-glass-border text-center text-text-muted text-xs">
+                    {tp("selectFrameToEdit")}
                 </div>
-                <p className="text-xs text-gray-500 text-center">
-                    Tip: Use the ⚙️ icon in the sidebar to configure aspect ratios.
+                <p className="text-xs text-text-muted text-center">
+                    {tp("tipConfigureAR")}
                 </p>
             </div>
         );
@@ -428,19 +425,19 @@ function StoryboardInspector() {
     return (
         <div className="space-y-6">
             <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Layout size={14} /> Frame Editor
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Layout size={14} /> {tp("frameDetails")}
                 </h3>
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-text-secondary">
                     Editing Frame {currentProject?.frames?.findIndex((f: any) => f.id === selectedFrameId) + 1}
                 </div>
             </div>
 
             {/* Action Description */}
             <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">Action / Visuals</label>
+                <label className="text-xs font-bold text-text-muted uppercase">{tp("actionDesc")}</label>
                 <textarea
-                    className="w-full h-24 bg-black/20 border border-white/10 rounded-lg p-3 text-xs text-gray-300 resize-none focus:outline-none focus:border-primary/50"
+                    className="w-full h-24 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50"
                     value={selectedFrame.action_description || ""}
                     onChange={(e) => updateFrame({ action_description: e.target.value })}
                     placeholder="Describe the action..."
@@ -449,9 +446,9 @@ function StoryboardInspector() {
 
             {/* Dialogue */}
             <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">Dialogue</label>
+                <label className="text-xs font-bold text-text-muted uppercase">{tp("dialogueContent")}</label>
                 <textarea
-                    className="w-full h-16 bg-black/20 border border-white/10 rounded-lg p-3 text-xs text-gray-300 resize-none focus:outline-none focus:border-primary/50"
+                    className="w-full h-16 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50"
                     value={selectedFrame.dialogue || ""}
                     onChange={(e) => updateFrame({ dialogue: e.target.value })}
                     placeholder="Speaker: Content"
@@ -473,25 +470,25 @@ function StoryboardInspector() {
 
                     const referenceCount = (sceneHasImage ? 1 : 0) + charImageCount + propImageCount;
 
-                    // Dynamic limit based on model
-                    const i2iModel = currentProject?.model_settings?.i2i_model;
-                    const referenceLimit = i2iModel === 'wan2.6-image' ? 4 : 3;
+                    const referenceLimit = getMaxReferenceImages(
+                        currentProject?.model_settings?.i2i_model
+                    );
                     const isLimitReached = referenceCount >= referenceLimit;
 
                     return (
                         <>
                             <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-gray-500 uppercase">Reference Assets</label>
-                                <span className={`text-[10px] ${isLimitReached ? "text-yellow-500 font-bold" : "text-gray-500"}`}>
+                                <label className="text-xs font-bold text-text-muted uppercase">{tp("characters")}</label>
+                                <span className={`text-[10px] ${isLimitReached ? "text-yellow-500 font-bold" : "text-text-muted"}`}>
                                     {referenceCount}/{referenceLimit} Images
                                 </span>
                             </div>
 
                             {/* Scene Selector */}
                             <div className="mb-2 space-y-2">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase">Scene</label>
+                                <label className="text-[10px] font-bold text-text-muted uppercase">Scene</label>
                                 <select
-                                    className="w-full bg-black/20 border border-white/10 rounded p-2 text-xs text-gray-300 focus:outline-none"
+                                    className="w-full bg-input-bg border border-glass-border rounded p-2 text-xs text-text-secondary focus:outline-none"
                                     value={selectedFrame.scene_id || ""}
                                     onChange={(e) => {
                                         // Check if selecting this scene would exceed limit
@@ -522,8 +519,8 @@ function StoryboardInspector() {
 
                                 {/* Show Scene Description if selected */}
                                 {selectedScene?.description && (
-                                    <div className="bg-white/5 p-2 rounded text-[10px] text-gray-400 italic border border-white/5">
-                                        <span className="font-bold not-italic text-gray-500">Scene: </span>
+                                    <div className="bg-glass p-2 rounded text-[10px] text-text-secondary italic border border-border-subtle">
+                                        <span className="font-bold not-italic text-text-muted">Scene: </span>
                                         {selectedScene.description}
                                     </div>
                                 )}
@@ -531,7 +528,7 @@ function StoryboardInspector() {
 
                             {/* Character Toggles */}
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase">Characters</label>
+                                <label className="text-[10px] font-bold text-text-muted uppercase">Characters</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {currentProject?.characters?.map((char: any) => {
                                         const isSelected = selectedFrame.character_ids?.includes(char.id);
@@ -548,13 +545,13 @@ function StoryboardInspector() {
                                                     toggleCharacter(char.id);
                                                 }}
                                                 className={`flex items-center gap-2 p-2 rounded border text-xs transition-all ${isSelected
-                                                    ? "bg-primary/20 border-primary text-white"
+                                                    ? "bg-primary/20 border-primary text-foreground"
                                                     : isDisabled
-                                                        ? "bg-black/10 border-white/5 text-gray-600 cursor-not-allowed opacity-50"
-                                                        : "bg-black/20 border-white/10 text-gray-400 hover:bg-white/5"
+                                                        ? "bg-surface border-border-subtle text-text-muted cursor-not-allowed opacity-50"
+                                                        : "bg-surface border-glass-border text-text-secondary hover:bg-glass"
                                                     }`}
                                             >
-                                                <div className="w-4 h-4 rounded-full bg-gray-700 overflow-hidden">
+                                                <div className="w-4 h-4 rounded-full bg-elevated overflow-hidden">
                                                     {char.avatar_url && <img src={getAssetUrl(char.avatar_url)} className="w-full h-full object-cover" />}
                                                 </div>
                                                 <span className="truncate">{char.name}</span>
@@ -567,8 +564,8 @@ function StoryboardInspector() {
                                 {selectedChars && selectedChars.length > 0 && (
                                     <div className="space-y-1">
                                         {selectedChars.map((char: any) => (
-                                            <div key={char.id} className="bg-white/5 p-2 rounded text-[10px] text-gray-400 italic border border-white/5">
-                                                <span className="font-bold not-italic text-gray-500">{char.name}: </span>
+                                            <div key={char.id} className="bg-glass p-2 rounded text-[10px] text-text-secondary italic border border-border-subtle">
+                                                <span className="font-bold not-italic text-text-muted">{char.name}: </span>
                                                 {char.description}
                                             </div>
                                         ))}
@@ -579,7 +576,7 @@ function StoryboardInspector() {
                             {/* Prop Toggles */}
                             {currentProject?.props && currentProject.props.length > 0 && (
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase">Props</label>
+                                    <label className="text-[10px] font-bold text-text-muted uppercase">Props</label>
                                     <div className="grid grid-cols-2 gap-2">
                                         {currentProject.props.map((prop: any) => {
                                             const isSelected = selectedFrame.prop_ids?.includes(prop.id);
@@ -600,13 +597,13 @@ function StoryboardInspector() {
                                                         updateFrame({ prop_ids: newProps });
                                                     }}
                                                     className={`flex items-center gap-2 p-2 rounded border text-xs transition-all ${isSelected
-                                                        ? "bg-primary/20 border-primary text-white"
+                                                        ? "bg-primary/20 border-primary text-foreground"
                                                         : isDisabled
-                                                            ? "bg-black/10 border-white/5 text-gray-600 cursor-not-allowed opacity-50"
-                                                            : "bg-black/20 border-white/10 text-gray-400 hover:bg-white/5"
+                                                            ? "bg-surface border-border-subtle text-text-muted cursor-not-allowed opacity-50"
+                                                            : "bg-surface border-glass-border text-text-secondary hover:bg-glass"
                                                         }`}
                                                 >
-                                                    <div className="w-4 h-4 rounded bg-gray-700 overflow-hidden flex-shrink-0">
+                                                    <div className="w-4 h-4 rounded bg-elevated overflow-hidden flex-shrink-0">
                                                         {prop.image_url && <img src={getAssetUrl(prop.image_url)} className="w-full h-full object-cover" />}
                                                     </div>
 
@@ -623,8 +620,8 @@ function StoryboardInspector() {
                                             return (
                                                 <div className="space-y-1">
                                                     {selectedProps.map((prop: any) => (
-                                                        <div key={prop.id} className="bg-white/5 p-2 rounded text-[10px] text-gray-400 italic border border-white/5">
-                                                            <span className="font-bold not-italic text-gray-500">{prop.name}: </span>
+                                                        <div key={prop.id} className="bg-glass p-2 rounded text-[10px] text-text-secondary italic border border-border-subtle">
+                                                            <span className="font-bold not-italic text-text-muted">{prop.name}: </span>
                                                             {prop.description}
                                                         </div>
                                                     ))}
@@ -642,10 +639,10 @@ function StoryboardInspector() {
 
             {/* Camera Controls */}
             <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">Camera</label>
+                <label className="text-xs font-bold text-text-muted uppercase">{tp("sceneContext")}</label>
                 <div className="grid grid-cols-1 gap-2">
                     <select
-                        className="bg-black/20 border border-white/10 rounded p-2 text-xs text-gray-300 focus:outline-none"
+                        className="bg-input-bg border border-glass-border rounded p-2 text-xs text-text-secondary focus:outline-none"
                         value={selectedFrame.camera_angle || ""}
                         onChange={(e) => updateFrame({ camera_angle: e.target.value })}
                     >
@@ -663,10 +660,10 @@ function StoryboardInspector() {
             {/* Prompt */}
             <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-gray-500 uppercase">Image Prompt</label>
+                    <label className="text-xs font-bold text-text-muted uppercase">{tp("imagePrompt")}</label>
                     <button
                         onClick={handleComposePrompt}
-                        className="flex items-center gap-1 text-[10px] bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-white transition-colors"
+                        className="flex items-center gap-1 text-[10px] bg-glass hover:bg-hover-bg px-2 py-1 rounded text-foreground transition-colors"
                         title="Auto-generate prompt from metadata"
                     >
                         <Wand2 size={10} /> Auto-Compose
@@ -681,7 +678,7 @@ function StoryboardInspector() {
                     </button>
                 </div>
                 <textarea
-                    className="w-full h-32 bg-black/20 border border-white/10 rounded-lg p-3 text-xs text-gray-300 resize-none focus:outline-none focus:border-primary/50"
+                    className="w-full h-32 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-none focus:outline-none focus:border-primary/50"
                     value={selectedFrame.image_prompt || ""}
                     onChange={(e) => updateFrame({ image_prompt: e.target.value })}
                     placeholder="Full image generation prompt..."
@@ -697,7 +694,7 @@ function StoryboardInspector() {
                     >
                         <div className="flex justify-between items-start">
                             <span className="text-xs font-bold text-purple-400 flex items-center gap-1">
-                                <Wand2 size={12} /> AI 双语润色
+                                <Wand2 size={12} /> AI Bilingual Polish
                             </span>
                             <button
                                 onClick={() => {
@@ -708,7 +705,7 @@ function StoryboardInspector() {
                                     });
                                     setFeedbackText("");
                                 }}
-                                className="text-[10px] text-gray-400 hover:text-white"
+                                className="text-[10px] text-text-secondary hover:text-foreground"
                             >
                                 ✕
                             </button>
@@ -717,18 +714,18 @@ function StoryboardInspector() {
                         {/* Chinese Prompt */}
                         <div className="space-y-1">
                             <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-bold text-gray-500 uppercase">中文 (预览)</span>
+                                <span className="text-[10px] font-bold text-text-muted uppercase">CN (Preview)</span>
                                 <button
                                     onClick={() => {
                                         navigator.clipboard.writeText(polishedPrompt.cn);
-                                        alert("中文提示词已复制");
+                                        alert("CN prompt copied");
                                     }}
-                                    className="text-[10px] text-gray-400 hover:text-white bg-black/20 px-2 py-0.5 rounded"
+                                    className="text-[10px] text-text-secondary hover:text-foreground bg-surface px-2 py-0.5 rounded"
                                 >
                                     复制
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap bg-black/20 p-2 rounded">
+                            <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-surface p-2 rounded">
                                 {polishedPrompt.cn}
                             </p>
                         </div>
@@ -736,14 +733,14 @@ function StoryboardInspector() {
                         {/* English Prompt */}
                         <div className="space-y-1">
                             <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-bold text-gray-500 uppercase">English (生图用)</span>
+                                <span className="text-[10px] font-bold text-text-muted uppercase">EN (Generation)</span>
                                 <div className="flex gap-1">
                                     <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(polishedPrompt.en);
                                             alert("English prompt copied");
                                         }}
-                                        className="text-[10px] text-gray-400 hover:text-white bg-black/20 px-2 py-0.5 rounded"
+                                        className="text-[10px] text-text-secondary hover:text-foreground bg-surface px-2 py-0.5 rounded"
                                     >
                                         Copy
                                     </button>
@@ -766,7 +763,7 @@ function StoryboardInspector() {
                                     </button>
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap bg-black/20 p-2 rounded font-mono">
+                            <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap bg-surface p-2 rounded font-mono">
                                 {polishedPrompt.en}
                             </p>
                         </div>
@@ -783,8 +780,8 @@ function StoryboardInspector() {
                                             handlePolish(feedbackText.trim());
                                         }
                                     }}
-                                    placeholder="哪里不满意？描述你的修改意见..."
-                                    className="flex-1 text-[10px] bg-black/30 border border-purple-500/20 rounded px-2 py-1.5 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50"
+                                    placeholder="Feedback for refinement..."
+                                    className="flex-1 text-[10px] bg-input-bg border border-purple-500/20 rounded px-2 py-1.5 text-foreground placeholder-text-muted focus:outline-none focus:border-purple-500/50"
                                 />
                                 <button
                                     onClick={() => handlePolish(feedbackText.trim())}
@@ -804,26 +801,27 @@ function StoryboardInspector() {
 }
 
 function MotionInspector() {
+    const tp = useTranslations("properties");
     return (
         <div className="space-y-6">
             <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                     <Video size={14} /> Motion Params
                 </h3>
                 <div className="space-y-4">
                     <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-gray-400">
+                        <div className="flex justify-between text-xs text-text-secondary">
                             <span>Motion Bucket</span>
                             <span>127</span>
                         </div>
-                        <input type="range" className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer" />
+                        <input type="range" className="w-full h-1 bg-glass rounded-lg appearance-none cursor-pointer" />
                     </div>
                     <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-gray-400">
+                        <div className="flex justify-between text-xs text-text-secondary">
                             <span>FPS</span>
                             <span>24</span>
                         </div>
-                        <input type="range" className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer" />
+                        <input type="range" className="w-full h-1 bg-glass rounded-lg appearance-none cursor-pointer" />
                     </div>
                 </div>
             </div>
@@ -832,25 +830,26 @@ function MotionInspector() {
 }
 
 function AudioInspector({ project }: { project: any }) {
+    const tp = useTranslations("properties");
     const assignedCount = project?.characters?.filter((c: any) => c.voice_id).length || 0;
     const totalCount = project?.characters?.length || 0;
 
     return (
         <div className="space-y-6">
             <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Mic size={14} /> Casting Status
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Mic size={14} /> {tp("audioStatus")}
                 </h3>
                 <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-glass rounded-full overflow-hidden">
                         <div
                             className="h-full bg-green-500 transition-all duration-500"
                             style={{ width: `${(assignedCount / totalCount) * 100}%` }}
                         />
                     </div>
-                    <span className="text-xs font-mono text-gray-400">{assignedCount}/{totalCount}</span>
+                    <span className="text-xs font-mono text-text-secondary">{assignedCount}/{totalCount}</span>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-text-muted">
                     {assignedCount === totalCount ? "All characters casted." : "Some characters need voices."}
                 </p>
             </div>
@@ -859,13 +858,14 @@ function AudioInspector({ project }: { project: any }) {
 }
 
 function MixInspector() {
+    const tp = useTranslations("properties");
     return (
         <div className="space-y-6">
             <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                     <Music size={14} /> Track Inspector
                 </h3>
-                <div className="p-4 bg-white/5 rounded-lg border border-white/10 text-center text-xs text-gray-500">
+                <div className="p-4 bg-glass rounded-lg border border-glass-border text-center text-xs text-text-muted">
                     Select a clip on the timeline to view details.
                 </div>
             </div>
@@ -874,16 +874,17 @@ function MixInspector() {
 }
 
 function ExportInspector() {
+    const tp = useTranslations("properties");
     return (
         <div className="space-y-6">
             <div className="space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                     <Film size={14} /> Export History
                 </h3>
                 <div className="space-y-2">
-                    <div className="p-2 bg-white/5 rounded border border-white/10 flex justify-between items-center">
-                        <span className="text-xs text-gray-300">Project_v1.mp4</span>
-                        <span className="text-[10px] text-gray-500">2h ago</span>
+                    <div className="p-2 bg-glass rounded border border-glass-border flex justify-between items-center">
+                        <span className="text-xs text-text-secondary">Project_v1.mp4</span>
+                        <span className="text-[10px] text-text-muted">2h ago</span>
                     </div>
                 </div>
             </div>
@@ -893,9 +894,9 @@ function ExportInspector() {
 
 function StatBox({ label, value }: { label: string, value: string | number }) {
     return (
-        <div className="bg-white/5 border border-white/10 rounded p-2 text-center">
-            <div className="text-lg font-bold text-white">{value}</div>
-            <div className="text-[10px] text-gray-500 uppercase">{label}</div>
+        <div className="bg-glass border border-glass-border rounded p-2 text-center">
+            <div className="text-lg font-bold text-foreground">{value}</div>
+            <div className="text-[10px] text-text-muted uppercase">{label}</div>
         </div>
     );
 }

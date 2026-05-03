@@ -4,13 +4,48 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* ─── Theme: Semantic Color Tokens ─── */
+
+:root,
+html.dark {
+  --color-bg-base: #050508;
+  --color-bg-surface: rgba(0, 0, 0, 0.4);
+  --color-bg-elevated: #1a1a1a;
+  --color-bg-input: rgba(0, 0, 0, 0.3);
+  --color-bg-hover: rgba(255, 255, 255, 0.05);
+  --color-glass: rgba(255, 255, 255, 0.05);
+  --color-border-default: rgba(255, 255, 255, 0.1);
+  --color-border-subtle: rgba(255, 255, 255, 0.05);
+  --color-text-primary: #ededed;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-overlay: rgba(0, 0, 0, 0.8);
+  --color-bg-inset: rgba(255, 255, 255, 0.03);
   --foreground-rgb: 237, 237, 237;
   --background-start-rgb: 5, 5, 8;
   --background-end-rgb: 5, 5, 8;
   --font-inter: 'Inter', sans-serif;
   --font-jetbrains-mono: 'JetBrains Mono', monospace;
   --font-space-grotesk: 'Space Grotesk', sans-serif;
+}
+
+html.light {
+  --color-bg-base: #f8f9fa;
+  --color-bg-surface: #ffffff;
+  --color-bg-elevated: #ffffff;
+  --color-bg-input: #f1f3f5;
+  --color-bg-hover: rgba(0, 0, 0, 0.04);
+  --color-glass: rgba(0, 0, 0, 0.03);
+  --color-border-default: rgba(0, 0, 0, 0.1);
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-overlay: rgba(0, 0, 0, 0.2);
+  --color-bg-inset: rgba(0, 0, 0, 0.02);
+  --foreground-rgb: 26, 26, 26;
+  --background-start-rgb: 248, 249, 250;
+  --background-end-rgb: 248, 249, 250;
 }
 
 body {
@@ -32,11 +67,11 @@ body {
   }
 
   .glass-input {
-    @apply bg-black/20 backdrop-blur-sm border border-white/10 rounded-md px-3 py-2 focus:outline-none focus:border-primary/50 transition-colors;
+    @apply bg-input-bg backdrop-blur-sm border border-glass-border rounded-md px-3 py-2 focus:outline-none focus:border-primary/50 transition-colors;
   }
 
   .glass-button {
-    @apply bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 rounded-md px-4 py-2 transition-all active:scale-95;
+    @apply bg-hover-bg hover:bg-glass backdrop-blur-sm border border-glass-border rounded-md px-4 py-2 transition-all active:scale-95;
   }
 }
 
@@ -54,9 +89,9 @@ body {
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 10px;
-  background: rgb(17, 24, 39);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgb(209, 213, 219);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-secondary);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s ease;

@@ -1,16 +1,17 @@
 import axios from "axios";
+import { DEFAULT_I2V_MODEL_ID } from "@/lib/modelCatalog";
 
 // Dynamic API URL detection:
 // 1. In packaged app (Electron): Frontend is served by backend, use same origin
-// 2. In development (port 3000/3001): Use backend port 17177
+// 2. In development (port 3008/3009, legacy 3000/3001): Use backend port 17177
 const getApiUrl = (): string => {
     // If running in browser
     if (typeof window !== 'undefined') {
         const { protocol, hostname, port } = window.location;
 
-        // In development mode (port 3000/3001 = Next.js dev server)
+        // In development mode (port 3008/3009, legacy 3000/3001 = Next.js dev server)
         // Backend is on a different port
-        if (port === '3000' || port === '3001') {
+        if (port === '3008' || port === '3009' || port === '3000' || port === '3001') {
             return `${protocol}//${hostname}:17177`;
         }
 
@@ -63,6 +64,8 @@ export interface VideoTask {
     frame_id?: string;
     generation_mode?: string;
     reference_video_urls?: string[];
+    reference_image_urls?: string[];
+    ratio?: string;
 }
 
 export const api = {
@@ -115,7 +118,7 @@ export const api = {
         promptExtend: boolean = true,
         negativePrompt?: string,
         batchSize: number = 1,
-        model: string = "wan2.6-i2v",
+        model: string = DEFAULT_I2V_MODEL_ID,
         frameId?: string,
         shotType: string = "single",  // 'single' or 'multi' (only for wan2.6-i2v)
         generationMode: string = "i2v",  // 'i2v' or 'r2v'
@@ -126,7 +129,10 @@ export const api = {
         cfgScale?: number,
         // Vidu params
         viduAudio?: boolean,
-        movementAmplitude?: string
+        movementAmplitude?: string,
+        // HappyHorse params
+        referenceImageUrls: string[] = [],  // Reference images for HappyHorse R2V (1-9)
+        ratio?: string  // Aspect ratio: 16:9, 9:16, 1:1, 4:3, 3:4
     ) => {
         const res = await axios.post(`${API_URL}/projects/${id}/video_tasks`, {
             image_url,
@@ -150,7 +156,10 @@ export const api = {
             cfg_scale: cfgScale,
             // Vidu
             vidu_audio: viduAudio,
-            movement_amplitude: movementAmplitude
+            movement_amplitude: movementAmplitude,
+            // HappyHorse
+            reference_image_urls: referenceImageUrls,
+            ratio
         });
         return res.data;
     },
@@ -316,12 +325,14 @@ export const api = {
         characterAspectRatio?: string,
         sceneAspectRatio?: string,
         propAspectRatio?: string,
-        storyboardAspectRatio?: string
+        storyboardAspectRatio?: string,
+        imageModel?: string
     ) => {
         const res = await axios.post(`${API_URL}/projects/${scriptId}/model_settings`, {
             t2i_model: t2iModel,
             i2i_model: i2iModel,
             i2v_model: i2vModel,
+            image_model: imageModel,
             character_aspect_ratio: characterAspectRatio,
             scene_aspect_ratio: sceneAspectRatio,
             prop_aspect_ratio: propAspectRatio,
@@ -641,6 +652,7 @@ export const api = {
     updateSeriesModelSettings: async (seriesId: string, settings: {
         t2i_model?: string;
         i2i_model?: string;
+        image_model?: string;
         i2v_model?: string;
         character_aspect_ratio?: string;
         scene_aspect_ratio?: string;

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, FileText, RotateCcw, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useProjectStore } from '@/store/projectStore';
 import { api } from '@/lib/api';
 
@@ -38,6 +39,8 @@ const SECTIONS = [
 export default function PromptConfigModal({ isOpen, onClose }: PromptConfigModalProps) {
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
+    const t = useTranslations("project");
+    const tc = useTranslations("common");
 
     const [config, setConfig] = useState({ storyboard_polish: '', video_polish: '', r2v_polish: '' });
     const [defaults, setDefaults] = useState<PromptDefaults | null>(null);
@@ -58,7 +61,7 @@ export default function PromptConfigModal({ isOpen, onClose }: PromptConfigModal
                 })
                 .catch((err) => {
                     console.error("Failed to load prompt config:", err);
-                    setLoadError("Failed to load prompt configuration. Please try again.");
+                    setLoadError(t("promptLoadFailed"));
                 })
                 .finally(() => setIsLoading(false));
         }
@@ -73,7 +76,7 @@ export default function PromptConfigModal({ isOpen, onClose }: PromptConfigModal
             onClose();
         } catch (error) {
             console.error("Failed to save prompt config:", error);
-            alert("Failed to save prompt configuration");
+            alert(t("promptSaveFailed"));
         } finally {
             setIsSaving(false);
         }
@@ -91,29 +94,29 @@ export default function PromptConfigModal({ isOpen, onClose }: PromptConfigModal
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm flex items-center justify-center p-4"
                 onClick={onClose}
             >
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-[#1a1a1a] rounded-2xl border border-white/10 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+                    className="bg-elevated rounded-2xl border border-glass-border w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                    <div className="p-6 border-b border-glass-border flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-purple-500/20 rounded-lg">
                                 <FileText size={20} className="text-purple-400" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-white">Prompt Configuration</h2>
-                                <p className="text-xs text-gray-400">Customize system prompts for AI polish stages</p>
+                                <h2 className="text-lg font-bold text-foreground">{t("promptConfig")}</h2>
+                                <p className="text-xs text-text-secondary">{t("promptConfigSub")}</p>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                            <X size={20} className="text-gray-400" />
+                        <button onClick={onClose} className="p-2 hover:bg-hover-bg rounded-lg transition-colors">
+                            <X size={20} className="text-text-secondary" />
                         </button>
                     </div>
 
@@ -122,7 +125,7 @@ export default function PromptConfigModal({ isOpen, onClose }: PromptConfigModal
                         {isLoading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 size={24} className="animate-spin text-purple-400" />
-                                <span className="ml-2 text-gray-400">Loading configuration...</span>
+                                <span className="ml-2 text-text-secondary">{t("loadingConfig")}</span>
                             </div>
                         ) : loadError ? (
                             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-sm text-red-300">
@@ -131,22 +134,22 @@ export default function PromptConfigModal({ isOpen, onClose }: PromptConfigModal
                         ) : (
                             <>
                                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-xs text-blue-300">
-                                    Leave a field empty to use the system default prompt. Custom prompts completely replace the default for that stage.
+                                    {t("promptEmptyHint")}
                                 </div>
 
                                 {SECTIONS.map((section) => (
                                     <div key={section.key} className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <h3 className="text-sm font-bold text-white">{section.label}</h3>
-                                                <p className="text-[10px] text-gray-500 mt-0.5">{section.description}</p>
+                                                <h3 className="text-sm font-bold text-foreground">{section.label}</h3>
+                                                <p className="text-[10px] text-text-muted mt-0.5">{section.description}</p>
                                             </div>
                                             <button
                                                 onClick={() => handleReset(section.key)}
                                                 disabled={!config[section.key]}
-                                                className="text-[10px] text-gray-400 hover:text-white flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                                className="text-[10px] text-text-secondary hover:text-foreground flex items-center gap-1 px-2 py-1 rounded hover:bg-hover-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                             >
-                                                <RotateCcw size={10} /> Reset to default
+                                                <RotateCcw size={10} /> {t("resetToDefault")}
                                             </button>
                                         </div>
 
@@ -154,7 +157,7 @@ export default function PromptConfigModal({ isOpen, onClose }: PromptConfigModal
                                             value={config[section.key]}
                                             onChange={(e) => setConfig(prev => ({ ...prev, [section.key]: e.target.value }))}
                                             placeholder={defaults ? defaults[section.key].slice(0, 150) + '...' : 'Loading default...'}
-                                            className="w-full h-32 bg-black/30 border border-white/10 rounded-lg p-3 text-xs text-gray-300 resize-y focus:outline-none focus:border-purple-500/50 font-mono placeholder-gray-600"
+                                            className="w-full h-32 bg-surface border border-glass-border rounded-lg p-3 text-xs text-foreground resize-y focus:outline-none focus:border-purple-500/50 font-mono placeholder-text-muted"
                                         />
 
                                         {/* Expandable default prompt viewer */}
@@ -162,19 +165,19 @@ export default function PromptConfigModal({ isOpen, onClose }: PromptConfigModal
                                             <div>
                                                 <button
                                                     onClick={() => setExpandedDefault(expandedDefault === section.key ? null : section.key)}
-                                                    className="text-[10px] text-gray-500 hover:text-gray-300 flex items-center gap-1 transition-colors"
+                                                    className="text-[10px] text-text-muted hover:text-foreground flex items-center gap-1 transition-colors"
                                                 >
                                                     {expandedDefault === section.key ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
-                                                    View full default prompt
+                                                    {t("viewDefault")}
                                                 </button>
                                                 {expandedDefault === section.key && (
-                                                    <pre className="mt-2 bg-black/40 border border-white/5 rounded-lg p-3 text-[10px] text-gray-500 overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap font-mono">{defaults[section.key]}</pre>
+                                                    <pre className="mt-2 bg-surface border border-border-subtle rounded-lg p-3 text-[10px] text-text-muted overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap font-mono">{defaults[section.key]}</pre>
                                                 )}
                                             </div>
                                         )}
 
                                         {section.key !== 'r2v_polish' && (
-                                            <div className="border-b border-white/5" />
+                                            <div className="border-b border-border-subtle" />
                                         )}
                                     </div>
                                 ))}
@@ -183,20 +186,20 @@ export default function PromptConfigModal({ isOpen, onClose }: PromptConfigModal
                     </div>
 
                     {/* Footer */}
-                    <div className="p-6 border-t border-white/10 flex justify-end gap-3">
+                    <div className="p-6 border-t border-glass-border flex justify-end gap-3">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                            className="px-4 py-2 text-sm text-text-secondary hover:text-foreground transition-colors"
                         >
-                            Cancel
+                            {tc("cancel")}
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={isSaving || isLoading || !!loadError}
-                            className="px-6 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                            className="px-6 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-500 text-foreground rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
                         >
                             {isSaving && <Loader2 size={14} className="animate-spin" />}
-                            Save
+                            {tc("save")}
                         </button>
                     </div>
                 </motion.div>

@@ -69,11 +69,11 @@ class WanxImageModel(ImageGenModel):
         if model_name:
             final_model_name = model_name
         elif all_ref_paths:
-            # For I2I, use i2i_model_name if configured, otherwise default to wan2.5-i2i-preview
-            final_model_name = self.params.get('i2i_model_name', 'wan2.5-i2i-preview')
+            # For I2I, use i2i_model_name if configured, otherwise default to wan2.7-image
+            final_model_name = self.params.get('i2i_model_name', 'wan2.7-image')
         else:
-            # For T2I, use model_name if configured, otherwise default to wan2.6-t2i
-            final_model_name = self.params.get('model_name', 'wan2.6-t2i')
+            # For T2I, use model_name if configured, otherwise default to wan2.7-image-pro
+            final_model_name = self.params.get('model_name', 'wan2.7-image-pro')
 
         if all_ref_paths:
             logger.info(f"Using I2I model: {final_model_name} with {len(all_ref_paths)} reference images")
@@ -87,7 +87,12 @@ class WanxImageModel(ImageGenModel):
         kwargs.pop('model_name', None)
         
         # Determine reference image limit based on model
-        ref_limit = 4 if final_model_name == 'wan2.6-image' else 3
+        if final_model_name.startswith('wan2.7-image') or final_model_name.startswith('qwen-image'):
+            ref_limit = 9
+        elif final_model_name == 'wan2.6-image':
+            ref_limit = 4
+        else:
+            ref_limit = 3
         if len(all_ref_paths) > ref_limit:
             logger.warning(f"Limiting reference images from {len(all_ref_paths)} to {ref_limit} for model {final_model_name}")
             all_ref_paths = all_ref_paths[:ref_limit]
@@ -98,12 +103,25 @@ class WanxImageModel(ImageGenModel):
 
         try:
             api_start_time = time.time()
-            # Use HTTP API for wan2.6 models (SDK not supported yet)
+            # Use HTTP API for wan2.6+ models and qwen-image models
             if final_model_name == 'wan2.6-t2i':
                 image_url = self._generate_wan26_http(prompt, size, n, negative_prompt)
             elif final_model_name == 'wan2.6-image':
                 # wan2.6-image for I2I (requires reference images)
                 image_url = self._generate_wan26_image_http(prompt, size, n, negative_prompt, all_ref_paths)
+            elif final_model_name.startswith('wan2.7-image') or final_model_name.startswith('qwen-image'):
+                # Wan2.7-image / Qwen-image via DashScope async HTTP API
+                image_url = self._generate_dashscope_image_http(
+                    prompt=prompt,
+                    model_name=final_model_name,
+                    size=size,
+                    n=n,
+                    negative_prompt=negative_prompt,
+                    ref_image_paths=all_ref_paths,
+                    seed=kwargs.pop('seed', None),
+                    prompt_extend=kwargs.pop('prompt_extend', True),
+                    watermark=kwargs.pop('watermark', False),
+                )
             else:
                 # Use SDK for other models
                 image_url = self._generate_sdk(prompt, final_model_name, size, n, negative_prompt, all_ref_paths,
@@ -124,6 +142,138 @@ class WanxImageModel(ImageGenModel):
             logger.error(f"Error during generation: {e}")
             logger.error(traceback.format_exc())
             raise
+
+    def _generate_dashscope_image_http(
+        self,
+        prompt: str,
+        model_name: str,
+        size: str = "1280*1280",
+        n: int = 1,
+        negative_prompt: str = None,
+        ref_image_paths: list = None,
+        seed: int = None,
+        prompt_extend: bool = True,
+        watermark: bool = False,
+    ) -> str:
+        """Generate image using Wan2.7-image / Qwen-image via DashScope async HTTP API."""
+        base = get_provider_base_url("DASHSCOPE")
+        create_url = f"{base}/api/v1/services/aigc/image-generation/generation"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "X-DashScope-Async": "enable",
+        }
+
+        # Build content array with optional reference images and prompt text
+        content = []
+        if ref_image_paths:
+            for path in ref_image_paths[:9]:
+                image_input = self._resolve_wan26_reference_image(path, model_name=model_name)
+                if image_input:
+                    content.append({"image": image_input})
+        content.append({"text": prompt})
+
+        payload = {
+            "model": model_name,
+            "input": {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": content,
+                    }
+                ]
+            },
+            "parameters": {
+                "prompt_extend": prompt_extend,
+                "watermark": watermark,
+                "n": n,
+                "size": size,
+            },
+        }
+
+        if negative_prompt:
+            payload["parameters"]["negative_prompt"] = negative_prompt
+        if seed:
+            payload["parameters"]["seed"] = seed
+
+        logger.info(f"Calling {model_name} HTTP API (async)...")
+        logger.info(f"Payload: {payload}")
+
+        # Step 1: Create task
+        response = requests.post(create_url, headers=headers, json=payload, timeout=120)
+
+        logger.info(f"Create task response status: {response.status_code}")
+        logger.info(f"Create task response body: {response.text[:500]}")
+
+        if response.status_code != 200:
+            error_data = response.json() if response.text else {}
+            error_msg = error_data.get('message', response.text)
+            raise RuntimeError(f"{model_name} task creation failed: {error_msg}")
+
+        result = response.json()
+        task_id = result.get('output', {}).get('task_id')
+        if not task_id:
+            raise RuntimeError(f"No task_id in response: {result}")
+
+        logger.info(f"Task created: {task_id}")
+
+        # Step 2: Poll for task completion
+        poll_url = f"{base}/api/v1/tasks/{task_id}"
+        poll_headers = {
+            "Authorization": f"Bearer {self.api_key}"
+        }
+
+        max_wait_time = 600
+        poll_interval = 10
+        elapsed = 0
+
+        while elapsed < max_wait_time:
+            time.sleep(poll_interval)
+            elapsed += poll_interval
+
+            poll_response = requests.get(poll_url, headers=poll_headers, timeout=30)
+
+            if poll_response.status_code != 200:
+                logger.warning(f"Poll request failed: {poll_response.status_code}")
+                continue
+
+            poll_result = poll_response.json()
+            task_status = poll_result.get('output', {}).get('task_status')
+
+            logger.info(f"Task {task_id} status: {task_status} (elapsed: {elapsed}s)")
+
+            if task_status == 'SUCCEEDED':
+                choices = poll_result.get('output', {}).get('choices', [])
+                if not choices:
+                    raise RuntimeError(f"No choices in completed task: {poll_result}")
+
+                first_choice = choices[0]
+                content = first_choice.get('message', {}).get('content', [])
+                if not content:
+                    raise RuntimeError(f"No content in choice: {first_choice}")
+
+                image_url = content[0].get('image')
+                if not image_url:
+                    raise RuntimeError(f"No image URL in content: {content}")
+
+                logger.info(f"Task completed. Image URL: {image_url}")
+                return image_url
+
+            elif task_status == 'FAILED':
+                error_msg = (
+                    poll_result.get('output', {}).get('message', '') or
+                    poll_result.get('output', {}).get('code', '') or
+                    poll_result.get('message', '') or
+                    poll_result.get('code', '') or
+                    'Unknown error'
+                )
+                raise RuntimeError(f"{model_name} task failed: {error_msg}")
+
+            elif task_status in ['CANCELED', 'UNKNOWN']:
+                raise RuntimeError(f"{model_name} task {task_status}: {poll_result}")
+
+        raise RuntimeError(f"{model_name} task timed out after {max_wait_time}s")
 
     def _generate_wan26_http(self, prompt: str, size: str, n: int, negative_prompt: str = None) -> str:
         """Generate image using Wan 2.6 T2I via HTTP API (synchronous)."""

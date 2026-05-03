@@ -61,6 +61,37 @@ Use the following vocabulary consistently in PRs, code, and docs:
 - `media_ref`: stable project-side media reference (for example local relative path or OSS object key)
 - `resolved_media_input`: request-side provider-ready payload derived from `media_ref`
 
+## 🧠 Model Onboarding Workflow
+
+When your change touches model support, do not treat it as an ordinary string-replacement task. Use the repo-native model workflow entry:
+
+- textual alias: `/lumenx-model-onboarding`
+- workflow docs:
+  - `.codex/workflows/lumenx-model-onboarding.md`
+  - `.claude/commands/lumenx-model-onboarding.md`
+
+Typical use cases:
+
+- onboarding a new model ID
+- updating model versions
+- changing default models
+- changing model parameter metadata
+- changing model UI visibility
+- refreshing vendor-doc evidence
+
+Minimum expected command sequence after catalog changes:
+
+```bash
+python scripts/build_model_catalog.py
+python scripts/validate_model_catalog.py
+pytest -q
+cd frontend && npm run typecheck
+cd frontend && npm run test:all
+cd frontend && npm run build
+```
+
+Read [docs/model-onboarding-implementation.md](docs/model-onboarding-implementation.md) before large model-support changes. It explains exactly which files own what.
+
 ## 📝 Code Style Guidelines
 
 ### Python Code (Backend)

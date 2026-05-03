@@ -1,13 +1,13 @@
 const { exec } = require('child_process');
 
-const URL = 'http://localhost:3000';
+const URL = 'http://localhost:3008';
 
 setTimeout(() => {
   console.log('\n  ╔══════════════════════════════════════════╗');
   console.log('  ║                                          ║');
   console.log('  ║   LumenX AI Comic Platform Ready!        ║');
   console.log('  ║                                          ║');
-  console.log('  ║   Frontend:  http://localhost:3000       ║');
+  console.log('  ║   Frontend:  http://localhost:3008       ║');
   console.log('  ║   Backend:   http://localhost:17177      ║');
   console.log('  ║                                          ║');
   console.log('  ║   Press Ctrl+C to stop all services.     ║');

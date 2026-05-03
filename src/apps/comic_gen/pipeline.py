@@ -1393,7 +1393,7 @@ class ComicGenPipeline:
         self._save_data()
         return script
 
-    def create_video_task(self, script_id: str, image_url: str, prompt: str, duration: int = 5, seed: int = None, resolution: str = "720p", generate_audio: bool = False, audio_url: str = None, prompt_extend: bool = True, negative_prompt: str = None, model: str = "wan2.6-i2v", frame_id: str = None, shot_type: str = "single", generation_mode: str = "i2v", reference_video_urls: list = None, mode: str = None, sound: str = None, cfg_scale: float = None, vidu_audio: bool = None, movement_amplitude: str = None) -> Tuple[Script, str]:
+    def create_video_task(self, script_id: str, image_url: str, prompt: str, duration: int = 5, seed: int = None, resolution: str = "720p", generate_audio: bool = False, audio_url: str = None, prompt_extend: bool = True, negative_prompt: str = None, model: str = "wan2.7-i2v", frame_id: str = None, shot_type: str = "single", generation_mode: str = "i2v", reference_video_urls: list = None, reference_image_urls: list = None, ratio: str = None, mode: str = None, sound: str = None, cfg_scale: float = None, vidu_audio: bool = None, movement_amplitude: str = None) -> Tuple[Script, str]:
         """Creates a new video generation task."""
         script = self.get_script(script_id)
         if not script:
@@ -1401,9 +1401,20 @@ class ComicGenPipeline:
         
         task_id = str(uuid.uuid4())
         
-        # If R2V mode is selected, use the R2V model
+        # If R2V mode is selected, use the appropriate R2V model
         if generation_mode == "r2v":
-            model = "wan2.6-r2v"
+            if model and model.startswith("happyhorse-"):
+                model = "happyhorse-1.0-r2v"
+            elif model and model.startswith("wan2.7-"):
+                model = "wan2.7-r2v"
+            elif model and model.startswith("kling"):
+                model = "kling-v3-r2v"
+            elif model and model.startswith("pixverse"):
+                model = "pixverse-c1-r2v"
+            elif model and model.startswith("vidu"):
+                model = "viduq3-pro-r2v"
+            else:
+                model = "wan2.7-r2v"
         
         # Snapshot the input image to ensure consistency
         snapshot_url = image_url
@@ -1451,6 +1462,8 @@ class ComicGenPipeline:
             shot_type=shot_type,
             generation_mode=generation_mode,
             reference_video_urls=reference_video_urls or [],
+            reference_image_urls=reference_image_urls or [],
+            ratio=ratio,
             mode=mode,
             sound=sound,
             cfg_scale=cfg_scale,
@@ -2012,11 +2025,14 @@ class ComicGenPipeline:
             model_name = task.model or ""
             model_name_lower = model_name.lower()
             backend = self._resolve_video_backend(model_name)
-            use_vendor_kling = backend == "vendor" and model_name_lower.startswith("kling-")
+            use_vendor_kling = backend == "vendor" and (
+                model_name_lower.startswith("kling-") or model_name_lower.startswith("kling/kling-")
+            )
             use_vendor_vidu = backend == "vendor" and (
                 model_name_lower.startswith("vidu")
                 or model_name_lower.startswith("viduq2")
                 or model_name_lower.startswith("viduq3")
+                or model_name_lower.startswith("vidu/vidu")
             )
 
             if use_vendor_kling:
@@ -2073,6 +2089,9 @@ class ComicGenPipeline:
                     model=task.model,
                     shot_type=task.shot_type,
                     ref_video_urls=task.reference_video_urls if task.generation_mode == "r2v" else None,
+                    ref_image_urls=task.reference_image_urls if task.generation_mode == "r2v" else None,
+                    ratio=task.ratio,
+                    audio_setting=task.audio_setting,
                     camera_motion=None,
                     subject_motion=None
                 )
@@ -2500,18 +2519,20 @@ class ComicGenPipeline:
         self._save_data()
         return script
 
-    def update_model_settings(self, script_id: str, t2i_model: str = None, i2i_model: str = None, i2v_model: str = None, character_aspect_ratio: str = None, scene_aspect_ratio: str = None, prop_aspect_ratio: str = None, storyboard_aspect_ratio: str = None) -> Script:
+    def update_model_settings(self, script_id: str, t2i_model: str = None, i2i_model: str = None, i2v_model: str = None, character_aspect_ratio: str = None, scene_aspect_ratio: str = None, prop_aspect_ratio: str = None, storyboard_aspect_ratio: str = None, image_model: str = None) -> Script:
         """Updates the model settings for a script."""
         script = self.scripts.get(script_id)
         if not script:
             raise ValueError("Script not found")
-        
+
         if t2i_model:
             script.model_settings.t2i_model = t2i_model
         if i2i_model:
             script.model_settings.i2i_model = i2i_model
         if i2v_model:
             script.model_settings.i2v_model = i2v_model
+        if image_model:
+            script.model_settings.image_model = image_model
         if character_aspect_ratio:
             script.model_settings.character_aspect_ratio = character_aspect_ratio
         if scene_aspect_ratio:

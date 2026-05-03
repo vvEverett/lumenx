@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Palette, Layout, Film, Share2, Mic, Music, BookOpen, Users, Video, Settings, Key, MessageSquareCode } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useProjectStore } from "@/store/projectStore";
 import PipelineSidebar from "@/components/layout/PipelineSidebar";
 import type { BreadcrumbSegment } from "@/components/layout/BreadcrumbBar";
@@ -27,6 +28,7 @@ export default function ProjectClient({ id, breadcrumbSegments }: { id: string; 
     const [modelSettingsOpen, setModelSettingsOpen] = useState(false);
     const [envDialogOpen, setEnvDialogOpen] = useState(false);
     const [promptConfigOpen, setPromptConfigOpen] = useState(false);
+    const t = useTranslations("project");
 
     const selectProject = useProjectStore((state) => state.selectProject);
     const currentProject = useProjectStore((state) => state.currentProject);
@@ -55,12 +57,12 @@ export default function ProjectClient({ id, breadcrumbSegments }: { id: string; 
         return (
             <div className="flex items-center justify-center h-screen bg-background">
                 <div className="text-center">
-                    <p className="text-gray-400 mb-4">项目未找到</p>
+                    <p className="text-text-secondary mb-4">{t("notFound")}</p>
                     <button
                         onClick={handleBackToHome}
                         className="text-primary hover:underline"
                     >
-                        返回项目列表
+                        {t("backToList")}
                     </button>
                 </div>
             </div>
@@ -73,24 +75,24 @@ export default function ProjectClient({ id, breadcrumbSegments }: { id: string; 
         <>
             <button
                 onClick={() => setEnvDialogOpen(true)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
-                title="API Key & OSS 配置"
+                className="p-2 hover:bg-hover-bg rounded-lg transition-colors group"
+                title={t("apiKeyConfig")}
             >
-                <Key size={16} className="text-gray-400 group-hover:text-green-400 transition-colors" />
+                <Key size={16} className="text-text-secondary group-hover:text-green-400 transition-colors" />
             </button>
             <button
                 onClick={() => setPromptConfigOpen(true)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
+                className="p-2 hover:bg-hover-bg rounded-lg transition-colors group"
                 title="Prompt Configuration"
             >
-                <MessageSquareCode size={16} className="text-gray-400 group-hover:text-purple-400 transition-colors" />
+                <MessageSquareCode size={16} className="text-text-secondary group-hover:text-purple-400 transition-colors" />
             </button>
             <button
                 onClick={() => setModelSettingsOpen(true)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
+                className="p-2 hover:bg-hover-bg rounded-lg transition-colors group"
                 title="Model Settings"
             >
-                <Settings size={16} className="text-gray-400 group-hover:text-white transition-colors" />
+                <Settings size={16} className="text-text-secondary group-hover:text-foreground transition-colors" />
             </button>
         </>
     );

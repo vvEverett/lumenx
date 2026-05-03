@@ -434,6 +434,7 @@ async def update_series_prompt_config(series_id: str, config: PromptConfig):
 class UpdateModelSettingsRequest(BaseModel):
     t2i_model: Optional[str] = None
     i2i_model: Optional[str] = None
+    image_model: Optional[str] = None
     i2v_model: Optional[str] = None
     character_aspect_ratio: Optional[str] = None
     scene_aspect_ratio: Optional[str] = None
@@ -1131,6 +1132,9 @@ class CreateVideoTaskRequest(BaseModel):
     # Vidu params
     vidu_audio: Optional[bool] = None
     movement_amplitude: Optional[str] = None
+    # HappyHorse params
+    reference_image_urls: List[str] = []  # Reference image URLs for HH R2V (max 9)
+    ratio: Optional[str] = None  # Aspect ratio for HH T2V/R2V
 
 
 async def process_video_task(script_id: str, task_id: str):
@@ -1163,6 +1167,8 @@ async def create_video_task(script_id: str, request: CreateVideoTaskRequest, bac
                 shot_type=request.shot_type,
                 generation_mode=request.generation_mode,
                 reference_video_urls=request.reference_video_urls,
+                reference_image_urls=request.reference_image_urls,
+                ratio=request.ratio,
                 mode=request.mode,
                 sound=request.sound,
                 cfg_scale=request.cfg_scale,
@@ -1443,7 +1449,8 @@ async def update_model_settings(script_id: str, request: UpdateModelSettingsRequ
             request.character_aspect_ratio,
             request.scene_aspect_ratio,
             request.prop_aspect_ratio,
-            request.storyboard_aspect_ratio
+            request.storyboard_aspect_ratio,
+            request.image_model
         )
         return signed_response(updated_script)
     except ValueError as e:

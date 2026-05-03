@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Save, ChevronDown, ChevronRight, Loader2, Key } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { api, type EnvConfigPayload, type ProviderMode } from "@/lib/api";
 
 interface EnvConfigDialogProps {
@@ -87,6 +88,8 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
   const [saving, setSaving] = useState(false);
   const [endpointsOpen, setEndpointsOpen] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const t = useTranslations("project");
+  const tc = useTranslations("common");
 
   useEffect(() => {
     if (isOpen) {
@@ -102,7 +105,7 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
       setConfig((prev) => normalizeEnvConfig(prev, data));
     } catch (error) {
       console.error("Failed to load env config:", error);
-      setLoadError("Failed to load configuration. Is the backend running?");
+      setLoadError(t("configLoadFailed"));
     } finally {
       setLoading(false);
     }
@@ -114,21 +117,21 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
   const handleSave = async () => {
     const errors = getValidationErrors(config);
     if (errors.length > 0) {
-      alert(`Please fill in required fields:\n- ${errors.join("\n- ")}`);
+      alert(t("requiredFields") + "\n- " + errors.join("\n- "));
       return;
     }
 
     setSaving(true);
     try {
       await api.saveEnvConfig(config);
-      alert("Configuration saved successfully!");
+      alert(t("configSaved"));
       onClose();
       if (isRequired) {
         window.location.reload();
       }
     } catch (error) {
       console.error("Failed to save env config:", error);
-      alert("Failed to save configuration. Please try again.");
+      alert(t("configSaveFailed"));
     } finally {
       setSaving(false);
     }
@@ -153,9 +156,9 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
 
   if (!isOpen) return null;
 
-  const inputClass = "w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 transition-colors";
+  const inputClass = "w-full bg-surface border border-glass-border rounded-lg px-4 py-2 text-foreground placeholder-text-muted focus:outline-none focus:border-primary/50 transition-colors";
   const modeButtonClass = (active: boolean) =>
-    `px-3 py-1.5 text-xs rounded-md border transition-colors ${active ? "border-amber-500/60 bg-amber-500/15 text-amber-200" : "border-white/10 bg-white/5 text-gray-400 hover:text-gray-200"}`;
+    `px-3 py-1.5 text-xs rounded-md border transition-colors font-medium ${active ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "border-glass-border bg-surface text-text-secondary hover:text-foreground"}`;
 
   return (
     <AnimatePresence>
@@ -163,51 +166,51 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm p-4"
         onClick={requestClose}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-[#1a1a1a] rounded-2xl border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-elevated rounded-2xl border border-glass-border w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <div className="flex items-center justify-between p-6 border-b border-glass-border">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-lg">
                 <Key size={20} className="text-amber-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Environment Configuration</h2>
-                <p className="text-xs text-gray-500">DashScope-first setup, with optional OSS mirror and vendor-direct routing</p>
+                <h2 className="text-lg font-bold text-foreground">{t("envConfig")}</h2>
+                <p className="text-xs text-text-muted">{t("envConfigSub")}</p>
               </div>
             </div>
             <button
               onClick={requestClose}
               disabled={!canClose}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-2 hover:bg-hover-bg rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <X size={20} className="text-gray-400" />
+              <X size={20} className="text-text-secondary" />
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {isRequired && (
               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 text-xs text-yellow-300">
-                DashScope API Key is required before using the app. OSS and vendor keys are optional unless you select vendor-direct mode.
+                {t("requiredHint")}
               </div>
             )}
             {isRequired && !canClose && (
-              <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-gray-400">
-                This dialog cannot be closed until required fields are valid.
+              <div className="bg-glass border border-glass-border rounded-lg p-3 text-xs text-text-secondary">
+                {t("cannotClose")}
               </div>
             )}
 
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 size={24} className="animate-spin text-amber-400" />
-                <span className="ml-2 text-gray-400">Loading configuration...</span>
+                <span className="ml-2 text-text-secondary">{t("loadingConfig")}</span>
               </div>
             ) : loadError ? (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-sm text-red-300">
@@ -216,9 +219,9 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
             ) : (
               <>
                 <div>
-                  <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
+                  <label className="flex items-center justify-between text-sm font-medium text-foreground mb-2">
                     <span>DashScope API Key <span className="text-red-500">*</span></span>
-                    <span className="text-gray-600 font-normal text-xs">e.g. sk-xxx</span>
+                    <span className="text-text-muted font-normal text-xs">e.g. sk-xxx</span>
                   </label>
                   <input
                     type="password"
@@ -229,12 +232,12 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                   />
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-4">
-                  <div className="text-xs text-gray-400">
-                    Storage is local-first by default. OSS credentials are optional and only used as a cloud mirror.
+                <div className="bg-glass border border-glass-border rounded-lg p-4 space-y-4">
+                  <div className="text-xs text-text-secondary">
+                    {t("ossLocalFirst")}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Alibaba Cloud Access Key ID
                     </label>
                     <input
@@ -247,7 +250,7 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Alibaba Cloud Access Key Secret
                     </label>
                     <input
@@ -260,11 +263,11 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-white/10">
+                <div className="pt-4 border-t border-glass-border">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-sm font-bold text-white">OSS Mirror (Optional)</h3>
-                      <p className="text-[10px] text-gray-500 mt-1">When configured, generated media is stored locally and mirrored to OSS.</p>
+                      <h3 className="text-sm font-bold text-foreground">{t("ossMirror")}</h3>
+                      <p className="text-[10px] text-text-muted mt-1">{t("ossMirrorDesc")}</p>
                     </div>
                     <a
                       href="https://oss.console.aliyun.com/overview"
@@ -278,9 +281,9 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
 
                   <div className="space-y-4">
                     <div>
-                      <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
+                      <label className="flex items-center justify-between text-sm font-medium text-foreground mb-2">
                         <span>OSS Bucket Name</span>
-                        <span className="text-gray-600 font-normal text-xs">e.g. my-comic-bucket</span>
+                        <span className="text-text-muted font-normal text-xs">e.g. my-comic-bucket</span>
                       </label>
                       <input
                         type="text"
@@ -292,9 +295,9 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                     </div>
 
                     <div>
-                      <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
+                      <label className="flex items-center justify-between text-sm font-medium text-foreground mb-2">
                         <span>OSS Endpoint</span>
-                        <span className="text-gray-600 font-normal text-xs">e.g. oss-cn-hangzhou.aliyuncs.com</span>
+                        <span className="text-text-muted font-normal text-xs">e.g. oss-cn-hangzhou.aliyuncs.com</span>
                       </label>
                       <input
                         type="text"
@@ -306,9 +309,9 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                     </div>
 
                     <div>
-                      <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
+                      <label className="flex items-center justify-between text-sm font-medium text-foreground mb-2">
                         <span>OSS Base Path</span>
-                        <span className="text-gray-600 font-normal text-xs">e.g. lumenx</span>
+                        <span className="text-text-muted font-normal text-xs">e.g. lumenx</span>
                       </label>
                       <input
                         type="text"
@@ -321,12 +324,12 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-white/10">
+                <div className="pt-4 border-t border-glass-border">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-bold text-white">Kling Provider</h3>
-                    <span className="text-[10px] text-gray-500">Choose DashScope proxy or vendor-direct</span>
+                    <h3 className="text-sm font-bold text-foreground">Kling Provider</h3>
+                    <span className="text-[10px] text-text-muted">{t("chooseProvider")}</span>
                   </div>
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-4">
+                  <div className="bg-glass border border-glass-border rounded-lg p-4 space-y-4">
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -343,14 +346,14 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                         Vendor Direct
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      DashScope mode uses your DashScope API key. Vendor-direct mode requires Kling Access Key and Secret Key.
+                    <p className="text-xs text-text-muted">
+                      {t("dashscopeMode")} {t("vendorMode")}
                     </p>
 
                     {config.KLING_PROVIDER_MODE === "vendor" && (
                       <>
                         <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                          <label className="block text-sm font-medium text-foreground mb-2">
                             Kling Access Key <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -363,7 +366,7 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                          <label className="block text-sm font-medium text-foreground mb-2">
                             Kling Secret Key <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -379,12 +382,12 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-white/10">
+                <div className="pt-4 border-t border-glass-border">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-bold text-white">Vidu Provider</h3>
-                    <span className="text-[10px] text-gray-500">Choose DashScope proxy or vendor-direct</span>
+                    <h3 className="text-sm font-bold text-foreground">Vidu Provider</h3>
+                    <span className="text-[10px] text-text-muted">{t("chooseProvider")}</span>
                   </div>
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-4">
+                  <div className="bg-input-bg border border-glass-border rounded-lg p-4 space-y-4">
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -401,13 +404,13 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                         Vendor Direct
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      DashScope mode uses your DashScope API key. Vendor-direct mode requires a Vidu API key.
+                    <p className="text-xs text-text-muted">
+                      {t("dashscopeMode")} {t("vendorMode")}
                     </p>
 
                     {config.VIDU_PROVIDER_MODE === "vendor" && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                           Vidu API Key <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -422,27 +425,27 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-white/10">
+                <div className="pt-4 border-t border-glass-border">
                   <button
                     type="button"
                     onClick={() => setEndpointsOpen(!endpointsOpen)}
                     aria-expanded={endpointsOpen}
-                    className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors"
+                    className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-foreground transition-colors"
                   >
                     {endpointsOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    Advanced: API Endpoints
+                    {t("advancedEndpoints")}
                   </button>
 
                   {endpointsOpen && (
                     <div className="mt-4 space-y-4">
-                      <p className="text-xs text-gray-500">
-                        Custom API endpoint URLs. Leave empty to use defaults. Endpoint overrides are preserved regardless of provider mode.
+                      <p className="text-xs text-text-muted">
+                        {t("endpointsDesc")}
                       </p>
                       {ENDPOINT_PROVIDERS.map(({ key, label, placeholder }) => (
                         <div key={key}>
-                          <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
+                          <label className="flex items-center justify-between text-sm font-medium text-foreground mb-2">
                             <span>{label} Base URL</span>
-                            <span className="text-gray-600 font-normal text-xs">{placeholder}</span>
+                            <span className="text-text-muted font-normal text-xs">{placeholder}</span>
                           </label>
                           <input
                             type="text"
@@ -460,28 +463,28 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
             )}
           </div>
 
-          <div className="flex justify-end gap-3 p-6 border-t border-white/10">
+          <div className="flex justify-end gap-3 p-6 border-t border-glass-border">
             <button
               onClick={requestClose}
               disabled={!canClose}
-              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm text-text-secondary hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Cancel
+              {tc("cancel")}
             </button>
             <button
               onClick={handleSave}
               disabled={saving || loading || !!loadError}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-foreground text-sm font-medium rounded-lg transition-all disabled:opacity-50"
             >
               {saving ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  Saving...
+                  {t("savingConfig")}
                 </>
               ) : (
                 <>
                   <Save size={16} />
-                  Save Configuration
+                  {t("saveConfig")}
                 </>
               )}
             </button>
