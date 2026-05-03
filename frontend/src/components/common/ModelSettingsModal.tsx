@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Image, Video, Film, Check, Layout, User, Building, Box } from 'lucide-react';
-import { useProjectStore, T2I_MODELS, I2I_MODELS, I2V_MODELS, ASPECT_RATIOS } from '@/store/projectStore';
+import { useProjectStore, IMAGE_MODELS, I2V_MODELS, ASPECT_RATIOS } from '@/store/projectStore';
 import { resolveModelSettings } from '@/lib/modelCatalog';
 import { api } from '@/lib/api';
 import { useTranslations } from "next-intl";
@@ -115,7 +115,7 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                             <div className="space-y-2">
                                 <label className="text-xs text-text-secondary">{t("model")}</label>
                                 <div className="grid grid-cols-2 gap-2">
-                                    {T2I_MODELS.map((model) => (
+                                    {IMAGE_MODELS.map((model) => (
                                         <button
                                             key={model.id}
                                             onClick={() => setT2iModel(model.id)}
@@ -219,7 +219,7 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                             <div className="space-y-2">
                                 <label className="text-xs text-text-secondary">{t("model")}</label>
                                 <div className="grid grid-cols-2 gap-2">
-                                    {I2I_MODELS.map((model) => (
+                                    {IMAGE_MODELS.map((model) => (
                                         <button
                                             key={model.id}
                                             onClick={() => setI2iModel(model.id)}

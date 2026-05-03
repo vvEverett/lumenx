@@ -5,9 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Image, Video, Layout, Check, User, Building, Box, Loader2 } from 'lucide-react';
 import { ASPECT_RATIOS } from '@/store/projectStore';
 import {
-    SERIES_I2I_MODELS,
+    SERIES_IMAGE_MODELS,
     SERIES_I2V_MODELS,
-    SERIES_T2I_MODELS,
     resolveModelSettings,
 } from '@/lib/modelCatalog';
 import { api } from '@/lib/api';
@@ -137,7 +136,7 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                     <div className="space-y-2">
                                         <label className="text-xs text-text-secondary">{t("model")}</label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {SERIES_T2I_MODELS.map((model) => (
+                                            {SERIES_IMAGE_MODELS.map((model) => (
                                                 <button
                                                     key={model.id}
                                                     onClick={() => setT2iModel(model.id)}
@@ -200,7 +199,7 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
                                     <div className="space-y-2">
                                         <label className="text-xs text-text-secondary">{t("model")}</label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {SERIES_I2I_MODELS.map((model) => (
+                                            {SERIES_IMAGE_MODELS.map((model) => (
                                                 <button
                                                     key={model.id}
                                                     onClick={() => setI2iModel(model.id)}

@@ -5,6 +5,7 @@ import type { FrontendModelSettings } from '@/lib/modelCatalog';
 export {
     I2I_MODELS,
     I2V_MODELS,
+    IMAGE_MODELS,
     T2I_MODELS,
 } from '@/lib/modelCatalog';
 export type {

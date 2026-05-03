@@ -7,9 +7,8 @@ import { api, type EnvConfigPayload, type ProviderMode } from "@/lib/api";
 import { ASPECT_RATIOS } from "@/store/projectStore";
 import {
   DEFAULT_MODEL_SETTINGS,
-  GLOBAL_I2I_MODELS,
   GLOBAL_I2V_MODELS,
-  GLOBAL_T2I_MODELS,
+  GLOBAL_IMAGE_MODELS,
   normalizeModelSettings,
 } from "@/lib/modelCatalog";
 import { useSettingsStore, type Locale, type Theme } from "@/store/settingsStore";
@@ -437,7 +436,7 @@ export default function SettingsPage() {
             <span>Text-to-Image Model</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {GLOBAL_T2I_MODELS.map((model) => (
+            {GLOBAL_IMAGE_MODELS.map((model) => (
               <button
                 key={model.id}
                 onClick={() => setModelSettings((s) => ({ ...s, t2i_model: model.id }))}
@@ -477,7 +476,7 @@ export default function SettingsPage() {
               <span>Storyboard (Image-to-Image)</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {GLOBAL_I2I_MODELS.map((model) => (
+              {GLOBAL_IMAGE_MODELS.map((model) => (
                 <button key={model.id} onClick={() => setModelSettings((s) => ({ ...s, i2i_model: model.id }))} className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${modelSettings.i2i_model === model.id ? "border-blue-500/50 bg-blue-500/10" : "border-glass-border hover:border-glass-border bg-glass"}`}>
                   {modelSettings.i2i_model === model.id && <div className="absolute top-2 right-2"><Check size={14} className="text-blue-400" /></div>}
                   <span className="text-sm font-medium text-foreground">{model.name}</span>
