@@ -191,6 +191,7 @@ class WanxModel(VideoGenModel):
             "x_oss_date": "x-oss-date",
             "x_oss_signature": "x-oss-signature",
             "x_oss_object_acl": "x-oss-object-acl",
+            "x_oss_forbid_overwrite": "x-oss-forbid-overwrite",
             "success_action_status": "success_action_status",
             "callback": "callback",
         }
@@ -199,10 +200,13 @@ class WanxModel(VideoGenModel):
             if value:
                 form_data[target_key] = str(value)
 
-        # DashScope OSS policy requires x-oss-object-acl=private; ensure it is always present
-        # even if the policy response omits it (new Bucket Policy enforcement)
+        # DashScope OSS policy requires x-oss-object-acl=private and
+        # x-oss-forbid-overwrite=true; ensure they are always present
+        # even if the policy response omits them (Bucket Policy enforcement)
         if "x-oss-object-acl" not in form_data:
             form_data["x-oss-object-acl"] = "private"
+        if "x-oss-forbid-overwrite" not in form_data:
+            form_data["x-oss-forbid-overwrite"] = "true"
 
         for key, value in policy_data.items():
             if key.startswith("x-oss-") and value and key not in form_data:
