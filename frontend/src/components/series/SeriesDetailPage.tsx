@@ -92,7 +92,8 @@ export default function SeriesDetailPage({ seriesId }: SeriesDetailPageProps) {
     setIsCreatingEpisode(true);
     try {
       const nextEpNum = episodes.length + 1;
-      await api.createEpisodeForSeries(seriesId, newEpisodeTitle.trim(), nextEpNum);
+      const workflowMode = series?.workflow_mode || "i2v_legacy";
+      await api.createEpisodeForSeries(seriesId, newEpisodeTitle.trim(), nextEpNum, workflowMode);
       const updatedEpisodes = await api.getSeriesEpisodes(seriesId);
       setEpisodes(updatedEpisodes);
       setNewEpisodeTitle("");
@@ -331,6 +332,9 @@ function EpisodeContentPanel({
   const t = useTranslations("series");
 
   const frames = episode.frames || [];
+  const characters = episode.characters || [];
+  const scenes = episode.scenes || [];
+  const originalText = episode.originalText || "";
 
   return (
     <motion.div
@@ -341,7 +345,7 @@ function EpisodeContentPanel({
       className="flex-1 flex flex-col overflow-hidden"
     >
       {/* Header */}
-      <div className="px-8 pt-6 pb-4 flex items-start justify-between">
+      <div className="px-8 pt-6 pb-4 flex items-start justify-between border-b border-glass-border">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <span className="text-xs bg-primary/20 text-primary px-2.5 py-1 rounded-lg font-mono font-bold">
@@ -352,7 +356,7 @@ function EpisodeContentPanel({
             </h2>
           </div>
           <p className="text-xs text-text-secondary">
-            {t("frameCount", { count: frames.length })}
+            {episode.workflow_mode === "r2v" ? "R2V" : "I2V Legacy"} · {t("frameCount", { count: frames.length })}
           </p>
         </div>
         <motion.button
@@ -367,73 +371,78 @@ function EpisodeContentPanel({
         </motion.button>
       </div>
 
-      {/* Frames preview */}
-      <div className="flex-1 overflow-y-auto px-8 pb-8">
-        {frames.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-text-secondary">
-            <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="w-16 h-16 rounded-2xl bg-glass border border-glass-border flex items-center justify-center mb-4"
-            >
-              <Play size={28} className="text-text-muted" />
-            </motion.div>
-            <p className="text-sm font-medium">{t("noFrames")}</p>
-            <p className="text-xs text-text-muted mt-1">{t("startCreating")}</p>
-          </div>
-        ) : (
-          <motion.div
-            className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              visible: { transition: { staggerChildren: 0.04 } },
-            }}
-          >
-            {frames.map((frame, i) => (
-              <motion.div
-                key={frame.id}
-                variants={{
-                  hidden: { opacity: 0, y: 16, scale: 0.97 },
-                  visible: {
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
-                    transition: { duration: 0.3, ease: [0.25, 1, 0.5, 1] },
-                  },
-                }}
-                whileHover={{ y: -2 }}
-                className="glass-panel rounded-xl overflow-hidden group cursor-pointer"
-                onClick={onOpenEditor}
-              >
-                <div className="aspect-video bg-surface flex items-center justify-center overflow-hidden relative">
+      {/* Episode Overview */}
+      <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+        {/* Script Summary */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-foreground">{t("scriptSummary")}</h3>
+          {originalText ? (
+            <p className="text-xs text-text-secondary leading-relaxed line-clamp-4 bg-surface rounded-lg p-3 border border-glass-border">
+              {originalText.slice(0, 300)}{originalText.length > 300 ? "..." : ""}
+            </p>
+          ) : (
+            <p className="text-xs text-text-muted italic">{t("noScript")}</p>
+          )}
+        </div>
+
+        {/* Storyboard Overview */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-foreground">{t("storyboardOverview")}</h3>
+          {frames.length === 0 ? (
+            <div className="flex items-center gap-3 bg-surface rounded-lg p-4 border border-glass-border">
+              <div className="w-10 h-10 rounded-lg bg-glass border border-glass-border flex items-center justify-center">
+                <Play size={16} className="text-text-muted" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-text-secondary">{t("noFrames")}</p>
+                <p className="text-[11px] text-text-muted">{t("startCreating")}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-4 lg:grid-cols-6 gap-2">
+              {frames.slice(0, 12).map((frame, i) => (
+                <div
+                  key={frame.id}
+                  className="aspect-video bg-surface rounded-lg border border-glass-border overflow-hidden cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={onOpenEditor}
+                >
                   {frame.rendered_image_url ? (
                     <img
                       src={frame.rendered_image_url}
-                      alt={t("frameNum", { number: i + 1 })}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      alt={`#${i + 1}`}
+                      className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="text-text-muted text-xs font-mono">
+                    <div className="w-full h-full flex items-center justify-center text-[10px] text-text-muted font-mono">
                       #{i + 1}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-overlay/0 group-hover:bg-overlay transition-colors duration-200 flex items-center justify-center">
-                    <Play
-                      size={20}
-                      className="text-foreground opacity-0 group-hover:opacity-80 transition-opacity duration-200"
-                    />
-                  </div>
                 </div>
-                <div className="p-2.5">
-                  <p className="text-xs text-text-secondary truncate">
-                    {frame.scene_description || t("frameNum", { number: i + 1 })}
-                  </p>
+              ))}
+              {frames.length > 12 && (
+                <div className="aspect-video bg-surface rounded-lg border border-glass-border flex items-center justify-center text-xs text-text-muted">
+                  +{frames.length - 12}
                 </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Characters & Scenes count */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-surface rounded-lg p-3 border border-glass-border text-center">
+            <p className="text-lg font-bold text-foreground">{characters.length}</p>
+            <p className="text-[11px] text-text-muted">{t("characters")}</p>
+          </div>
+          <div className="bg-surface rounded-lg p-3 border border-glass-border text-center">
+            <p className="text-lg font-bold text-foreground">{scenes.length}</p>
+            <p className="text-[11px] text-text-muted">{t("scenes")}</p>
+          </div>
+          <div className="bg-surface rounded-lg p-3 border border-glass-border text-center">
+            <p className="text-lg font-bold text-foreground">{frames.length}</p>
+            <p className="text-[11px] text-text-muted">{t("storyboardFrames")}</p>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

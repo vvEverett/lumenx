@@ -126,13 +126,14 @@ class ComicGenPipeline:
             except Exception as e:
                 logger.error(f"Failed to save data: {e}")
 
-    def create_project(self, title: str, text: str, skip_analysis: bool = False) -> Script:
+    def create_project(self, title: str, text: str, skip_analysis: bool = False, workflow_mode: str = "i2v_legacy") -> Script:
         """Step 1: Parse novel and create project."""
         if skip_analysis:
             script = self.script_processor.create_draft_script(title, text)
         else:
             script = self.script_processor.parse_novel(title, text)
-            
+        
+        script.workflow_mode = workflow_mode
         self.scripts[script.id] = script
         self._save_data()
         return script
@@ -157,6 +158,7 @@ class ComicGenPipeline:
         new_script.style_preset = existing_script.style_preset
         new_script.style_prompt = existing_script.style_prompt
         new_script.merged_video_url = existing_script.merged_video_url
+        new_script.workflow_mode = existing_script.workflow_mode
         
         # Replace the script in memory
         self.scripts[script_id] = new_script
@@ -2628,13 +2630,14 @@ class ComicGenPipeline:
         with self._save_lock:
             self._save_series_data_unlocked()
 
-    def create_series(self, title: str, description: str = "") -> Series:
+    def create_series(self, title: str, description: str = "", workflow_mode: str = "i2v_legacy") -> Series:
         """Create a new Series."""
         with self._save_lock:
             series = Series(
                 id=str(uuid.uuid4()),
                 title=title,
                 description=description,
+                workflow_mode=workflow_mode,
                 created_at=time.time(),
                 updated_at=time.time(),
             )

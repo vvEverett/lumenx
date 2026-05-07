@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, FolderOpen, RefreshCw, Library, Calendar, Play, Trash2, FileUp, X, ChevronDown, FileText } from "lucide-react";
+import {
+  Plus, FolderOpen, RefreshCw, Library, Calendar, Play, Trash2, FileUp, X, ChevronDown, FileText,
+  Zap, Film,
+} from "lucide-react";
 import { useProjectStore, Series, Project } from "@/store/projectStore";
 import ProjectCard from "@/components/project/ProjectCard";
 import CreateProjectDialog from "@/components/project/CreateProjectDialog";
@@ -25,10 +28,12 @@ const AssetLibraryPage = dynamic(() => import("@/components/library/AssetLibrary
 function CreateSeriesDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [workflowMode, setWorkflowMode] = useState<"r2v" | "i2v_legacy">("r2v");
   const [isCreating, setIsCreating] = useState(false);
   const createSeries = useProjectStore((state) => state.createSeries);
   const t = useTranslations("workspace");
   const tc = useTranslations("common");
+  const tp = useTranslations("project");
 
   if (!isOpen) return null;
 
@@ -36,9 +41,10 @@ function CreateSeriesDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () 
     if (!title.trim()) return;
     setIsCreating(true);
     try {
-      const series = await createSeries(title.trim(), description.trim() || undefined);
+      const series = await createSeries(title.trim(), description.trim() || undefined, workflowMode);
       setTitle("");
       setDescription("");
+      setWorkflowMode("r2v");
       onClose();
       window.location.hash = `#/series/${series.id}`;
     } catch (error) {
@@ -49,54 +55,98 @@ function CreateSeriesDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-elevated border border-glass-border rounded-2xl p-6 w-full max-w-md shadow-2xl"
+        className="bg-elevated border border-border rounded-2xl p-8 w-full max-w-4xl shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-display font-bold text-foreground">{t("newSeries")}</h2>
-          <button onClick={onClose} className="p-1 hover:bg-hover-bg rounded-lg transition-colors">
+          <h2 className="text-2xl font-display font-bold text-foreground">{t("newSeries")}</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-hover-bg transition-colors">
             <X size={20} className="text-text-secondary" />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-text-secondary mb-1">{t("seriesTitle")} *</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("seriesTitle")} *</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("seriesTitlePlaceholder")}
-              className="w-full bg-elevated border border-glass-border rounded-lg px-4 py-2.5 text-foreground placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
+              className="glass-input w-full"
               autoFocus
             />
           </div>
+
+          {/* Workflow Mode */}
           <div>
-            <label className="block text-sm text-text-secondary mb-1">{t("description")}</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{tp("workflowMode")}</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setWorkflowMode("r2v")}
+                className={`relative p-4 rounded-xl border-2 text-left transition-all ${
+                  workflowMode === "r2v"
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-surface hover:border-text-muted"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Zap size={16} className={workflowMode === "r2v" ? "text-primary" : "text-text-secondary"} />
+                  <span className="font-semibold text-sm text-foreground">{tp("workflowR2V")}</span>
+                </div>
+                <p className="text-xs text-text-secondary leading-relaxed">{tp("workflowR2VDesc")}</p>
+                {workflowMode === "r2v" && (
+                  <span className="absolute top-2 right-2 text-[10px] font-medium text-primary bg-primary/20 px-1.5 py-0.5 rounded">
+                    {tc("recommended")}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setWorkflowMode("i2v_legacy")}
+                className={`relative p-4 rounded-xl border-2 text-left transition-all ${
+                  workflowMode === "i2v_legacy"
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-surface hover:border-text-muted"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Film size={16} className={workflowMode === "i2v_legacy" ? "text-primary" : "text-text-secondary"} />
+                  <span className="font-semibold text-sm text-foreground">{tp("workflowI2V")}</span>
+                </div>
+                <p className="text-xs text-text-secondary leading-relaxed">{tp("workflowI2VDesc")}</p>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">{t("description")}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t("descriptionPlaceholder")}
-              rows={3}
-              className="w-full bg-elevated border border-glass-border rounded-lg px-4 py-2.5 text-foreground placeholder-text-muted focus:outline-none focus:border-primary transition-colors resize-none"
+              rows={4}
+              className="glass-input w-full resize-none"
             />
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="flex gap-3 pt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-text-secondary hover:text-foreground hover:bg-hover-bg transition-colors"
+            className="flex-1 glass-button"
           >
             {tc("cancel")}
           </button>
           <button
             onClick={handleCreate}
             disabled={!title.trim() || isCreating}
-            className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-foreground font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-primary hover:bg-primary/90 text-foreground px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isCreating ? t("creating") : t("createSeries")}
           </button>

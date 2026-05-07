@@ -317,7 +317,7 @@ export default function ConsistencyVault() {
         if (!currentProject) return;
 
         const confirmed = confirm(
-            tv("syncDesc")
+            tv("syncDescription")
         );
 
         if (!confirmed) return;
@@ -386,17 +386,27 @@ export default function ConsistencyVault() {
                 <div className="flex gap-2">
                     <button
                         onClick={handleSyncDescriptions}
-                        className="flex items-center gap-2 px-4 py-2 bg-glass hover:bg-hover-bg border border-glass-border rounded-lg transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 bg-glass hover:bg-hover-bg border border-glass-border rounded-lg transition-colors"
                         title={tv("syncDescHint")}
                     >
-                        <RefreshCw size={16} className="text-blue-400" />
-                        <span className="text-sm font-bold">{tv("syncDescription")}</span>
+                        <RefreshCw size={14} className="text-blue-400" />
+                        <span className="text-sm font-medium">{tv("syncDesc")}</span>
                     </button>
-
                 </div>
             </div>
 
             {/* Content Grid */}
+            {currentProject?.workflow_mode !== "i2v_legacy" && (
+                <div className="mx-6 mt-4 px-4 py-3 rounded-lg bg-primary/5 border border-primary/20 flex items-start gap-3">
+                    <Paintbrush size={16} className="text-primary mt-0.5 shrink-0" />
+                    <div>
+                        <p className="text-sm font-medium text-foreground">{tv("r2vModeActive")}</p>
+                        <p className="text-xs text-text-secondary mt-0.5">
+                            {tv("r2vBannerDesc")}
+                        </p>
+                    </div>
+                </div>
+            )}
             <div className="flex-1 overflow-y-auto p-6">
                 {!currentProject ? (
                     <div className="flex items-center justify-center h-full text-text-muted">

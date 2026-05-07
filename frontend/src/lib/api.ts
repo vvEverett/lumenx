@@ -69,8 +69,8 @@ export interface VideoTask {
 }
 
 export const api = {
-    createProject: async (title: string, text: string, skipAnalysis: boolean = false) => {
-        const res = await axios.post(`${API_URL}/projects`, { title, text }, {
+    createProject: async (title: string, text: string, skipAnalysis: boolean = false, workflowMode: string = "r2v") => {
+        const res = await axios.post(`${API_URL}/projects`, { title, text, workflow_mode: workflowMode }, {
             params: { skip_analysis: skipAnalysis }
         });
         return { ...res.data, originalText: res.data.original_text };
@@ -591,8 +591,8 @@ export const api = {
     // ============================================
 
     // Series CRUD
-    createSeries: async (title: string, description?: string) => {
-        const response = await axios.post(`${API_URL}/series`, { title, description });
+    createSeries: async (title: string, description?: string, workflowMode?: string) => {
+        const response = await axios.post(`${API_URL}/series`, { title, description, workflow_mode: workflowMode || "r2v" });
         return response.data;
     },
     listSeries: async () => {
@@ -664,8 +664,8 @@ export const api = {
     },
 
     // Helper: create a project and add it as an episode to a series
-    createEpisodeForSeries: async (seriesId: string, title: string, episodeNumber: number) => {
-        const project = await api.createProject(title, "", true);
+    createEpisodeForSeries: async (seriesId: string, title: string, episodeNumber: number, workflowMode: string = "r2v") => {
+        const project = await api.createProject(title, "", true, workflowMode);
         await api.addEpisodeToSeries(seriesId, project.id, episodeNumber);
         return project;
     },

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { api } from '@/lib/api';
+import { api, API_URL } from '@/lib/api';
 import type { FrontendModelSettings } from '@/lib/modelCatalog';
 export {
     I2I_MODELS,
@@ -198,6 +198,7 @@ export interface Series {
     art_direction?: ArtDirection;
     prompt_config?: PromptConfig;
     model_settings?: ModelSettings;
+    workflow_mode?: "r2v" | "i2v_legacy";
     episode_ids: string[];
     created_at: number;
     updated_at: number;
@@ -220,6 +221,7 @@ export interface Project {
     art_direction?: ArtDirection;
     model_settings?: ModelSettings;
     prompt_config?: PromptConfig;
+    workflow_mode?: "i2v_legacy" | "r2v";
     merged_video_url?: string;
     series_id?: string;
     episode_number?: number;
@@ -239,7 +241,7 @@ interface ProjectStore {
 
     // Actions
     setProjects: (projects: Project[]) => void;  // For syncing from backend
-    createProject: (title: string, text: string, skipAnalysis?: boolean) => Promise<void>;
+    createProject: (title: string, text: string, skipAnalysis?: boolean, workflowMode?: string) => Promise<void>;
     analyzeProject: (script: string) => Promise<void>;
     analyzeArtStyle: (scriptId: string, text: string) => Promise<void>;
     loadProjects: () => void;
@@ -273,7 +275,7 @@ interface ProjectStore {
     currentSeries: Series | null;
     fetchSeriesList: () => Promise<void>;
     fetchSeries: (id: string) => Promise<void>;
-    createSeries: (title: string, description?: string) => Promise<Series>;
+    createSeries: (title: string, description?: string, workflowMode?: string) => Promise<Series>;
     deleteSeries: (id: string) => Promise<void>;
     setCurrentSeries: (series: Series | null) => void;
 }
@@ -290,10 +292,10 @@ export const useProjectStore = create<ProjectStore>()(
             // Sync projects from backend
             setProjects: (projects: Project[]) => set({ projects }),
 
-            createProject: async (title: string, text: string, skipAnalysis: boolean = false) => {
+            createProject: async (title: string, text: string, skipAnalysis: boolean = false, workflowMode: string = "r2v") => {
                 set({ isLoading: true });
                 try {
-                    const project = await api.createProject(title, text, skipAnalysis);
+                    const project = await api.createProject(title, text, skipAnalysis, workflowMode);
                     set((state) => ({
                         projects: [...state.projects, project],
                         currentProject: project,
@@ -348,9 +350,6 @@ export const useProjectStore = create<ProjectStore>()(
 
                 // Then fetch latest data from backend
                 try {
-                    const API_URL = typeof window !== 'undefined'
-                        ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000')
-                        : 'http://localhost:8000';
                     const response = await fetch(`${API_URL}/projects/${id}`);
                     if (response.ok) {
                         const rawData = await response.json();
@@ -507,9 +506,9 @@ export const useProjectStore = create<ProjectStore>()(
                 }
             },
 
-            createSeries: async (title: string, description?: string) => {
+            createSeries: async (title: string, description?: string, workflowMode?: string) => {
                 try {
-                    const series = await api.createSeries(title, description);
+                    const series = await api.createSeries(title, description, workflowMode);
                     set((state) => ({
                         seriesList: [...state.seriesList, series],
                     }));

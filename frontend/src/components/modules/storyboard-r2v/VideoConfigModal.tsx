@@ -1,0 +1,609 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Settings2, Check, Wand2, Timer, SlidersHorizontal } from "lucide-react";
+import { useTranslations } from "next-intl";
+import {
+    DEFAULT_I2V_MODEL_ID,
+    type DurationConfig,
+    type ModelParamSupport,
+    VIDEO_I2V_MODELS,
+} from "@/lib/modelCatalog";
+
+export interface VideoConfig {
+    model: string;
+    duration: number;
+    resolution: string;
+    promptExtend: boolean;
+    negativePrompt: string;
+    // Kling
+    mode?: string;
+    cfgScale?: number;
+    sound?: boolean;
+    // Vidu
+    viduAudio?: boolean;
+    movementAmplitude?: string;
+}
+
+interface VideoConfigModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    config: VideoConfig;
+    onConfigChange: (config: VideoConfig) => void;
+}
+
+export const DEFAULT_VIDEO_CONFIG: VideoConfig = {
+    model: DEFAULT_I2V_MODEL_ID,
+    duration: 5,
+    resolution: "720p",
+    promptExtend: true,
+    negativePrompt: "",
+    mode: "std",
+    cfgScale: 0.5,
+    sound: false,
+    viduAudio: true,
+    movementAmplitude: "auto",
+};
+
+const springFast = { type: "spring" as const, stiffness: 400, damping: 28 };
+const springMed = { type: "spring" as const, stiffness: 300, damping: 30 };
+const springOverlay = { type: "spring" as const, stiffness: 200, damping: 25 };
+
+// Staggered section entrance variants
+const sectionVariants = {
+    hidden: { opacity: 0, y: 12 },
+    visible: (i: number) => ({
+        opacity: 1,
+        y: 0,
+        transition: { type: "spring" as const, stiffness: 200, damping: 22, delay: i * 0.06 },
+    }),
+};
+
+// Provider accent color map
+function getProviderAccent(modelId: string): string {
+    if (modelId.includes("wan") || modelId.includes("wanx")) return "from-blue-500 to-cyan-400";
+    if (modelId.includes("kling")) return "from-amber-400 to-orange-500";
+    if (modelId.includes("vidu")) return "from-emerald-400 to-teal-500";
+    if (modelId.includes("pixverse")) return "from-violet-400 to-purple-500";
+    if (modelId.includes("happyhorse")) return "from-rose-400 to-pink-500";
+    return "from-primary to-primary/60";
+}
+
+export default function VideoConfigModal({ isOpen, onClose, config, onConfigChange }: VideoConfigModalProps) {
+    const [draft, setDraft] = useState<VideoConfig>(config);
+    const t = useTranslations("storyboardR2V");
+    const tm = useTranslations("motion");
+
+    const currentModelConfig =
+        VIDEO_I2V_MODELS.find((m) => m.id === draft.model) ??
+        VIDEO_I2V_MODELS.find((m) => m.id === DEFAULT_I2V_MODEL_ID) ??
+        VIDEO_I2V_MODELS[0];
+    const modelParams: ModelParamSupport = currentModelConfig?.params ?? {};
+
+    const updateDraft = useCallback(
+        (key: string, value: any) => {
+            const newDraft = { ...draft, [key]: value };
+            if (key === "model") {
+                const newModelConfig = VIDEO_I2V_MODELS.find((m) => m.id === value);
+                if (newModelConfig?.duration) {
+                    const dc = newModelConfig.duration;
+                    if (dc.type === "fixed") {
+                        newDraft.duration = dc.value;
+                    } else if (dc.type === "slider") {
+                        if (newDraft.duration < dc.min || newDraft.duration > dc.max) {
+                            newDraft.duration = dc.default;
+                        }
+                    } else if (dc.type === "buttons") {
+                        if (!dc.options.includes(newDraft.duration)) {
+                            newDraft.duration = dc.default;
+                        }
+                    }
+                }
+                const np = newModelConfig?.params ?? {};
+                newDraft.resolution = np.resolution?.default ?? "720p";
+                newDraft.promptExtend = !!np.promptExtend;
+                newDraft.negativePrompt = "";
+                newDraft.mode = np.mode?.default ?? "std";
+                newDraft.sound = false;
+                newDraft.cfgScale = np.cfgScale?.default ?? 0.5;
+                newDraft.viduAudio = true;
+                newDraft.movementAmplitude = np.movementAmplitude?.default ?? "auto";
+            }
+            setDraft(newDraft);
+        },
+        [draft]
+    );
+
+    const handleApply = () => {
+        onConfigChange(draft);
+        onClose();
+    };
+
+    const handleOpen = () => {
+        setDraft(config);
+    };
+
+    const hasAdvancedParams =
+        modelParams.resolution ||
+        modelParams.promptExtend ||
+        modelParams.negativePrompt ||
+        modelParams.cfgScale ||
+        modelParams.movementAmplitude ||
+        modelParams.mode;
+
+    const activeAccent = getProviderAccent(draft.model);
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={springOverlay}
+                    className="fixed inset-0 bg-black/70 backdrop-blur-lg z-50 flex items-center justify-center p-4 md:p-8"
+                    onClick={onClose}
+                    onAnimationStart={handleOpen}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0, y: 24 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.9, opacity: 0, y: 24 }}
+                        transition={springMed}
+                        className="relative bg-[#0a0a10] border border-white/[0.08] shadow-[0_0_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.04)] rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header — Cinematic glass bar with accent */}
+                        <div className="relative flex items-center justify-between px-7 py-5 border-b border-white/[0.06] shrink-0 bg-white/[0.015]">
+                            {/* Accent gradient line at top */}
+                            <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${activeAccent} opacity-40`} />
+                            <div className="flex items-center gap-3.5">
+                                <div className="relative w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
+                                    <Settings2 size={16} className="text-foreground/70" strokeWidth={1.5} />
+                                    <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-gradient-to-br ${activeAccent} border border-[#0a0a10]`} />
+                                </div>
+                                <div>
+                                    <h2 className="text-[15px] font-semibold text-foreground tracking-tight">
+                                        {t("videoSettings")}
+                                    </h2>
+                                    <p className="text-[11px] text-white/30 mt-0.5 tracking-wide font-medium">
+                                        {VIDEO_I2V_MODELS.find((m) => m.id === draft.model)?.name}
+                                    </p>
+                                </div>
+                            </div>
+                            <motion.button
+                                whileHover={{ scale: 1.1, rotate: 90 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={onClose}
+                                transition={springFast}
+                                className="p-2 rounded-xl hover:bg-white/[0.06] text-white/30 hover:text-white/60 transition-colors"
+                            >
+                                <X size={18} strokeWidth={1.5} />
+                            </motion.button>
+                        </div>
+
+                        {/* Content — Staggered sections */}
+                        <div className="flex-1 overflow-y-auto px-7 py-7 space-y-9">
+                            {/* Model Selection */}
+                            <motion.section
+                                custom={0}
+                                variants={sectionVariants}
+                                initial="hidden"
+                                animate="visible"
+                                className="space-y-4"
+                            >
+                                <div className="flex items-center gap-2.5">
+                                    <Wand2 size={13} className="text-white/25" strokeWidth={1.5} />
+                                    <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
+                                        {t("modelSelection")}
+                                    </h3>
+                                </div>
+                                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+                                    {VIDEO_I2V_MODELS.map((model, idx) => {
+                                        const isSelected = draft.model === model.id;
+                                        const accent = getProviderAccent(model.id);
+                                        return (
+                                            <motion.button
+                                                key={model.id}
+                                                initial={{ opacity: 0, x: -8 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: idx * 0.03, stiffness: 200, damping: 20 }}
+                                                whileHover={{ x: 4 }}
+                                                whileTap={{ scale: 0.99 }}
+                                                onClick={() => updateDraft("model", model.id)}
+                                                className={`relative w-full flex items-center gap-3.5 pl-3 pr-4 py-3.5 rounded-xl text-left transition-all duration-300 overflow-hidden group ${
+                                                    isSelected
+                                                        ? "bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                                                        : "hover:bg-white/[0.02]"
+                                                }`}
+                                            >
+                                                {/* Provider accent left border */}
+                                                <div className={`w-[3px] self-stretch rounded-full transition-all duration-300 ${
+                                                    isSelected
+                                                        ? `bg-gradient-to-b ${accent}`
+                                                        : "bg-white/[0.06] group-hover:bg-white/[0.12]"
+                                                }`} />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <span className={`text-[13px] font-semibold transition-colors duration-300 ${
+                                                            isSelected ? "text-foreground" : "text-white/50 group-hover:text-white/70"
+                                                        }`}>
+                                                            {model.name}
+                                                        </span>
+                                                        {isSelected && (
+                                                            <motion.span
+                                                                initial={{ opacity: 0, scale: 0.6, y: -2 }}
+                                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                                transition={springFast}
+                                                                className={`text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r ${accent} text-white tracking-wider`}
+                                                            >
+                                                                ACTIVE
+                                                            </motion.span>
+                                                        )}
+                                                    </div>
+                                                    <p className={`text-[11px] mt-0.5 leading-relaxed transition-colors duration-300 ${
+                                                        isSelected ? "text-white/40" : "text-white/20 group-hover:text-white/30"
+                                                    }`}>
+                                                        {model.description}
+                                                    </p>
+                                                </div>
+                                                {/* Radio indicator */}
+                                                <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-300 ${
+                                                    isSelected
+                                                        ? `border-transparent bg-gradient-to-br ${accent}`
+                                                        : "border-white/[0.10]"
+                                                }`}>
+                                                    {isSelected && (
+                                                        <motion.div
+                                                            initial={{ scale: 0 }}
+                                                            animate={{ scale: 1 }}
+                                                            transition={springFast}
+                                                        >
+                                                            <Check size={10} className="text-white" strokeWidth={3} />
+                                                        </motion.div>
+                                                    )}
+                                                </div>
+                                            </motion.button>
+                                        );
+                                    })}
+                                </div>
+                            </motion.section>
+
+                            {/* Duration */}
+                            <motion.section
+                                custom={1}
+                                variants={sectionVariants}
+                                initial="hidden"
+                                animate="visible"
+                                className="space-y-4"
+                            >
+                                <div className="flex items-center gap-2.5">
+                                    <Timer size={13} className="text-white/25" strokeWidth={1.5} />
+                                    <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
+                                        {t("durationLabel")}
+                                    </h3>
+                                </div>
+                                {(() => {
+                                    const dc: DurationConfig = currentModelConfig?.duration ?? {
+                                        type: "buttons",
+                                        options: [5, 10],
+                                        default: 5,
+                                    };
+                                    if (dc.type === "fixed") {
+                                        return (
+                                            <div className="flex items-baseline gap-2 px-5 py-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                                                <span className="text-3xl font-bold text-foreground tabular-nums tracking-tight">
+                                                    {dc.value}
+                                                </span>
+                                                <span className="text-sm text-white/30 font-medium">sec</span>
+                                            </div>
+                                        );
+                                    }
+                                    if (dc.type === "slider") {
+                                        const pct = ((draft.duration - dc.min) / (dc.max - dc.min)) * 100;
+                                        return (
+                                            <div className="space-y-3 px-1">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[11px] text-white/25 font-medium tracking-wide">
+                                                        {t("durationLabel")}
+                                                    </span>
+                                                    <span className="text-sm font-bold text-foreground tabular-nums">
+                                                        {draft.duration}<span className="text-white/25 text-xs font-medium ml-0.5">s</span>
+                                                    </span>
+                                                </div>
+                                                <div className="relative h-[6px] bg-white/[0.04] rounded-full">
+                                                    {/* Gradient fill track */}
+                                                    <div
+                                                        className={`absolute top-0 left-0 h-full rounded-full bg-gradient-to-r ${activeAccent} opacity-60 transition-all duration-150`}
+                                                        style={{ width: `${pct}%` }}
+                                                    />
+                                                    {/* Glow on track end */}
+                                                    <div
+                                                        className="absolute top-1/2 -translate-y-1/2 w-8 h-8 rounded-full opacity-20 pointer-events-none"
+                                                        style={{
+                                                            left: `${pct}%`,
+                                                            transform: `translate(-50%, -50%)`,
+                                                            background: `radial-gradient(circle, currentColor 0%, transparent 70%)`,
+                                                        }}
+                                                    />
+                                                    <input
+                                                        type="range"
+                                                        min={dc.min}
+                                                        max={dc.max}
+                                                        step={dc.step}
+                                                        value={draft.duration}
+                                                        onChange={(e) => updateDraft("duration", parseInt(e.target.value))}
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                    />
+                                                    {/* Thumb */}
+                                                    <motion.div
+                                                        className="absolute top-1/2 -translate-y-1/2 w-[18px] h-[18px] rounded-full bg-white border-2 border-[#0a0a10] shadow-[0_0_12px_rgba(255,255,255,0.15)] pointer-events-none"
+                                                        animate={{ left: `calc(${pct}% - 9px)` }}
+                                                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-between text-[10px] text-white/15 font-semibold tabular-nums">
+                                                    <span>{dc.min}s</span>
+                                                    <span>{dc.max}s</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    // Buttons type
+                                    return (
+                                        <div className="flex gap-2">
+                                            {dc.options.map((dur) => {
+                                                const isActive = draft.duration === dur;
+                                                return (
+                                                    <motion.button
+                                                        key={dur}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        onClick={() => updateDraft("duration", dur)}
+                                                        className={`relative flex-1 py-3 text-sm font-bold rounded-xl border transition-all duration-200 overflow-hidden ${
+                                                            isActive
+                                                                ? "bg-white/[0.06] border-white/[0.12] text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                                                                : "bg-white/[0.015] border-white/[0.05] text-white/30 hover:border-white/[0.10] hover:text-white/50"
+                                                        }`}
+                                                    >
+                                                        {isActive && (
+                                                            <div className={`absolute inset-0 bg-gradient-to-r ${activeAccent} opacity-[0.06]`} />
+                                                        )}
+                                                        <span className="relative z-10">{dur}s</span>
+                                                    </motion.button>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })()}
+                            </motion.section>
+
+                            {/* Advanced Parameters */}
+                            {hasAdvancedParams && (
+                                <>
+                                    <motion.div
+                                        custom={2}
+                                        variants={sectionVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                        className="w-full h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent"
+                                    />
+                                    <motion.section
+                                        custom={2}
+                                        variants={sectionVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                        className="space-y-5"
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            <SlidersHorizontal size={13} className="text-white/25" strokeWidth={1.5} />
+                                            <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
+                                                {t("advancedParams")}
+                                            </h3>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 auto-flow-dense">
+                                            {/* Resolution */}
+                                            {modelParams.resolution && (
+                                                <div className="space-y-2.5">
+                                                    <label className="block text-[11px] text-white/30 font-semibold tracking-wide">
+                                                        {tm("resolutionLabel")}
+                                                    </label>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {modelParams.resolution.options.map((res) => {
+                                                            const isActive = draft.resolution === res;
+                                                            return (
+                                                                <motion.button
+                                                                    key={res}
+                                                                    whileHover={{ scale: 1.06 }}
+                                                                    whileTap={{ scale: 0.94 }}
+                                                                    onClick={() => updateDraft("resolution", res)}
+                                                                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all duration-200 ${
+                                                                        isActive
+                                                                            ? `bg-gradient-to-r ${activeAccent} bg-opacity-10 border-white/[0.12] text-foreground`
+                                                                            : "bg-white/[0.015] border-white/[0.05] text-white/30 hover:border-white/[0.10] hover:text-white/50"
+                                                                    }`}
+                                                                    style={isActive ? { background: `linear-gradient(to right, var(--tw-gradient-stops))`, opacity: 0.9 } : {}}
+                                                                >
+                                                                    {res}
+                                                                </motion.button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Prompt Extend */}
+                                            {modelParams.promptExtend && (
+                                                <div className="flex items-center justify-between py-1">
+                                                    <label className="text-[11px] text-white/30 font-semibold tracking-wide">
+                                                        {tm("promptEnhancer")}
+                                                    </label>
+                                                    <button
+                                                        onClick={() => updateDraft("promptExtend", !draft.promptExtend)}
+                                                        className={`relative w-11 h-[22px] rounded-full transition-colors duration-300 ${
+                                                            draft.promptExtend
+                                                                ? `bg-gradient-to-r ${activeAccent}`
+                                                                : "bg-white/[0.06]"
+                                                        }`}
+                                                    >
+                                                        <motion.div
+                                                            className="absolute top-[3px] w-4 h-4 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]"
+                                                            animate={{
+                                                                left: draft.promptExtend ? "22px" : "4px",
+                                                            }}
+                                                            transition={springFast}
+                                                        />
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* Negative Prompt */}
+                                            {modelParams.negativePrompt && (
+                                                <div className="md:col-span-2 space-y-2.5">
+                                                    <label className="block text-[11px] text-white/30 font-semibold tracking-wide">
+                                                        {tm("negativePrompt")}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={draft.negativePrompt}
+                                                        onChange={(e) => updateDraft("negativePrompt", e.target.value)}
+                                                        placeholder={tm("negativePromptPlaceholder")}
+                                                        className="w-full text-sm bg-white/[0.02] border border-white/[0.06] rounded-xl px-4 py-3 text-foreground placeholder:text-white/15 focus:outline-none focus:border-white/[0.14] focus:bg-white/[0.03] transition-all duration-200"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Kling: Mode */}
+                                            {modelParams.mode && (
+                                                <div className="space-y-2.5">
+                                                    <label className="block text-[11px] text-white/30 font-semibold tracking-wide">
+                                                        {tm("modeLabel")}
+                                                    </label>
+                                                    <div className="flex gap-1.5">
+                                                        {modelParams.mode.options.map((opt) => {
+                                                            const isActive = draft.mode === opt;
+                                                            return (
+                                                                <motion.button
+                                                                    key={opt}
+                                                                    whileHover={{ scale: 1.04 }}
+                                                                    whileTap={{ scale: 0.96 }}
+                                                                    onClick={() => updateDraft("mode", opt)}
+                                                                    className={`flex-1 py-2.5 text-[11px] font-bold rounded-lg border transition-all duration-200 uppercase tracking-wider ${
+                                                                        isActive
+                                                                            ? "bg-white/[0.06] border-white/[0.12] text-foreground"
+                                                                            : "bg-white/[0.015] border-white/[0.05] text-white/30 hover:border-white/[0.10] hover:text-white/50"
+                                                                    }`}
+                                                                >
+                                                                    {opt}
+                                                                </motion.button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Kling: CFG Scale */}
+                                            {modelParams.cfgScale && (
+                                                <div className="space-y-2.5">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-[11px] text-white/30 font-semibold tracking-wide">
+                                                            {tm("cfgScale")}
+                                                        </label>
+                                                        <span className="text-[11px] font-bold text-foreground/60 tabular-nums">
+                                                            {(draft.cfgScale ?? 0.5).toFixed(1)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="relative h-[6px] bg-white/[0.04] rounded-full">
+                                                        {(() => {
+                                                            const cfgVal = draft.cfgScale ?? 0.5;
+                                                            const cfgMin = modelParams.cfgScale.min ?? 0;
+                                                            const cfgMax = modelParams.cfgScale.max ?? 1;
+                                                            const pct = ((cfgVal - cfgMin) / (cfgMax - cfgMin)) * 100;
+                                                            return (
+                                                                <>
+                                                                    <div
+                                                                        className={`absolute top-0 left-0 h-full rounded-full bg-gradient-to-r ${activeAccent} opacity-50 transition-all duration-150`}
+                                                                        style={{ width: `${pct}%` }}
+                                                                    />
+                                                                    <input
+                                                                        type="range"
+                                                                        min={cfgMin}
+                                                                        max={cfgMax}
+                                                                        step={modelParams.cfgScale.step}
+                                                                        value={cfgVal}
+                                                                        onChange={(e) => updateDraft("cfgScale", parseFloat(e.target.value))}
+                                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                                    />
+                                                                    <motion.div
+                                                                        className="absolute top-1/2 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-white border-2 border-[#0a0a10] shadow-[0_0_8px_rgba(255,255,255,0.12)] pointer-events-none"
+                                                                        animate={{ left: `calc(${pct}% - 8px)` }}
+                                                                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                                                    />
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Vidu: Movement Amplitude */}
+                                            {modelParams.movementAmplitude && (
+                                                <div className="space-y-2.5">
+                                                    <label className="block text-[11px] text-white/30 font-semibold tracking-wide">
+                                                        {tm("movementAmplitude")}
+                                                    </label>
+                                                    <div className="flex gap-1.5">
+                                                        {modelParams.movementAmplitude.options.map((opt) => {
+                                                            const isActive = draft.movementAmplitude === opt;
+                                                            return (
+                                                                <motion.button
+                                                                    key={opt}
+                                                                    whileHover={{ scale: 1.06 }}
+                                                                    whileTap={{ scale: 0.94 }}
+                                                                    onClick={() => updateDraft("movementAmplitude", opt)}
+                                                                    className={`flex-1 py-2 text-[11px] font-bold rounded-lg border transition-all duration-200 capitalize ${
+                                                                        isActive
+                                                                            ? "bg-white/[0.06] border-white/[0.12] text-foreground"
+                                                                            : "bg-white/[0.015] border-white/[0.05] text-white/30 hover:border-white/[0.10] hover:text-white/50"
+                                                                    }`}
+                                                                >
+                                                                    {opt === "auto" ? "Auto" : opt === "small" ? "S" : opt === "medium" ? "M" : "L"}
+                                                                </motion.button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </motion.section>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Footer — Glass bar with accent glow CTA */}
+                        <div className="flex gap-3 px-7 py-5 border-t border-white/[0.06] shrink-0 bg-white/[0.015]">
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={onClose}
+                                className="flex-1 px-4 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] text-white/40 hover:text-white/60 text-sm font-semibold tracking-wide transition-all duration-200"
+                            >
+                                Cancel
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleApply}
+                                className={`relative flex-1 px-4 py-3 rounded-xl bg-gradient-to-r ${activeAccent} text-white text-sm font-bold tracking-wide transition-all duration-200 shadow-[0_0_32px_rgba(100,108,255,0.2)] hover:shadow-[0_0_48px_rgba(100,108,255,0.3)]`}
+                            >
+                                {t("applySettings")}
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}

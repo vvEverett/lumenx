@@ -190,6 +190,7 @@ class WanxModel(VideoGenModel):
             "x_oss_credential": "x-oss-credential",
             "x_oss_date": "x-oss-date",
             "x_oss_signature": "x-oss-signature",
+            "x_oss_object_acl": "x-oss-object-acl",
             "success_action_status": "success_action_status",
             "callback": "callback",
         }
@@ -197,6 +198,11 @@ class WanxModel(VideoGenModel):
             value = policy_data.get(source_key)
             if value:
                 form_data[target_key] = str(value)
+
+        # DashScope OSS policy requires x-oss-object-acl=private; ensure it is always present
+        # even if the policy response omits it (new Bucket Policy enforcement)
+        if "x-oss-object-acl" not in form_data:
+            form_data["x-oss-object-acl"] = "private"
 
         for key, value in policy_data.items():
             if key.startswith("x-oss-") and value and key not in form_data:

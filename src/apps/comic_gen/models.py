@@ -308,6 +308,9 @@ class Script(BaseModel):
     # Custom prompt configuration for polish stages
     prompt_config: PromptConfig = Field(default_factory=PromptConfig, description="Custom system prompts for polish stages")
 
+    # Workflow mode
+    workflow_mode: str = Field("i2v_legacy", description="Workflow mode: 'r2v' (reference-to-video) or 'i2v_legacy' (first-frame I2V, default for old projects)")
+
     # Merged video URL
     merged_video_url: Optional[str] = Field(None, description="URL of the merged final video")
 
@@ -338,6 +341,9 @@ class Series(BaseModel):
 
     # Model settings
     model_settings: ModelSettings = Field(default_factory=ModelSettings, description="Series-level model settings")
+
+    # Workflow mode for all episodes in this series
+    workflow_mode: str = Field("i2v_legacy", description="Workflow mode: 'r2v' or 'i2v_legacy'")
 
     # Episode references
     episode_ids: List[str] = Field(default_factory=list, description="Ordered list of Episode/Script IDs")

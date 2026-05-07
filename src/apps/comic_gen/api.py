@@ -251,6 +251,7 @@ async def upload_asset(
 class CreateProjectRequest(BaseModel):
     title: str
     text: str
+    workflow_mode: str = "r2v"  # "r2v" (default) or "i2v_legacy"
 
 
 @app.post("/projects", response_model=Script)
@@ -260,7 +261,7 @@ async def create_project(request: CreateProjectRequest, skip_analysis: bool = Fa
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(
         None,  # Use default executor
-        partial(pipeline.create_project, request.title, request.text, skip_analysis)
+        partial(pipeline.create_project, request.title, request.text, skip_analysis, request.workflow_mode)
     )
     return signed_response(result)
 
@@ -302,17 +303,19 @@ async def list_projects():
 class CreateSeriesRequest(BaseModel):
     title: str
     description: str = ""
+    workflow_mode: str = "r2v"
 
 
 class UpdateSeriesRequest(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    workflow_mode: Optional[str] = None
 
 
 @app.post("/series")
 async def create_series(request: CreateSeriesRequest):
     """Create a new Series."""
-    series = pipeline.create_series(request.title, request.description)
+    series = pipeline.create_series(request.title, request.description, request.workflow_mode)
     return signed_response(series)
 
 
