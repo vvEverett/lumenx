@@ -66,6 +66,14 @@ export interface VideoTask {
     reference_video_urls?: string[];
     reference_image_urls?: string[];
     ratio?: string;
+    /** Failure reason set by pipeline / cancel / orphan recovery. */
+    error?: string | null;
+    /** User-starred shortlist flag (multi-select per shot) — set via
+     *  PATCH /annotate. Optional on the wire so older task records
+     *  parse unchanged. */
+    is_starred?: boolean;
+    /** User-attached short free-text note (≤20 chars, server-truncated). */
+    label?: string | null;
 }
 
 export const api = {

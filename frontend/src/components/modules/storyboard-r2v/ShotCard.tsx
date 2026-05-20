@@ -24,17 +24,41 @@ export interface ShotNode {
     prompt: string;
     tabMode: "t2i_i2v" | "direct_r2v";
 
-    // T2I stage (only for t2i_i2v mode)
+    // T2I stage (only for t2i_i2v mode). Single-task fields stay here
+    // for backward compat with existing shot drafts and the legacy
+    // single-image preview. New: a history of generated T2I images per
+    // shot + an index for the currently-active one (the one used as
+    // first-frame for I2V). Persisted in localStorage with the rest of
+    // the shot state. See Storyboard R2V redesign discussion.
     t2iImageUrl?: string;
     t2iTaskId?: string;
     t2iStatus?: "pending" | "processing" | "completed" | "failed";
+    /** Ordered list of every T2I image URL this shot has produced.
+     *  Newest at the end. Active one is at t2iSelectedIndex (defaults
+     *  to last). Bounded to T2I_HISTORY_LIMIT FIFO to keep
+     *  localStorage from growing without bound. */
+    t2iImageUrls?: string[];
+    t2iSelectedIndex?: number;
 
-    // Video stage (shared)
+    // Video stage (shared). The single-task fields stay for "the most
+    // recent attempt" but the candidates panel reads from the shot's
+    // full videoTaskIds history (cross-referenced against the script's
+    // video_tasks list which is persisted server-side).
     videoUrl?: string;
     videoTaskId?: string;
     videoStatus?: "pending" | "processing" | "completed" | "failed";
+    /** Every video task this shot has spawned, oldest first. Each tab
+     *  (t2i_i2v / direct_r2v) gets its own list — see videoTaskIdsByTab.
+     *  Empty / missing → no history (e.g. legacy shots). */
+    videoTaskIdsByTab?: {
+        t2i_i2v?: string[];
+        direct_r2v?: string[];
+    };
     imageUrl?: string;
 }
+
+/** Cap on T2I image history per shot. Older drops off FIFO when adding. */
+export const T2I_HISTORY_LIMIT = 10;
 
 interface ShotCardProps {
     shot: ShotNode;
