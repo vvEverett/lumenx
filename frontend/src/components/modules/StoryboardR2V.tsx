@@ -35,9 +35,30 @@ export default function StoryboardR2V() {
     const [videoConfig, setVideoConfig] = useState<VideoConfig>(() => {
         const savedModel = typeof window !== 'undefined' ? localStorage.getItem('storyboard-r2v-model') : null;
         const projectModel = currentProject?.model_settings?.i2v_model || DEFAULT_I2V_MODEL_ID;
-        const modelId = savedModel || projectModel;
-        const modelConfig = VIDEO_I2V_MODELS.find(m => m.id === modelId);
-        const dc = modelConfig?.duration;
+        const candidate = savedModel || projectModel;
+        // Defensive: a cached localStorage model id may have been hidden
+        // or removed from the I2V list since it was last selected (e.g.
+        // the user once picked `wan2.7-r2v` while it was visible, the
+        // catalog later marked it hidden, and now the ID lingers in
+        // their browser). Falling back to the default avoids silently
+        // shipping the wrong model into the I2V flow on every submit,
+        // which surfaces as "ref_image_urls is required" hundreds of
+        // lines deep in the backend log. (See pipeline.create_video_task
+        // for the matching guard.)
+        const modelConfig = VIDEO_I2V_MODELS.find(m => m.id === candidate);
+        const modelId = modelConfig ? candidate : DEFAULT_I2V_MODEL_ID;
+        if (!modelConfig && typeof window !== 'undefined' && savedModel) {
+            // Wipe the stale cache so we don't keep falling back every
+            // mount. Project-level i2v_model can still drive the choice.
+            localStorage.removeItem('storyboard-r2v-model');
+            // eslint-disable-next-line no-console
+            console.warn(
+                `[Studio] Cached I2V model "${candidate}" is no longer in the visible I2V list; ` +
+                `falling back to "${DEFAULT_I2V_MODEL_ID}".`,
+            );
+        }
+        const finalConfig = VIDEO_I2V_MODELS.find(m => m.id === modelId);
+        const dc = finalConfig?.duration;
         const defaultDuration = dc ? (dc.type === 'fixed' ? dc.value : dc.default) : 5;
         return { ...DEFAULT_VIDEO_CONFIG, model: modelId, duration: defaultDuration };
     });
@@ -245,7 +266,28 @@ export default function StoryboardR2V() {
                     ));
                 }
             } else {
-                // I2V mode: use T2I image as first frame
+                // I2V mode: use T2I image as first frame.
+                // Bug A guard: even if videoConfig.model passed the
+                // mount-time check, the catalog can change at runtime
+                // (catalog reload, project setting flip). Last sanity
+                // check right before submit so we never ship an r2v-
+                // only model into the I2V flow.
+                const i2vModelOk = VIDEO_I2V_MODELS.some(m => m.id === videoConfig.model);
+                if (!i2vModelOk) {
+                    // eslint-disable-next-line no-console
+                    console.warn(
+                        `[Studio] Refusing to submit I2V task with model "${videoConfig.model}" ` +
+                        `which is not in the visible I2V list. Falling back to "${DEFAULT_I2V_MODEL_ID}".`,
+                    );
+                    setVideoConfig(c => ({ ...c, model: DEFAULT_I2V_MODEL_ID }));
+                    if (typeof window !== 'undefined') {
+                        localStorage.removeItem('storyboard-r2v-model');
+                    }
+                    setShots(prev => prev.map((s, i) =>
+                        i === index ? { ...s, videoStatus: "failed" as const } : s,
+                    ));
+                    return;
+                }
                 const imageUrl = shot.t2iImageUrl || shot.imageUrl || "";
 
                 const task = await api.createVideoTask(
@@ -435,6 +477,25 @@ export default function StoryboardR2V() {
                                 const tag = `[${type}:${name}]`;
                                 updatePrompt(index, shots[index].prompt + " " + tag);
                             }}
+                            onCancelVideo={
+                                shot.videoTaskId && currentProject
+                                    ? async () => {
+                                        const projectId = currentProject.id;
+                                        const taskId = shot.videoTaskId!;
+                                        try {
+                                            await api.cancelVideoTask(projectId, taskId);
+                                        } finally {
+                                            // Optimistic local flip — backend has
+                                            // already marked failed, but the next
+                                            // refetch may take a beat. Failed state
+                                            // surfaces the existing Retry button.
+                                            setShots(prev => prev.map((s, i) =>
+                                                i === index ? { ...s, videoStatus: "failed" as const } : s,
+                                            ));
+                                        }
+                                    }
+                                    : undefined
+                            }
                         />
                     </motion.div>
                 ))}

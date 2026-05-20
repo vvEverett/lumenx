@@ -176,6 +176,30 @@ export const api = {
         return response.json();
     },
 
+    /** Lightweight liveness probe + log path. Used by the Diagnose UI
+     *  on stuck tasks. 5s timeout because it's only meant to confirm
+     *  the backend is alive, not to wait through a slow request. */
+    healthCheck: async (): Promise<{
+        ok: boolean;
+        time: number;
+        log_file: string;
+        log_dir: string;
+        studio_projects: number;
+    }> => {
+        const res = await axios.get(`${API_URL}/health`, { timeout: 5000 });
+        return res.data;
+    },
+
+    /** Mark a video task as failed-by-cancel. Provider-side render
+     *  keeps going; this just unblocks the local UI. Already-completed
+     *  tasks are a 404 no-op. */
+    cancelVideoTask: async (scriptId: string, taskId: string) => {
+        const res = await axios.post(
+            `${API_URL}/projects/${scriptId}/video_tasks/${taskId}/cancel`,
+        );
+        return res.data;
+    },
+
     /**
      * Upload an asset image as a new variant.
      * The uploaded image will be marked as the 'upload source' for reverse generation.

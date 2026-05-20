@@ -157,6 +157,24 @@ class UpdateAssetAttributesRequest(BaseModel):
     attributes: Dict[str, Any]
 
 
+@app.get("/health")
+async def health_check():
+    """Lightweight liveness probe used by the Diagnose UI on stuck
+    tasks and by external uptime checks. Intentionally cheap: no DB
+    hit, no provider call, just a 200 + a few facts the frontend can
+    show next to the spinner ("backend reachable, log file at X")."""
+    from ...utils import get_log_dir
+    log_dir = get_log_dir()
+    log_file = os.path.join(log_dir, "app.log")
+    return {
+        "ok": True,
+        "time": time.time(),
+        "log_file": log_file,
+        "log_dir": log_dir,
+        "studio_projects": len(getattr(pipeline, "scripts", {})),
+    }
+
+
 @app.get("/system/check")
 async def check_system():
     """Check system dependencies (ffmpeg, etc.) and configuration."""
@@ -1141,11 +1159,50 @@ class CreateVideoTaskRequest(BaseModel):
 
 
 async def process_video_task(script_id: str, task_id: str):
-    """Background task to generate video."""
+    """Background task to generate video.
+
+    The pipeline method has its own try/except that flips status to
+    "failed" on errors during generation. This outer wrapper is a
+    belt-and-suspenders writeback for exceptions that escape *before*
+    that inner handler armed (e.g. `get_script` raising, persistence
+    layer crashing). Without it the task would stay forever-`pending`
+    and the UI would show an eternal spinner.
+    """
     try:
         pipeline.process_video_task(script_id, task_id)
     except Exception as e:
-        logger.error(f"Error processing video task {task_id}: {e}")
+        logger.exception(f"Error processing video task {task_id}")
+        try:
+            pipeline.mark_video_task_failed(
+                script_id, task_id, f"Background error: {e}"
+            )
+        except Exception:
+            logger.exception(
+                f"Could not mark video task {task_id} as failed after wrapper exception"
+            )
+
+
+@app.post("/projects/{script_id}/video_tasks/{task_id}/cancel", response_model=VideoTask)
+async def cancel_video_task(script_id: str, task_id: str):
+    """Mark a video task as failed-by-cancel. We can't actually yank a
+    running provider call mid-flight (the provider keeps rendering on
+    its side), but flipping the local status to "failed" unblocks the
+    UI and puts the user back in control. Treats already-completed
+    tasks as a no-op."""
+    ok = pipeline.mark_video_task_failed(script_id, task_id, "Canceled by user")
+    if not ok:
+        raise HTTPException(
+            status_code=404,
+            detail="Video task not found or already completed",
+        )
+    script = pipeline.get_script(script_id)
+    task = next(
+        (t for t in (script.video_tasks if script else []) if t.id == task_id),
+        None,
+    )
+    if not task:
+        raise HTTPException(status_code=404, detail="Video task not found")
+    return signed_response(task)
 
 
 @app.post("/projects/{script_id}/video_tasks", response_model=List[VideoTask])

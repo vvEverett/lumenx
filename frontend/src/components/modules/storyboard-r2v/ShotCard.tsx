@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import AssetChipBar from "./AssetChipBar";
+import { PendingTaskAffordance } from "@/components/shared/PendingTaskAffordance";
 
 export interface ShotNode {
     id: string;
@@ -52,6 +53,10 @@ interface ShotCardProps {
     onSetTabMode: (mode: "t2i_i2v" | "direct_r2v") => void;
     onOpenDrawer: () => void;
     onInsertAsset: (type: string, name: string) => void;
+    /** Optional: Cancel CTA shown inside the pending-state affordance
+     *  after the soft-stuck threshold (60 s by default). Caller should
+     *  hit the backend cancel endpoint and refresh local state. */
+    onCancelVideo?: () => Promise<void> | void;
 }
 
 export default function ShotCard({
@@ -71,6 +76,7 @@ export default function ShotCard({
     onSetTabMode,
     onOpenDrawer,
     onInsertAsset,
+    onCancelVideo,
 }: ShotCardProps) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -117,11 +123,12 @@ export default function ShotCard({
             }
             if (shot.videoStatus === "processing" || shot.videoStatus === "pending") {
                 return (
-                    <div className="w-full aspect-video flex flex-col items-center justify-center gap-2.5">
-                        <Loader2 size={22} className="text-primary animate-spin" />
-                        <span className={`text-[11px] font-medium ${statusColor[shot.videoStatus]}`}>
-                            {shot.videoStatus === "pending" ? t("queued") : t("generatingVideo")}
-                        </span>
+                    <div className="w-full aspect-video flex items-center justify-center">
+                        <PendingTaskAffordance
+                            statusLabel={shot.videoStatus === "pending" ? t("queued") : t("generatingVideo")}
+                            taskId={shot.videoTaskId}
+                            onCancel={onCancelVideo}
+                        />
                     </div>
                 );
             }
@@ -150,11 +157,11 @@ export default function ShotCard({
             }
             if (shot.t2iStatus === "processing" || shot.t2iStatus === "pending") {
                 return (
-                    <div className="w-full aspect-video flex flex-col items-center justify-center gap-2.5">
-                        <Loader2 size={22} className="text-primary animate-spin" />
-                        <span className={`text-[11px] font-medium ${statusColor[shot.t2iStatus]}`}>
-                            {shot.t2iStatus === "pending" ? t("queued") : t("t2iGenerating")}
-                        </span>
+                    <div className="w-full aspect-video flex items-center justify-center">
+                        <PendingTaskAffordance
+                            statusLabel={shot.t2iStatus === "pending" ? t("queued") : t("t2iGenerating")}
+                            taskId={shot.t2iTaskId}
+                        />
                     </div>
                 );
             }
@@ -206,11 +213,12 @@ export default function ShotCard({
         }
         if (shot.videoStatus === "processing" || shot.videoStatus === "pending") {
             return (
-                <div className="w-full aspect-video flex flex-col items-center justify-center gap-2.5">
-                    <Loader2 size={22} className="text-primary animate-spin" />
-                    <span className={`text-[11px] font-medium ${statusColor[shot.videoStatus]}`}>
-                        {shot.videoStatus === "pending" ? t("queued") : t("generatingVideo")}
-                    </span>
+                <div className="w-full aspect-video flex items-center justify-center">
+                    <PendingTaskAffordance
+                        statusLabel={shot.videoStatus === "pending" ? t("queued") : t("generatingVideo")}
+                        taskId={shot.videoTaskId}
+                        onCancel={onCancelVideo}
+                    />
                 </div>
             );
         }

@@ -73,6 +73,100 @@ class ComicGenPipeline:
         self._kling_model = None
         self._vidu_model = None
 
+        # Recover orphan async tasks. FastAPI BackgroundTasks live in
+        # process memory — any restart between submit + execute leaves
+        # them permanently `pending` (or `processing` if interrupted
+        # mid-call) on disk. We mark such tasks `failed` with a clear
+        # reason so the user sees a Retry affordance instead of an
+        # eternal spinner. We do NOT auto-resume because re-running a
+        # half-completed video task could double-charge providers.
+        try:
+            self._recover_orphan_tasks()
+        except Exception as exc:  # pragma: no cover — defensive
+            logger.warning("Orphan task recovery failed: %s", exc)
+
+    _ORPHAN_RECOVERY_REASON = (
+        "Backend was restarted while this task was running. Click Retry to run it again."
+    )
+
+    def _recover_orphan_tasks(self) -> None:
+        """Sweep persisted state for video tasks left in pending/processing.
+
+        FastAPI's BackgroundTasks queue lives entirely in process memory:
+        if uvicorn restarts (dev --reload, OOM, OS reboot, ctrl-C) every
+        queued processor is gone but the task records on disk still say
+        "pending" or "processing". The frontend then shows an eternal
+        spinner and the user has no recovery path.
+
+        Strategy: on boot, find every such record and stamp it `failed`
+        with a clear, user-readable reason so the existing Retry button
+        becomes usable. Auto-resume is intentionally NOT done — a
+        half-run video generation may have already incurred provider
+        cost and re-running could double-charge.
+
+        Asset / motion-ref tasks live in transient in-process dicts
+        (self.asset_generation_tasks etc.) and never persist, so they
+        die naturally with the process and don't need recovery.
+        """
+        STUCK = ("pending", "processing")
+        recovered = 0
+
+        for script in self.scripts.values():
+            tasks = getattr(script, "video_tasks", None) or []
+            for task in tasks:
+                if getattr(task, "status", None) in STUCK:
+                    task.status = "failed"
+                    if not getattr(task, "error", None):
+                        try:
+                            task.error = self._ORPHAN_RECOVERY_REASON
+                        except Exception:
+                            pass
+                    recovered += 1
+
+        if recovered > 0:
+            try:
+                self._save_data()
+            except Exception:
+                logger.warning("Orphan recovery: failed to persist sweep")
+            logger.warning(
+                "Orphan task recovery: marked %d stuck task(s) as failed.",
+                recovered,
+            )
+        else:
+            logger.debug("Orphan task recovery: no stuck tasks found.")
+
+    def mark_video_task_failed(
+        self, script_id: str, task_id: str, error_message: str
+    ) -> bool:
+        """Belt-and-suspenders setter used by BG-task wrappers when an
+        exception escapes the pipeline's own try/except. Writes
+        status='failed' + error so the UI never sees an eternal
+        spinner. Also used by the cancel endpoint. Returns True when a
+        task was found and marked."""
+        with self._save_lock:
+            script = self.scripts.get(script_id)
+            if not script:
+                return False
+            tasks = getattr(script, "video_tasks", None) or []
+            task = next((t for t in tasks if getattr(t, "id", None) == task_id), None)
+            if not task:
+                return False
+            if getattr(task, "status", None) == "completed":
+                # Already successfully completed — don't downgrade on a
+                # spurious wrapper exception or a late cancel.
+                return False
+            task.status = "failed"
+            try:
+                if not getattr(task, "error", None):
+                    task.error = error_message
+            except Exception:
+                pass
+            try:
+                self._save_data()
+            except Exception:
+                logger.warning("mark_video_task_failed: save failed")
+            return True
+
     def _resolve_video_backend(self, model_name: str) -> str:
         try:
             return resolve_provider_backend(model_name)
@@ -1417,7 +1511,24 @@ class ComicGenPipeline:
                 model = "viduq3-pro-r2v"
             else:
                 model = "wan2.7-r2v"
-        
+
+        # Defensive guard against model⇄mode⇄refs mismatch (real bug seen
+        # in production: a stale localStorage carried `wan2.7-r2v` into
+        # an I2V flow that never supplies refs, so wanx.py raised mid-
+        # generation, the BG task crashed, and the user saw nothing but a
+        # spinner). Catch the inconsistency at task-creation time so the
+        # frontend gets a clean 400 instead of a permanently-failed task.
+        if model in ("wan2.7-r2v", "wan2.6-r2v"):
+            needs_image_refs = model == "wan2.7-r2v"
+            refs = (reference_image_urls or []) if needs_image_refs else (reference_video_urls or [])
+            if not refs:
+                kind = "image" if needs_image_refs else "video"
+                raise ValueError(
+                    f"Model '{model}' is reference-to-video and requires {kind} references, "
+                    "but none were provided. Switch to an I2V model (e.g. wan2.7-i2v) or "
+                    "supply reference inputs."
+                )
+
         # Snapshot the input image to ensure consistency
         snapshot_url = image_url
         try:
