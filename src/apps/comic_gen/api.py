@@ -1218,6 +1218,33 @@ async def process_video_task(script_id: str, task_id: str):
             )
 
 
+class AnnotateVideoTaskRequest(BaseModel):
+    """User-review annotations on a video task ("抽卡 review").
+    Both fields optional so the same endpoint covers star-only,
+    label-only, or both. `clear_label=True` explicitly removes
+    the label (None on its own means "don't change")."""
+    is_starred: Optional[bool] = None
+    label: Optional[str] = None
+    clear_label: bool = False
+
+
+@app.patch("/projects/{script_id}/video_tasks/{task_id}/annotate", response_model=VideoTask)
+async def annotate_video_task(script_id: str, task_id: str, request: AnnotateVideoTaskRequest):
+    """Set the user's star + label on a video task. Used by Storyboard's
+    candidates panel for shortlist marking (multi-select) and short
+    free-text notes (≤20 chars, truncated server-side)."""
+    task = pipeline.annotate_video_task(
+        script_id,
+        task_id,
+        is_starred=request.is_starred,
+        label=request.label,
+        clear_label=request.clear_label,
+    )
+    if task is None:
+        raise HTTPException(status_code=404, detail="Video task not found")
+    return signed_response(task)
+
+
 @app.post("/projects/{script_id}/video_tasks/{task_id}/cancel", response_model=VideoTask)
 async def cancel_video_task(script_id: str, task_id: str):
     """Mark a video task as failed-by-cancel. We can't actually yank a

@@ -208,6 +208,22 @@ export const api = {
         return res.data;
     },
 
+    /** Set the user's star + label annotations on a video task. Used
+     *  by Storyboard's candidates panel (shortlist + free-text note).
+     *  All payload fields optional; pass clear_label=true to remove
+     *  the label explicitly (label=null on its own = "don't change"). */
+    annotateVideoTask: async (
+        scriptId: string,
+        taskId: string,
+        payload: { is_starred?: boolean; label?: string | null; clear_label?: boolean },
+    ) => {
+        const res = await axios.patch(
+            `${API_URL}/projects/${scriptId}/video_tasks/${taskId}/annotate`,
+            payload,
+        );
+        return res.data;
+    },
+
     /** Mark a video task as failed-by-cancel. Provider-side render
      *  keeps going; this just unblocks the local UI. Already-completed
      *  tasks are a 404 no-op. */

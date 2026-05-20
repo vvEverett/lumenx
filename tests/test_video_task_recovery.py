@@ -200,6 +200,57 @@ def test_create_video_task_rejects_wan26_r2v_without_video_refs(pipeline):
         )
 
 
+def test_annotate_video_task_sets_star_and_label(pipeline):
+    """User starts a take + attaches a free-text note via the new
+    annotate endpoint. Both fields optional so the call can set either
+    independently or together."""
+    task = _video_task(status="completed", task_id="t1")
+    pipeline.scripts = {"p1": _script_with_tasks(task)}
+
+    # Star + label together.
+    after = pipeline.annotate_video_task("p1", "t1", is_starred=True, label="best lighting")
+    assert after is not None
+    assert after.is_starred is True
+    assert after.label == "best lighting"
+
+    # Star only — label preserved.
+    after = pipeline.annotate_video_task("p1", "t1", is_starred=False)
+    assert after.is_starred is False
+    assert after.label == "best lighting"
+
+    # Label only — star preserved.
+    after = pipeline.annotate_video_task("p1", "t1", label="action怪")
+    assert after.is_starred is False
+    assert after.label == "action怪"
+
+    # clear_label removes label, ignores label payload value.
+    after = pipeline.annotate_video_task("p1", "t1", clear_label=True)
+    assert after.label is None
+
+
+def test_annotate_video_task_truncates_label_to_max(pipeline):
+    """Label is bounded server-side at 20 chars so a runaway client
+    can't store a 10 KB note in a single field."""
+    task = _video_task(status="completed", task_id="t1")
+    pipeline.scripts = {"p1": _script_with_tasks(task)}
+
+    long = "a" * 200
+    after = pipeline.annotate_video_task("p1", "t1", label=long)
+    assert after is not None
+    assert len(after.label) == 20
+    assert after.label == "a" * 20
+
+    # Whitespace-only label clears.
+    after = pipeline.annotate_video_task("p1", "t1", label="    ")
+    assert after.label is None
+
+
+def test_annotate_video_task_returns_none_for_unknown(pipeline):
+    pipeline.scripts = {"p1": _script_with_tasks(_video_task(task_id="t1"))}
+    assert pipeline.annotate_video_task("p1", "ghost", is_starred=True) is None
+    assert pipeline.annotate_video_task("ghost", "t1", is_starred=True) is None
+
+
 def test_model_settings_persists_r2v_model(pipeline):
     """B-plan: project-level model_settings.r2v_model is the default
     Storyboard's R2V tab seeds from. Verify it round-trips: writing

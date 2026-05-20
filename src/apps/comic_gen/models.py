@@ -117,6 +117,12 @@ class VideoTask(BaseModel):
     reference_image_urls: List[str] = Field(default_factory=list, description="Reference image URLs for HappyHorse R2V (max 9)")
     ratio: Optional[str] = Field(None, description="Aspect ratio for HappyHorse T2V/R2V: 16:9, 9:16, 1:1, 4:3, 3:4")
     audio_setting: Optional[str] = Field(None, description="Audio setting for HappyHorse V2V: auto/origin")
+    # User annotations on this take (抽卡 review). Storyboard's candidates
+    # panel lets the user star multiple takes as a shortlist and attach a
+    # short free-text label (≤20 chars). 🎬 final-take selection happens
+    # in Assembly stage, not here.
+    is_starred: bool = Field(False, description="User-starred shortlist flag (multi-select per shot)")
+    label: Optional[str] = Field(None, description="User-attached short free-text note (≤20 chars)")
     created_at: float = Field(default_factory=time.time)
 
 class Character(BaseModel):

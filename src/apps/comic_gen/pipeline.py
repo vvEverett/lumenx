@@ -135,6 +135,45 @@ class ComicGenPipeline:
         else:
             logger.debug("Orphan task recovery: no stuck tasks found.")
 
+    _MAX_LABEL_LEN = 20
+
+    def annotate_video_task(
+        self,
+        script_id: str,
+        task_id: str,
+        is_starred: Optional[bool] = None,
+        label: Optional[str] = None,
+        clear_label: bool = False,
+    ) -> Optional["VideoTask"]:
+        """Set the user's review annotations on a video task. Two fields,
+        both optional so callers can update either independently:
+          - is_starred: shortlist flag, multi-select per shot
+          - label: short free-text note (≤20 chars). Pass clear_label=True
+            to explicitly remove the label (None on its own means "don't
+            change").
+        Returns the updated VideoTask, or None if script/task not found
+        (caller can decide whether that's a 404)."""
+        with self._save_lock:
+            script = self.scripts.get(script_id)
+            if not script:
+                return None
+            tasks = getattr(script, "video_tasks", None) or []
+            task = next((t for t in tasks if getattr(t, "id", None) == task_id), None)
+            if not task:
+                return None
+            if is_starred is not None:
+                task.is_starred = bool(is_starred)
+            if clear_label:
+                task.label = None
+            elif label is not None:
+                trimmed = label.strip()[: self._MAX_LABEL_LEN]
+                task.label = trimmed or None
+            try:
+                self._save_data()
+            except Exception:
+                logger.warning("annotate_video_task: save failed")
+            return task
+
     def mark_video_task_failed(
         self, script_id: str, task_id: str, error_message: str
     ) -> bool:
