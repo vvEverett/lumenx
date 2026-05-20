@@ -1,25 +1,45 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
-import { Plus, Settings2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useProjectStore } from "@/store/projectStore";
-import { api } from "@/lib/api";
+import { api, type VideoTask } from "@/lib/api";
+import { getAssetUrl } from "@/lib/utils";
+import type { BatchSummary } from "./storyboard-r2v/shot-panel/CandidatesSection";
 import { getR2vRouteModelId, isR2vImageBased, VIDEO_I2V_MODELS, VIDEO_R2V_MODELS, DEFAULT_I2V_MODEL_ID, DEFAULT_R2V_MODEL_ID } from "@/lib/modelCatalog";
 import ShotCard, { type ShotNode } from "./storyboard-r2v/ShotCard";
 import AssetDrawer from "./storyboard-r2v/AssetDrawer";
-import VideoConfigModal, { type VideoConfig, DEFAULT_VIDEO_CONFIG } from "./storyboard-r2v/VideoConfigModal";
+import { type VideoConfig, DEFAULT_VIDEO_CONFIG } from "./storyboard-r2v/VideoConfigModal";
+import {
+    migrateShotNode,
+    appendT2IImage,
+    setActiveT2IIndex,
+    removeT2IImage,
+    appendVideoTaskId,
+    videoTaskIdsForTab,
+    getActiveT2IImageUrl,
+} from "./storyboard-r2v/shotNodeHelpers";
+import ShotPanel from "./storyboard-r2v/shot-panel/ShotPanel";
+import ParamsSection, { type ParamsState } from "./storyboard-r2v/shot-panel/ParamsSection";
+import T2ISubsection from "./storyboard-r2v/shot-panel/T2ISubsection";
+import CandidatesSection from "./storyboard-r2v/shot-panel/CandidatesSection";
+import CompareModal from "./storyboard-r2v/shot-panel/CompareModal";
+import TaskQueueButton from "./storyboard-r2v/shot-panel/TaskQueueButton";
+import TaskQueuePanel from "./storyboard-r2v/shot-panel/TaskQueuePanel";
 
 export default function StoryboardR2V() {
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
     const t = useTranslations("storyboardR2V");
 
-    // Derive shots from project frames or initialize empty
+    // Derive shots from project frames or initialize empty. Each shot
+    // gets pushed through migrateShotNode so the new t2iImageUrls /
+    // videoTaskIdsByTab fields are present even for legacy drafts.
     const [shots, setShots] = useState<ShotNode[]>(() => {
         if (currentProject?.frames && currentProject.frames.length > 0) {
-            return currentProject.frames.map((frame: any) => ({
+            return currentProject.frames.map((frame: any) => migrateShotNode({
                 id: frame.id,
                 prompt: frame.action_description || "",
                 tabMode: "direct_r2v" as const,
@@ -28,7 +48,7 @@ export default function StoryboardR2V() {
                 imageUrl: frame.rendered_image_url || frame.image_url || undefined,
             }));
         }
-        return [{ id: `shot_${Date.now()}`, prompt: "", tabMode: "direct_r2v" }];
+        return [migrateShotNode({ id: `shot_${Date.now()}`, prompt: "", tabMode: "direct_r2v" })];
     });
 
     // Global video config (with localStorage persistence for model selection)
@@ -84,23 +104,40 @@ export default function StoryboardR2V() {
         };
     });
 
-    const handleConfigChange = useCallback((config: VideoConfig) => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('storyboard-r2v-model', config.model);
-            localStorage.setItem('storyboard-r2v-r2v-model', config.r2vModel);
-        }
-        setVideoConfig(config);
-    }, []);
-
-    // Modal & drawer state
-    const [configModalOpen, setConfigModalOpen] = useState(false);
+    // Modal & drawer state (configModalOpen retired with the gear; the
+    // old VideoConfigModal mount is gone, replaced by per-shot
+    // ParamsSection panels under each ShotCard. handleConfigChange is
+    // also gone — model writes now flow through handleShotParamsChange
+    // below, which mirrors them to localStorage.)
     const [drawerState, setDrawerState] = useState<{ isOpen: boolean; targetShotIndex: number | null }>({
         isOpen: false,
         targetShotIndex: null,
     });
 
+    // Task-queue side panel state. Persisted across renders only; we
+    // intentionally don't localStorage this — it's transient "I want
+    // to peek at queue" UI affordance, not a saved layout preference.
+    const [queueOpen, setQueueOpen] = useState(false);
+
+    // Compare-mode selection: a Set of task ids the user shift-clicked
+    // in any shot's candidate panel. Multi-shot compare is a future
+    // feature; for now the same Set is shared across shots so user
+    // can only effectively compare within one shot at a time. Cleared
+    // on Compare modal close.
+    const [compareSelectedIds, setCompareSelectedIds] = useState<Set<string>>(() => new Set());
+    const [compareModalOpen, setCompareModalOpen] = useState(false);
+
     // Refs map for textareas (for asset insertion from drawer)
     const textareaRefs = useRef<Map<number, HTMLTextAreaElement>>(new Map());
+    // Refs to each shot's outer wrapper so the task-queue panel can
+    // jump-scroll the canvas to a specific frame.
+    const shotWrapperRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
+
+    // Per-shot batch count (the "抽卡 ×N" knob). Decoupled from
+    // videoConfig because users typically pick the model + duration
+    // once and vary count per shot. Keyed by shot.id so insert/move
+    // don't shuffle counts onto the wrong shot.
+    const [shotCounts, setShotCounts] = useState<Record<string, number>>({});
 
     const characters = currentProject?.characters || [];
     const scenes = currentProject?.scenes || [];
@@ -228,10 +265,12 @@ export default function StoryboardR2V() {
                     i === index ? { ...s, t2iTaskId: taskId, t2iStatus: "processing" } : s
                 ));
             } else if (result?.image_url || result?.rendered_image_url) {
-                // Immediate result (synchronous render)
+                // Immediate result (synchronous render). Append to T2I
+                // history + auto-select so the new image becomes the
+                // active首帧 used by downstream I2V generation.
                 const imageUrl = result.image_url || result.rendered_image_url;
                 setShots(prev => prev.map((s, i) =>
-                    i === index ? { ...s, t2iImageUrl: imageUrl, t2iStatus: "completed" } : s
+                    i === index ? appendT2IImage({ ...s, t2iStatus: "completed" }, imageUrl) : s
                 ));
             }
         } catch (error) {
@@ -363,6 +402,171 @@ export default function StoryboardR2V() {
         }
     }, [shots, currentProject, videoConfig, parseAssetTags]);
 
+    // Batch-aware generation. The user's "抽卡" mental model: one
+    // click of Generate ×N fires N independent createVideoTask calls
+    // in parallel (each becomes its own VideoTask record on the
+    // backend). All N task ids get appended to the shot's per-tab
+    // bucket so the CandidatesSection can render them as one batch.
+    // Refactored from the single-task generateVideo to support both
+    // R2V and I2V paths; falls back to N=1 if count is undefined.
+    const generateVideoBatch = useCallback(async (
+        index: number,
+        count: number,
+        params?: Partial<ParamsState>,
+    ) => {
+        const shot = shots[index];
+        if (!currentProject || !shot?.prompt.trim()) return;
+        const promptText = cleanPrompt(shot.prompt);
+        const tabMode = shot.tabMode;
+        const effectiveCount = Math.max(1, Math.min(6, count || 1));
+
+        setShots(prev => prev.map((s, i) =>
+            i === index ? { ...s, videoStatus: "pending" } : s
+        ));
+
+        try {
+            // Build a per-call factory so the batch fires N parallel
+            // requests through Promise.all — fail-fast on any one
+            // failure leaves the others untouched on the backend (the
+            // BG-task wrapper handles their lifecycle independently).
+            const createOne = async (): Promise<string | null> => {
+                if (tabMode === "direct_r2v") {
+                    const referenceUrls = parseAssetTags(shot.prompt);
+                    const explicitR2v = params?.model ?? videoConfig.r2vModel;
+                    const explicitOk = VIDEO_R2V_MODELS.some(m => m.id === explicitR2v);
+                    const routeModelId = explicitOk
+                        ? explicitR2v
+                        : getR2vRouteModelId(videoConfig.model);
+                    const imageBased = isR2vImageBased(routeModelId);
+                    const task = await api.createVideoTask(
+                        currentProject.id,
+                        "",
+                        promptText,
+                        params?.duration ?? videoConfig.duration,
+                        params?.seed,
+                        params?.resolution ?? videoConfig.resolution,
+                        false,
+                        "",
+                        params?.promptExtend ?? videoConfig.promptExtend,
+                        params?.negativePrompt ?? videoConfig.negativePrompt,
+                        1,
+                        routeModelId,
+                        shot.id,
+                        params?.shotType ?? "multi",
+                        "r2v",
+                        !imageBased ? referenceUrls : undefined,
+                        undefined, undefined, undefined,
+                        undefined, undefined,
+                        imageBased ? referenceUrls : undefined,
+                        params?.ratio ?? videoConfig.resolution,
+                    );
+                    return task?.id ?? null;
+                }
+                // I2V branch — same defensive check on the model.
+                const i2vModelId = params?.model ?? videoConfig.model;
+                const i2vModelOk = VIDEO_I2V_MODELS.some(m => m.id === i2vModelId);
+                if (!i2vModelOk) {
+                    console.warn(`[Studio] Refusing I2V submission with non-I2V model "${i2vModelId}".`);
+                    return null;
+                }
+                const imageUrl = getActiveT2IImageUrl(shot) || shot.imageUrl || "";
+                const task = await api.createVideoTask(
+                    currentProject.id,
+                    imageUrl,
+                    promptText,
+                    params?.duration ?? videoConfig.duration,
+                    params?.seed,
+                    params?.resolution ?? videoConfig.resolution,
+                    false,
+                    "",
+                    params?.promptExtend ?? videoConfig.promptExtend,
+                    params?.negativePrompt ?? videoConfig.negativePrompt,
+                    1,
+                    i2vModelId,
+                    shot.id,
+                    params?.shotType ?? "multi",
+                    "i2v",
+                    undefined,
+                    params?.mode ?? videoConfig.mode,
+                    params?.sound ?? videoConfig.sound,
+                    params?.cfgScale ?? videoConfig.cfgScale,
+                    params?.viduAudio ?? videoConfig.viduAudio,
+                    params?.movementAmplitude ?? videoConfig.movementAmplitude,
+                    undefined,
+                );
+                return task?.id ?? null;
+            };
+
+            const taskIds = (await Promise.all(
+                Array.from({ length: effectiveCount }, createOne),
+            )).filter((id): id is string => !!id);
+
+            if (taskIds.length > 0) {
+                setShots(prev => prev.map((s, i) => {
+                    if (i !== index) return s;
+                    // Stamp each new task into the per-tab bucket; the
+                    // legacy single videoTaskId mirrors the latest one
+                    // so any code still reading the single field gets
+                    // the most-recent batch's last task.
+                    let next = s;
+                    for (const tid of taskIds) {
+                        next = appendVideoTaskId(next, tabMode, tid);
+                    }
+                    return { ...next, videoStatus: "processing" as const };
+                }));
+            } else {
+                setShots(prev => prev.map((s, i) =>
+                    i === index ? { ...s, videoStatus: "failed" as const } : s
+                ));
+            }
+        } catch (error) {
+            console.error("Batch generate failed for shot:", error);
+            setShots(prev => prev.map((s, i) =>
+                i === index ? { ...s, videoStatus: "failed" as const } : s
+            ));
+        }
+    }, [shots, currentProject, videoConfig, parseAssetTags]);
+
+    // Project-level task refresh: when any task on any shot is in
+    // flight, refetch the whole project every 5s. The candidates
+    // panel + queue read from currentProject.video_tasks for canonical
+    // state. Cheap because it's just a GET; cancels when nothing is
+    // in flight. This is independent of the per-shot poll above (the
+    // per-shot poll updates shot.videoStatus / videoUrl which drives
+    // the ShotCard preview; the project refresh fills in candidate
+    // metadata like is_starred / label / error / final video_url).
+    useEffect(() => {
+        if (!currentProject?.id) return;
+        const allTasks: any[] = (currentProject as any).video_tasks ?? [];
+        const anyInFlight = allTasks.some(
+            (t) => t.status === "pending" || t.status === "processing",
+        );
+        // Also poll if any local shot has an unresolved task id — that
+        // covers the just-created-task window before the project state
+        // has caught up.
+        const localInFlight = shots.some((s) => {
+            const ids = [
+                ...(videoTaskIdsForTab(s, "t2i_i2v") || []),
+                ...(videoTaskIdsForTab(s, "direct_r2v") || []),
+            ];
+            return ids.some((id) => {
+                const t = allTasks.find((tt) => tt.id === id);
+                return !t || t.status === "pending" || t.status === "processing";
+            });
+        });
+        if (!anyInFlight && !localInFlight) return;
+        const projectId = currentProject.id;
+        const id = window.setInterval(async () => {
+            try {
+                const fresh = await api.getProject(projectId);
+                updateProject(projectId, fresh);
+            } catch {
+                /* swallow — network blips are fine, next tick retries */
+            }
+        }, 5000);
+        return () => window.clearInterval(id);
+    }, [currentProject?.id, (currentProject as any)?.video_tasks, shots, updateProject]);
+
     // Poll for task completion (both T2I and video)
     useEffect(() => {
         const processingShots = shots.filter(s =>
@@ -398,7 +602,9 @@ export default function StoryboardR2V() {
                             const imageUrl = status.image_url || status.video_url || status.result_url;
                             if (imageUrl) {
                                 setShots(prev => prev.map(s =>
-                                    s.id === shot.id ? { ...s, t2iStatus: "completed", t2iImageUrl: imageUrl } : s
+                                    s.id === shot.id
+                                        ? appendT2IImage({ ...s, t2iStatus: "completed" }, imageUrl)
+                                        : s
                                 ));
                             }
                         } else if (status.status === "failed") {
@@ -448,8 +654,226 @@ export default function StoryboardR2V() {
         ? (VIDEO_R2V_MODELS.find(m => m.id === videoConfig.r2vModel)?.name ?? videoConfig.r2vModel)
         : (VIDEO_I2V_MODELS.find(m => m.id === videoConfig.model)?.name ?? videoConfig.model);
 
+    // ---- Project-level task derivations (drive Queue + Candidates) ----
+    // We derive these via useMemo so per-render allocation is cheap and
+    // children can rely on referentially-stable arrays (set-membership
+    // tests in CompareModal etc. are correctness-sensitive).
+    const allVideoTasks: VideoTask[] = useMemo(
+        () => ((currentProject as any)?.video_tasks ?? []) as VideoTask[],
+        [currentProject],
+    );
+
+    const tasksById = useMemo(() => {
+        const map = new Map<string, VideoTask>();
+        for (const t of allVideoTasks) map.set(t.id, t);
+        return map;
+    }, [allVideoTasks]);
+
+    // Map shot.id → human label for the queue panel's frame column.
+    const shotLabelByFrameId = useMemo(() => {
+        const out: Record<string, string> = {};
+        shots.forEach((s, i) => { out[s.id] = `Shot ${i + 1}`; });
+        return out;
+    }, [shots]);
+
+    // In-flight aggregate count drives the TaskQueueButton badge.
+    const inFlightTaskCount = useMemo(
+        () => allVideoTasks.filter(t => t.status === "pending" || t.status === "processing").length,
+        [allVideoTasks],
+    );
+
+    // Compare modal needs the actual VideoTask objects for the
+    // currently-selected ids (in whatever order they were selected).
+    const compareTasks = useMemo(() => {
+        const out: VideoTask[] = [];
+        Array.from(compareSelectedIds).forEach((id) => {
+            const t = tasksById.get(id);
+            if (t) out.push(t);
+        });
+        return out;
+    }, [compareSelectedIds, tasksById]);
+
+    // Per-shot candidate tasks: walk the shot's per-tab id bucket and
+    // resolve each id to a project-level VideoTask. Tasks not yet
+    // round-tripped to the project record are skipped (the next 5s
+    // refresh tick picks them up).
+    const tasksForShot = useCallback((shot: ShotNode): VideoTask[] => {
+        const ids = videoTaskIdsForTab(shot, shot.tabMode);
+        const out: VideoTask[] = [];
+        for (const id of ids) {
+            const t = tasksById.get(id);
+            if (t) out.push(t);
+        }
+        return out;
+    }, [tasksById]);
+
+    // Build a ParamsState from videoConfig + per-shot count override.
+    // Single source of truth: videoConfig drives shared knobs; shotCounts
+    // overrides the batch size per shot.
+    const paramsStateForShot = useCallback((shot: ShotNode): ParamsState => {
+        const isR2v = shot.tabMode === "direct_r2v";
+        const modelId = isR2v ? videoConfig.r2vModel : videoConfig.model;
+        return {
+            model: modelId,
+            duration: videoConfig.duration,
+            count: shotCounts[shot.id] ?? 1,
+            resolution: videoConfig.resolution,
+            ratio: videoConfig.resolution,
+            negativePrompt: videoConfig.negativePrompt,
+            promptExtend: videoConfig.promptExtend,
+            cfgScale: videoConfig.cfgScale,
+            mode: videoConfig.mode,
+            movementAmplitude: videoConfig.movementAmplitude,
+            sound: videoConfig.sound,
+            viduAudio: videoConfig.viduAudio,
+        };
+    }, [videoConfig, shotCounts]);
+
+    // ParamsSection.onChange handler: count goes into the per-shot
+    // map; everything else writes back to the shared videoConfig (so
+    // the user's most-recent picks become the new default for siblings).
+    const handleShotParamsChange = useCallback((shot: ShotNode, next: ParamsState) => {
+        setShotCounts(prev => ({ ...prev, [shot.id]: next.count }));
+        const isR2v = shot.tabMode === "direct_r2v";
+        const ls = typeof window !== "undefined" ? window.localStorage : null;
+        setVideoConfig(prev => {
+            const updated: VideoConfig = {
+                ...prev,
+                duration: next.duration,
+                resolution: next.resolution ?? prev.resolution,
+                negativePrompt: next.negativePrompt ?? prev.negativePrompt,
+                promptExtend: next.promptExtend ?? prev.promptExtend,
+                cfgScale: next.cfgScale ?? prev.cfgScale,
+                mode: next.mode ?? prev.mode,
+                movementAmplitude: next.movementAmplitude ?? prev.movementAmplitude,
+                sound: next.sound ?? prev.sound,
+                viduAudio: next.viduAudio ?? prev.viduAudio,
+            };
+            if (isR2v) {
+                updated.r2vModel = next.model;
+                ls?.setItem("storyboard-r2v-r2v-model", next.model);
+            } else {
+                updated.model = next.model;
+                ls?.setItem("storyboard-r2v-model", next.model);
+            }
+            return updated;
+        });
+    }, []);
+
+    // Annotate handlers wire CandidateThumb's star/label CTAs to the
+    // backend PATCH endpoint. We refresh the project after each call
+    // so the candidate cell re-renders with the new flag without
+    // waiting for the 5s polling tick.
+    const refreshProject = useCallback(async () => {
+        if (!currentProject?.id) return;
+        try {
+            const fresh = await api.getProject(currentProject.id);
+            updateProject(currentProject.id, fresh);
+        } catch { /* swallow */ }
+    }, [currentProject?.id, updateProject]);
+
+    const handleToggleStar = useCallback(async (task: VideoTask, next: boolean) => {
+        if (!currentProject?.id) return;
+        try {
+            await api.annotateVideoTask(currentProject.id, task.id, { is_starred: next });
+            await refreshProject();
+        } catch (err) {
+            console.error("Failed to toggle star:", err);
+        }
+    }, [currentProject?.id, refreshProject]);
+
+    const handleSetLabel = useCallback(async (task: VideoTask, next: string | null) => {
+        if (!currentProject?.id) return;
+        try {
+            if (next === null || next === "") {
+                await api.annotateVideoTask(currentProject.id, task.id, { clear_label: true });
+            } else {
+                await api.annotateVideoTask(currentProject.id, task.id, { label: next });
+            }
+            await refreshProject();
+        } catch (err) {
+            console.error("Failed to set label:", err);
+        }
+    }, [currentProject?.id, refreshProject]);
+
+    const handleCancelTask = useCallback(async (task: VideoTask) => {
+        if (!currentProject?.id) return;
+        try {
+            await api.cancelVideoTask(currentProject.id, task.id);
+            await refreshProject();
+        } catch (err) {
+            console.error("Failed to cancel task:", err);
+        }
+    }, [currentProject?.id, refreshProject]);
+
+    // Retry = fire a fresh batch of 1 for the shot owning this task,
+    // reusing the task's params as best-effort. Falls back to current
+    // ParamsSection state if we can't find the owner.
+    const handleRetryTask = useCallback(async (task: VideoTask) => {
+        const ownerIdx = shots.findIndex((s) => {
+            const ids = videoTaskIdsForTab(s, s.tabMode);
+            return ids.includes(task.id);
+        });
+        if (ownerIdx < 0) return;
+        await generateVideoBatch(ownerIdx, 1);
+    }, [shots, generateVideoBatch]);
+
+    // Click on a candidate thumb: plain click = preview (open new
+    // window for v1), shift-click = toggle compare-selection.
+    const handleCandidateClick = useCallback((task: VideoTask, mods: { shift: boolean; meta: boolean }) => {
+        if (mods.shift) {
+            setCompareSelectedIds(prev => {
+                const next = new Set(prev);
+                if (next.has(task.id)) next.delete(task.id);
+                else next.add(task.id);
+                return next;
+            });
+            return;
+        }
+        if (task.video_url) {
+            window.open(getAssetUrl(task.video_url), "_blank", "noopener");
+        }
+    }, []);
+
+    // 复用此批参数: copy a batch's model + neg_prompt into videoConfig,
+    // so the next Generate uses the same recipe. We don't change count
+    // here — count remains the per-shot knob the user chose.
+    const handleReuseBatchParams = useCallback((batch: BatchSummary) => {
+        const first = batch.tasks[0];
+        if (!first) return;
+        setVideoConfig(prev => {
+            const updated = { ...prev };
+            // Decide which slot the batch's model lives in (I2V or R2V).
+            if (VIDEO_R2V_MODELS.some(m => m.id === first.model)) {
+                updated.r2vModel = first.model!;
+            } else if (VIDEO_I2V_MODELS.some(m => m.id === first.model)) {
+                updated.model = first.model!;
+            }
+            if (first.duration) updated.duration = first.duration;
+            if (first.resolution) updated.resolution = first.resolution;
+            if (first.negative_prompt !== undefined) updated.negativePrompt = first.negative_prompt;
+            return updated;
+        });
+    }, []);
+
+    // Queue's jump-to-shot: scroll the shot's wrapper into view.
+    const handleJumpToShot = useCallback((frameId: string) => {
+        const el = shotWrapperRefs.current.get(frameId);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, []);
+
+    // Active candidate URL resolver — many backend video URLs are
+    // relative paths needing the asset prefix to render in <video>.
+    const resolveAssetUrl = useCallback((u: string) => getAssetUrl(u), []);
+
     return (
-        <div className="h-full flex flex-col overflow-hidden relative">
+        <div className="h-full flex overflow-hidden relative">
+        {/* Main column — pushed (compressed) when the queue panel opens
+            so the queue doesn't overlay content. The flex parent splits
+            available width between this main column and the side queue. */}
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             {/* Top Toolbar */}
             <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.06] bg-white/[0.02] backdrop-blur-xl shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                 <div className="flex items-center gap-3">
@@ -468,23 +892,28 @@ export default function StoryboardR2V() {
                 </div>
                 <div className="flex items-center gap-3">
                     <span className="text-[11px] text-text-secondary tracking-wide">{t("currentModel")}: <span className="text-foreground font-medium">{currentModelName}</span></span>
-                    <motion.button
-                        whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.92 }}
-                        onClick={() => setConfigModalOpen(true)}
-                        className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.10] text-text-secondary hover:text-foreground transition-all"
-                        title={t("videoSettings")}
-                    >
-                        <Settings2 size={13} />
-                    </motion.button>
+                    <TaskQueueButton
+                        inFlightCount={inFlightTaskCount}
+                        open={queueOpen}
+                        onToggle={() => setQueueOpen(v => !v)}
+                    />
                 </div>
             </div>
 
             {/* Shot List (Timeline) */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-                {shots.map((shot, index) => (
+                {shots.map((shot, index) => {
+                    const shotTasks = tasksForShot(shot);
+                    const shotInFlight = shotTasks.filter(
+                        (t) => t.status === "pending" || t.status === "processing",
+                    ).length;
+                    const paramsState = paramsStateForShot(shot);
+                    const isI2vTab = shot.tabMode === "t2i_i2v";
+                    const modelList = shot.tabMode === "direct_r2v" ? VIDEO_R2V_MODELS : VIDEO_I2V_MODELS;
+                    return (
                     <motion.div
                         key={shot.id}
+                        ref={(el) => { shotWrapperRefs.current.set(shot.id, el); }}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{
@@ -535,8 +964,58 @@ export default function StoryboardR2V() {
                                     : undefined
                             }
                         />
+                        {/* Attached workbench: params on top + (optional)
+                            T2I首帧 strip inline + candidates panel below.
+                            Connector line in ShotPanel hints "child of". */}
+                        <ShotPanel>
+                            <ParamsSection
+                                shotId={shot.id}
+                                modelList={modelList}
+                                title={isI2vTab ? "I2V Params" : "R2V Params"}
+                                params={paramsState}
+                                onChange={(next) => handleShotParamsChange(shot, next)}
+                                onGenerate={(p) => generateVideoBatch(index, p.count, p)}
+                                inFlightCount={shotInFlight}
+                            />
+                            {isI2vTab ? (
+                                <div className="border-t border-white/[0.04] px-3 py-2.5">
+                                    <T2ISubsection
+                                        imageUrls={shot.t2iImageUrls ?? []}
+                                        selectedIndex={shot.t2iSelectedIndex ?? 0}
+                                        generating={shot.t2iStatus === "pending" || shot.t2iStatus === "processing"}
+                                        inFlightTaskId={shot.t2iTaskId}
+                                        inFlightStatus={shot.t2iStatus}
+                                        onSelect={(i) => setShots(prev => prev.map((s, j) =>
+                                            j === index ? setActiveT2IIndex(s, i) : s,
+                                        ))}
+                                        onRemove={(i) => setShots(prev => prev.map((s, j) =>
+                                            j === index ? removeT2IImage(s, i) : s,
+                                        ))}
+                                        onGenerate={() => generateT2I(index)}
+                                        resolveUrl={resolveAssetUrl}
+                                    />
+                                </div>
+                            ) : null}
+                            <div className="border-t border-white/[0.04] px-3 py-2.5">
+                                <CandidatesSection
+                                    shotId={shot.id}
+                                    tasks={shotTasks}
+                                    activeModel={paramsState.model}
+                                    compareSelectedIds={compareSelectedIds}
+                                    onClickThumb={handleCandidateClick}
+                                    onToggleStar={handleToggleStar}
+                                    onSetLabel={handleSetLabel}
+                                    onCancel={handleCancelTask}
+                                    onRetry={handleRetryTask}
+                                    onReuseBatchParams={handleReuseBatchParams}
+                                    onOpenCompare={() => setCompareModalOpen(true)}
+                                    resolveUrl={resolveAssetUrl}
+                                />
+                            </div>
+                        </ShotPanel>
                     </motion.div>
-                ))}
+                    );
+                })}
 
                 {/* Add shot at end */}
                 <motion.button
@@ -562,15 +1041,29 @@ export default function StoryboardR2V() {
                 props={props}
                 onSelectAsset={insertAssetFromDrawer}
             />
-
-            {/* Video Config Modal */}
-            <VideoConfigModal
-                isOpen={configModalOpen}
-                onClose={() => setConfigModalOpen(false)}
-                config={videoConfig}
-                onConfigChange={handleConfigChange}
-                variant={isR2VWorkflow ? "r2v" : "i2v"}
+        </div>
+        {/* Right-side Task Queue — pushes (does not overlay) the main
+            column. Mounted in the layout flex, not as a fixed overlay,
+            so width compression is automatic when it opens. */}
+        <TaskQueuePanel
+            open={queueOpen}
+            onClose={() => setQueueOpen(false)}
+            tasks={allVideoTasks}
+            shotLabelByFrameId={shotLabelByFrameId}
+            onJumpToShot={handleJumpToShot}
+            onCancel={handleCancelTask}
+            onRetry={handleRetryTask}
+        />
+        {/* Compare modal — portaled to body to escape clipped/transformed
+            ancestors. Shows once user has shift-selected ≥2 and clicked
+            the floating Compare button in any CandidatesSection. */}
+        {compareModalOpen && compareTasks.length >= 2 ? (
+            <CompareModal
+                tasks={compareTasks}
+                onClose={() => setCompareModalOpen(false)}
+                resolveUrl={resolveAssetUrl}
             />
+        ) : null}
         </div>
     );
 }
