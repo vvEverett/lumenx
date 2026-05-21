@@ -673,12 +673,28 @@
     "promptExpandSave": "保存",
     "promptExpandSaveHint": "保存并关闭 (Cmd/Ctrl + Enter)",
     "promptExpandHotkeys": "Esc 关闭 · Cmd/Ctrl+Enter 保存",
-    "promptExpandShortcut": "Cmd/Ctrl + E 也能保存"
+    "promptExpandShortcut": "Cmd/Ctrl + E 也能保存",
+    "polish": "AI 润色",
+    "polishing": "润色中...",
+    "polishFailed": "润色失败，请重试",
+    "polishCnLabel": "CN · 预览",
+    "polishEnLabel": "EN · 用于生成",
+    "polishApply": "应用",
+    "polishDiscard": "丢弃",
+    "polishFeedbackPlaceholder": "想再调整？输入反馈让 AI 再优化一次...",
+    "polishRefineAgain": "再优化",
+    "artStyleLabel": "画风",
+    "artStyleHint": "全局画风设定（点击跳转 艺术指导 编辑）",
+    "shotCast": "出镜：",
+    "shotCastEmpty": "本镜未引用角色 · @角色 加入"
   },
   "assetCard": {
     "seriesSharedBadge": "系列",
     "seriesSharedTooltip": "此资产属于整个系列共享。修改会同步影响所有引用此资产的剧集。",
     "episodeLocalBadge": "本集",
     "episodeLocalTooltip": "此资产仅在本集中可见，不会影响其他剧集。"
+  },
+  "episodeMiniList": {
+    "title": "本系列 · {count} 集"
   }
 }

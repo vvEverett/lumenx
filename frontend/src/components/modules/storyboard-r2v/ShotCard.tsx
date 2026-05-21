@@ -16,7 +16,9 @@ import {
 import { useTranslations } from "next-intl";
 import AssetChipBar from "./AssetChipBar";
 import PromptExpandModal from "./PromptExpandModal";
+import PolishPanel from "./PolishPanel";
 import { PendingTaskAffordance } from "@/components/shared/PendingTaskAffordance";
+import { useProjectStore } from "@/store/projectStore";
 
 export interface ShotNode {
     id: string;
@@ -108,6 +110,49 @@ export default function ShotCard({
     // opens it; saving syncs back via onUpdatePrompt; cancel
     // discards the modal's draft without touching parent state.
     const [expandOpen, setExpandOpen] = useState(false);
+    // currentProjectId — needed by PolishPanel to look up the
+    // project's PromptConfig override server-side.
+    const currentProjectId = useProjectStore((state) => state.currentProject?.id);
+    // r2vSlots — when R2V tab is active, derive slot context from
+    // @character references in the prompt so the polish system
+    // prompt knows what character1/character2 ID maps to.
+    const r2vSlots = useCallback((): { description: string }[] => {
+        if (shot.tabMode !== "direct_r2v") return [];
+        const out: { description: string }[] = [];
+        const tagPattern = /\[character\d+:([^\]]+)\]/g;
+        let match;
+        while ((match = tagPattern.exec(shot.prompt)) !== null) {
+            const [, name] = match;
+            const char = characters.find((c: any) => c.name === name);
+            out.push({ description: char?.description ? `${name}: ${char.description}` : name });
+        }
+        return out;
+    }, [shot.tabMode, shot.prompt, characters])();
+
+    // castAvatars — character avatar group for the "Cast:" row above
+    // the prompt textarea (L5 borrow from 火山剧创's 出镜角色). De-
+    // duped by id. We accept either [character:name] or [characterN:
+    // name] patterns since the asset chip bar emits both formats.
+    const castAvatars = useCallback((): Array<{ id: string; name: string; avatarUrl?: string }> => {
+        const out: Array<{ id: string; name: string; avatarUrl?: string }> = [];
+        const seen = new Set<string>();
+        const tagPattern = /\[character\d*:([^\]]+)\]/g;
+        let match;
+        while ((match = tagPattern.exec(shot.prompt)) !== null) {
+            const [, name] = match;
+            const char = characters.find((c: any) => c.name === name);
+            if (!char || seen.has(char.id)) continue;
+            seen.add(char.id);
+            const avatarUrl =
+                char.avatar_url ||
+                char.headshot_image_url ||
+                char.image_url ||
+                char.full_body_image_url ||
+                (char.full_body_asset?.variants?.[0]?.url);
+            out.push({ id: char.id, name: char.name, avatarUrl });
+        }
+        return out;
+    }, [shot.prompt, characters])();
 
     // Auto-grow the textarea up to a cap (B2: ~10 rows). Re-runs
     // when prompt changes or the textarea mounts. The cap is
@@ -387,6 +432,54 @@ export default function ShotCard({
 
                     {/* Right: Prompt + Controls */}
                     <div className="flex-1 p-3 flex flex-col gap-2">
+                        {/* Cast avatar group — at-a-glance view of
+                            which characters are referenced in this
+                            shot's prompt. Derived from [character:X]
+                            tags. Click an avatar to jump to the
+                            Assets step for editing. Borrowed from
+                            火山剧创's "出镜角色" but as a compact
+                            avatar group instead of a verbose list. */}
+                        {castAvatars.length > 0 ? (
+                            <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-chrome-sm tracking-tight text-text-muted">
+                                    {t("shotCast")}
+                                </span>
+                                <div className="flex items-center -space-x-1.5">
+                                    {castAvatars.slice(0, 3).map((c) => (
+                                        <button
+                                            key={c.id}
+                                            type="button"
+                                            onClick={() => {
+                                                document.dispatchEvent(
+                                                    new CustomEvent("lumenx:navigateStep", { detail: "assets" }),
+                                                );
+                                            }}
+                                            title={c.name}
+                                            className="grid h-6 w-6 place-items-center overflow-hidden rounded-full border-2 border-surface bg-elevated transition-all duration-fast ease-out-quart hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                                        >
+                                            {c.avatarUrl ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={c.avatarUrl}
+                                                    alt={c.name}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="font-mono text-[9px] font-medium text-text-secondary">
+                                                    {c.name.slice(0, 1)}
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                    {castAvatars.length > 3 ? (
+                                        <span className="grid h-6 w-6 place-items-center rounded-full border-2 border-surface bg-elevated font-mono text-[9px] font-medium text-text-secondary">
+                                            +{castAvatars.length - 3}
+                                        </span>
+                                    ) : null}
+                                </div>
+                            </div>
+                        ) : null}
+
                         {/* Prompt Editor wrapper — relative so the
                             expand icon can sit absolute top-right
                             without taking layout space. */}
@@ -426,6 +519,19 @@ export default function ShotCard({
                                 <Maximize2 size={12} aria-hidden="true" />
                             </button>
                         </div>
+
+                        {/* AI Polish — bilingual prompt rewrite using
+                            the project's polish system prompt
+                            (storyboard_polish / video_polish /
+                            r2v_polish from PromptConfig). Routes to
+                            the right API by tabMode. */}
+                        <PolishPanel
+                            prompt={shot.prompt}
+                            tabMode={shot.tabMode}
+                            scriptId={currentProjectId ?? ""}
+                            slots={r2vSlots}
+                            onApply={onUpdatePrompt}
+                        />
 
                         {/* Asset Chip Bar */}
                         <AssetChipBar

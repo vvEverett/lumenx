@@ -673,12 +673,28 @@
     "promptExpandSave": "Save",
     "promptExpandSaveHint": "Save and close (Cmd/Ctrl + Enter)",
     "promptExpandHotkeys": "Esc to cancel · Cmd/Ctrl+Enter to save",
-    "promptExpandShortcut": "Cmd/Ctrl + E also saves"
+    "promptExpandShortcut": "Cmd/Ctrl + E also saves",
+    "polish": "AI Polish",
+    "polishing": "Polishing...",
+    "polishFailed": "Polish failed, please retry",
+    "polishCnLabel": "CN · Preview",
+    "polishEnLabel": "EN · Used for generation",
+    "polishApply": "Apply",
+    "polishDiscard": "Discard",
+    "polishFeedbackPlaceholder": "Want to tweak? Type feedback for another iteration...",
+    "polishRefineAgain": "Refine again",
+    "artStyleLabel": "Style",
+    "artStyleHint": "Global art style (click to edit in Art Direction)",
+    "shotCast": "Cast:",
+    "shotCastEmpty": "No characters referenced · @ character to add"
   },
   "assetCard": {
     "seriesSharedBadge": "Series",
     "seriesSharedTooltip": "Shared across the entire series. Edits propagate to all episodes that reference this asset.",
     "episodeLocalBadge": "Episode",
     "episodeLocalTooltip": "Local to this episode only. Edits don't affect other episodes."
+  },
+  "episodeMiniList": {
+    "title": "Series · {count} eps"
   }
 }
