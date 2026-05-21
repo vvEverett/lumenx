@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Palette } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useProjectStore } from "@/store/projectStore";
 import { api, type VideoTask } from "@/lib/api";
@@ -1066,7 +1066,28 @@ export default function StoryboardR2V() {
                         {t("addShot")}
                     </motion.button>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    {/* 画风 (Art Direction) pill — keeps the global
+                        style choice visible while users iterate on
+                        shots. Click jumps to the Art Direction step
+                        for editing. Hidden until art_direction is
+                        set. */}
+                    {currentProject?.art_direction?.style_config?.name ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                document.dispatchEvent(
+                                    new CustomEvent("lumenx:navigateStep", { detail: "art_direction" }),
+                                );
+                            }}
+                            title={t("artStyleHint")}
+                            className="btn-tip inline-flex items-center gap-1.5 rounded-md border border-glass-border bg-black/20 px-2.5 py-1 font-mono text-chrome font-medium text-text-secondary transition-colors duration-fast ease-out-quart hover:border-accent/50 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/55"
+                        >
+                            <Palette size={11} aria-hidden="true" />
+                            <span className="hidden sm:inline">{t("artStyleLabel")}:</span>
+                            <span className="text-foreground/95">{currentProject.art_direction.style_config.name}</span>
+                        </button>
+                    ) : null}
                     {/* Hide the verbose current-model label on narrow
                         viewports — the model is also visible inside
                         each shot's ParamsSection, so the toolbar can
