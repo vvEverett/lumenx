@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
     Play,
@@ -11,9 +11,11 @@ import {
     Video,
     ImageIcon,
     AtSign,
+    Maximize2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import AssetChipBar from "./AssetChipBar";
+import PromptExpandModal from "./PromptExpandModal";
 import { PendingTaskAffordance } from "@/components/shared/PendingTaskAffordance";
 
 export interface ShotNode {
@@ -102,6 +104,24 @@ export default function ShotCard({
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const t = useTranslations("storyboardR2V");
+    // Expand modal state (B5). Cmd/Ctrl+E in the small textarea
+    // opens it; saving syncs back via onUpdatePrompt; cancel
+    // discards the modal's draft without touching parent state.
+    const [expandOpen, setExpandOpen] = useState(false);
+
+    // Auto-grow the textarea up to a cap (B2: ~10 rows). Re-runs
+    // when prompt changes or the textarea mounts. The cap is
+    // enforced by CSS (max-h-[260px] ≈ 10 lines @ leading-relaxed
+    // 14px) so anything beyond scrolls in-place instead of pushing
+    // the whole shot card off the viewport.
+    useEffect(() => {
+        const ta = textareaRef.current;
+        if (!ta) return;
+        // Reset before measuring so shrinking also works (delete text).
+        ta.style.height = "auto";
+        const next = Math.min(ta.scrollHeight, 260);
+        ta.style.height = `${next}px`;
+    }, [shot.prompt]);
 
     const statusColor: Record<string, string> = {
         pending: "text-amber-400",
@@ -367,15 +387,45 @@ export default function ShotCard({
 
                     {/* Right: Prompt + Controls */}
                     <div className="flex-1 p-3 flex flex-col gap-2">
-                        {/* Prompt Editor */}
-                        <textarea
-                            ref={textareaRef}
-                            value={shot.prompt}
-                            onChange={(e) => onUpdatePrompt(e.target.value)}
-                            placeholder={t("promptPlaceholder")}
-                            className="w-full text-sm resize-none leading-relaxed bg-transparent border border-white/[0.06] rounded-lg px-3 py-2.5 text-foreground placeholder:text-text-muted focus:outline-none focus:border-primary/30 focus:bg-white/[0.02] transition-all duration-200"
-                            rows={3}
-                        />
+                        {/* Prompt Editor wrapper — relative so the
+                            expand icon can sit absolute top-right
+                            without taking layout space. */}
+                        <div className="relative">
+                            <textarea
+                                ref={textareaRef}
+                                value={shot.prompt}
+                                onChange={(e) => onUpdatePrompt(e.target.value)}
+                                onKeyDown={(e) => {
+                                    // Cmd/Ctrl + E from inside the
+                                    // textarea opens the focus editor
+                                    // (B5). Cmd is mac, Ctrl is
+                                    // win/linux — handle both.
+                                    if (e.key.toLowerCase() === "e" && (e.metaKey || e.ctrlKey)) {
+                                        e.preventDefault();
+                                        setExpandOpen(true);
+                                    }
+                                }}
+                                placeholder={t("promptPlaceholder")}
+                                // rows=5 baseline (B3); auto-grow up
+                                // to max-h-[260px] (≈10 lines, B2).
+                                // pr-8 reserves space for the expand
+                                // icon so it never overlays text.
+                                className="w-full text-sm resize-none leading-relaxed bg-transparent border border-white/[0.06] rounded-lg pl-3 pr-8 py-2.5 text-foreground placeholder:text-text-muted focus:outline-none focus:border-primary/30 focus:bg-white/[0.02] transition-all duration-200 min-h-[110px] max-h-[260px] overflow-y-auto"
+                                rows={5}
+                            />
+                            {/* Expand-to-modal icon — top-right,
+                                always visible. 24×24 hit area on
+                                a 14×14 visual via padding. */}
+                            <button
+                                type="button"
+                                onClick={() => setExpandOpen(true)}
+                                aria-label={t("promptExpand")}
+                                title={`${t("promptExpand")} (⌘/Ctrl + E)`}
+                                className="btn-tip absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded text-text-muted/70 transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                            >
+                                <Maximize2 size={12} aria-hidden="true" />
+                            </button>
+                        </div>
 
                         {/* Asset Chip Bar */}
                         <AssetChipBar
@@ -440,6 +490,22 @@ export default function ShotCard({
                     </div>
                 </div>
             </div>
+            {/* Focus-editor modal (B5 escape hatch) — opens via the
+                expand icon or Cmd/Ctrl+E. Cancel discards; Save
+                propagates back through the same onUpdatePrompt
+                path the inline textarea uses. */}
+            {expandOpen ? (
+                <PromptExpandModal
+                    initialValue={shot.prompt}
+                    shotLabel={`Shot ${index + 1}`}
+                    placeholder={t("promptPlaceholder")}
+                    onSave={(next) => {
+                        onUpdatePrompt(next);
+                        setExpandOpen(false);
+                    }}
+                    onClose={() => setExpandOpen(false)}
+                />
+            ) : null}
         </div>
     );
 }
