@@ -5,6 +5,7 @@ import { Palette, Layout, Film, Share2, Mic, Music, BookOpen, Users, Video, Sett
 import { useTranslations } from "next-intl";
 import { useProjectStore } from "@/store/projectStore";
 import PipelineSidebar from "@/components/layout/PipelineSidebar";
+import EpisodeMiniList from "@/components/layout/EpisodeMiniList";
 import type { BreadcrumbSegment } from "@/components/layout/BreadcrumbBar";
 import PropertiesPanel from "@/components/modules/PropertiesPanel";
 import ScriptProcessor from "@/components/modules/ScriptProcessor";
@@ -72,6 +73,22 @@ export default function ProjectClient({ id, breadcrumbSegments }: { id: string; 
         window.location.hash = '';
     };
 
+    // Cross-module step navigation event (used by intra-module
+    // affordances like Storyboard's "画风" pill that wants to jump
+    // to Art Direction without prop-drilling setActiveStep into
+    // every leaf component).
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const detail = (e as CustomEvent<string>).detail;
+            if (typeof detail !== "string") return;
+            if (steps.some((s) => s.id === detail)) {
+                setActiveStep(detail);
+            }
+        };
+        document.addEventListener("lumenx:navigateStep", handler);
+        return () => document.removeEventListener("lumenx:navigateStep", handler);
+    }, [steps]);
+
     useEffect(() => {
         selectProject(id);
     }, [id, selectProject]);
@@ -135,6 +152,15 @@ export default function ProjectClient({ id, breadcrumbSegments }: { id: string; 
                     steps={steps}
                     breadcrumbSegments={segments}
                     headerActions={settingsActions}
+                    topSlot={
+                        currentProject?.series_id ? (
+                            <EpisodeMiniList
+                                seriesId={currentProject.series_id}
+                                currentProjectId={id}
+                                activeStep={activeStep}
+                            />
+                        ) : null
+                    }
                 />
             </div>
 
