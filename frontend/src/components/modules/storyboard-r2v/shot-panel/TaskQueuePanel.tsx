@@ -71,7 +71,7 @@ export default function TaskQueuePanel({
             <div
                 aria-hidden="true"
                 onClick={onClose}
-                className="absolute inset-0 z-20 bg-black/55 backdrop-blur-[1px] motion-safe:animate-[fadeInBackdrop_180ms_ease-out-quart_both] xl:hidden"
+                className="absolute inset-0 z-20 bg-black/55 backdrop-blur-[1px] motion-safe:animate-[fadeInBackdrop_180ms_cubic-bezier(0.22,1,0.36,1)_both] xl:hidden"
             />
             <aside
                 role="region"
