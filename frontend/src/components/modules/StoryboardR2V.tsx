@@ -152,6 +152,22 @@ export default function StoryboardR2V() {
         [t],
     );
 
+    // Per-shot seed override. The Seed advanced param doesn't live in
+    // videoConfig (seeds are inherently per-generation; sharing one
+    // across shots would defeat the "different shots = different
+    // creative takes" expectation). Without this state the seed
+    // input + dice button would appear to do nothing because
+    // ParamsSection.set("seed", N) flowed up to handleShotParamsChange,
+    // which silently dropped it, so the next paramsStateForShot()
+    // call would always rebuild params.seed = undefined.
+    //
+    // `undefined` means "no explicit seed" (provider picks). Any
+    // number means "use this exact seed" — same for all takes in a
+    // batch (intentional: ×N with a fixed seed = N runs at that seed
+    // for ablation testing). Users who want N varied takes leave it
+    // empty.
+    const [shotSeeds, setShotSeeds] = useState<Record<string, number | undefined>>({});
+
     // Per-shot batch count (the "抽卡 ×N" knob). Decoupled from
     // videoConfig because users typically pick the model + duration
     // once and vary count per shot. Keyed by shot.id so insert/move
@@ -838,9 +854,12 @@ export default function StoryboardR2V() {
         });
     }, [allVideoTasks]);
 
-    // Build a ParamsState from videoConfig + per-shot count override.
-    // Single source of truth: videoConfig drives shared knobs; shotCounts
-    // overrides the batch size per shot.
+    // Build a ParamsState from videoConfig + per-shot overrides.
+    // Single source of truth strategy:
+    //  - Per-shot overrides (shotCounts, shotSeeds) for params whose
+    //    "right value" naturally differs by shot.
+    //  - videoConfig for shared knobs the user typically picks once
+    //    and uses across all shots in a project.
     const paramsStateForShot = useCallback((shot: ShotNode): ParamsState => {
         const isR2v = shot.tabMode === "direct_r2v";
         const modelId = isR2v ? videoConfig.r2vModel : videoConfig.model;
@@ -848,6 +867,9 @@ export default function StoryboardR2V() {
             model: modelId,
             duration: videoConfig.duration,
             count: shotCounts[shot.id] ?? 1,
+            // Per-shot seed override (Sweep G fix); undefined means
+            // "random per generation".
+            seed: shotSeeds[shot.id],
             resolution: videoConfig.resolution,
             ratio: videoConfig.resolution,
             negativePrompt: videoConfig.negativePrompt,
@@ -858,10 +880,10 @@ export default function StoryboardR2V() {
             sound: videoConfig.sound,
             viduAudio: videoConfig.viduAudio,
         };
-    }, [videoConfig, shotCounts]);
+    }, [videoConfig, shotCounts, shotSeeds]);
 
-    // ParamsSection.onChange handler: count goes into the per-shot
-    // map (and persisted to the frame); everything else writes back to
+    // ParamsSection.onChange handler: per-shot overrides (count, seed)
+    // go into their dedicated maps; everything else writes back to
     // the shared videoConfig (so the user's most-recent picks become
     // the new default for siblings). videoConfig is mirrored to
     // localStorage as a recovery cache only — the authoritative model
@@ -872,6 +894,20 @@ export default function StoryboardR2V() {
             persistWorkbench(shot.id, { workbench_generate_count: next.count });
         }
         setShotCounts(prev => ({ ...prev, [shot.id]: next.count }));
+        // Seed: track per-shot. Undefined ↔ "random" — stored as
+        // delete-from-map so the entry doesn't accrete forever.
+        setShotSeeds(prev => {
+            const wasSet = prev[shot.id] !== undefined;
+            const isSet = next.seed !== undefined && !Number.isNaN(next.seed);
+            if (!wasSet && !isSet) return prev;
+            if (wasSet && !isSet) {
+                const out = { ...prev };
+                delete out[shot.id];
+                return out;
+            }
+            if (prev[shot.id] === next.seed) return prev;
+            return { ...prev, [shot.id]: next.seed };
+        });
         const isR2v = shot.tabMode === "direct_r2v";
         const ls = typeof window !== "undefined" ? window.localStorage : null;
         setVideoConfig(prev => {

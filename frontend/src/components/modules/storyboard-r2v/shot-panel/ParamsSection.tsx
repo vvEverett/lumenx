@@ -18,7 +18,7 @@
  * can manage tasks, queue, and shot-state updates.
  */
 import { useCallback, useMemo } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Dices, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { I2VModelConfig, DurationConfig, ModelParamSupport } from "@/lib/modelCatalog";
 import { usePanelSectionState } from "./usePanelSectionState";
@@ -266,14 +266,32 @@ export default function ParamsSection({
                                         <div className="flex items-center gap-1.5">
                                             <input
                                                 type="number"
+                                                min={0}
+                                                max={2_147_483_647}
                                                 value={params.seed ?? ""}
                                                 onChange={(e) => {
+                                                    // Browser may emit value="" when user
+                                                    // clears OR when native spinner click
+                                                    // on empty input fails on Safari.
+                                                    // parseInt of non-numeric ("abc") is
+                                                    // NaN — treat both as "no explicit
+                                                    // seed" (provider will randomize).
                                                     const v = e.target.value;
-                                                    set("seed", v === "" ? undefined : parseInt(v, 10));
+                                                    if (v === "") {
+                                                        set("seed", undefined);
+                                                        return;
+                                                    }
+                                                    const parsed = parseInt(v, 10);
+                                                    set("seed", Number.isNaN(parsed) ? undefined : parsed);
                                                 }}
                                                 placeholder="random"
+                                                aria-label="Random seed (leave blank for provider default)"
                                                 className="w-32 rounded-md border border-glass-border bg-black/30 px-2 py-1.5 font-mono text-body-sm text-foreground placeholder:text-text-muted outline-none transition-colors duration-fast ease-out-quart focus:border-primary/55 focus-visible:ring-2 focus-visible:ring-primary/45"
                                             />
+                                            {/* Dice = randomize. Lucide icon for
+                                                visual cohesion with the rest of
+                                                the panel; the emoji 🎲 rendered
+                                                inconsistently across platforms. */}
                                             <button
                                                 type="button"
                                                 onClick={() => set("seed", Math.floor(Math.random() * 1_000_000_000))}
@@ -281,8 +299,23 @@ export default function ParamsSection({
                                                 className="grid h-8 w-8 place-items-center rounded text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                                                 title="New random seed"
                                             >
-                                                🎲
+                                                <Dices size={15} aria-hidden="true" />
                                             </button>
+                                            {/* Clear → back to "random" (provider
+                                                picks). Native spinners on an empty
+                                                number input behave inconsistently;
+                                                this is the explicit reset. */}
+                                            {params.seed !== undefined ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => set("seed", undefined)}
+                                                    aria-label="Clear seed"
+                                                    title="Clear (random)"
+                                                    className="grid h-8 w-8 place-items-center rounded text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                                                >
+                                                    <X size={13} aria-hidden="true" />
+                                                </button>
+                                            ) : null}
                                         </div>
                                     </ParamRow>
                                 ) : null}

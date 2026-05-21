@@ -436,9 +436,19 @@ export const VIDEO_R2V_MODELS: I2VModelConfig[] = (() => {
         if (!r2vModel) continue;
         seen.add(r2vId);
         const base = toI2VModel(r2vModel);
-        // Inherit duration / params from the I2V sibling when the R2V
-        // entry leaves them empty (the typical case). If the R2V
-        // entry explicitly defines its own, those win.
+        // Loose inheritance, not strict:
+        //   - If the R2V model defines its OWN duration/params in
+        //     the catalog yaml, those win — even when the values
+        //     diverge from the I2V sibling (e.g. future Wan R2V
+        //     might support 4–15s while its I2V sibling supports
+        //     2–15s; the R2V's own bound wins).
+        //   - If the R2V entry leaves duration/params null/{} (the
+        //     current case for every R2V model — R2V is treated as
+        //     a routing variant of I2V at generation time), it
+        //     inherits from the I2V sibling so the workbench shows
+        //     a sane slider instead of falling back to fixed 5s.
+        // Future-proof: per-mode catalog override "just works" for
+        // the divergent case without any frontend change.
         const r2vHasDuration = r2vModel.duration && (r2vModel.duration as { type?: string }).type;
         const r2vHasParams = r2vModel.params && Object.keys(r2vModel.params).length > 0;
         out.push({
