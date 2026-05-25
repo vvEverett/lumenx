@@ -2,10 +2,12 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
-import { Plus, Palette } from "lucide-react";
+import { Plus, Palette, Film } from "lucide-react";
+import StepHeader from "@/components/shared/StepHeader";
+import PreviousEpisodeFramesRail from "./storyboard-r2v/PreviousEpisodeFramesRail";
 import { useTranslations } from "next-intl";
 import { useProjectStore } from "@/store/projectStore";
-import { api, type VideoTask } from "@/lib/api";
+import { api, crudApi, type VideoTask } from "@/lib/api";
 import { getAssetUrl } from "@/lib/utils";
 import { debugLog } from "@/lib/debugLog";
 import type { BatchSummary } from "./storyboard-r2v/shot-panel/CandidatesSection";
@@ -20,7 +22,7 @@ import {
     removeT2IImage,
     getActiveT2IImageUrl,
 } from "./storyboard-r2v/shotNodeHelpers";
-import ShotPanel from "./storyboard-r2v/shot-panel/ShotPanel";
+import { overridePanelSectionState } from "./storyboard-r2v/shot-panel/usePanelSectionState";
 import ParamsSection, { type ParamsState } from "./storyboard-r2v/shot-panel/ParamsSection";
 import T2ISubsection from "./storyboard-r2v/shot-panel/T2ISubsection";
 import CandidatesSection from "./storyboard-r2v/shot-panel/CandidatesSection";
@@ -32,6 +34,7 @@ export default function StoryboardR2V() {
     const currentProject = useProjectStore((state) => state.currentProject);
     const updateProject = useProjectStore((state) => state.updateProject);
     const t = useTranslations("storyboardR2V");
+    const tStep = useTranslations("stepHeader");
 
     // Derive shots from project frames. Workbench state (T2I 抽卡
     // history, last-active tab, batch count) now comes from backend-
@@ -139,6 +142,10 @@ export default function StoryboardR2V() {
     // Refs to each shot's outer wrapper so the task-queue panel can
     // jump-scroll the canvas to a specific frame.
     const shotWrapperRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
+    // Per-shot submission lockout (Issue 17) — debounce double-clicks and
+    // strict-mode double-effects. Holds shot.id strings; entries auto-expire
+    // after 500ms via setTimeout in generateVideoBatch.
+    const submittingShotsRef = useRef<Set<string>>(new Set());
 
     // Inline per-shot validation error messages (shown by ParamsSection
     // below the Generate CTA). Used for pre-flight failures like
@@ -184,6 +191,52 @@ export default function StoryboardR2V() {
         return out;
     });
 
+    // Issue 16 — per-shot expand state (P plan). Default: all collapsed
+    // (browse mode). Set persists per project to localStorage so coming back
+    // to the project restores the user's last working layout.
+    const expandStorageKey = currentProject ? `storyboard-r2v-expanded-${currentProject.id}` : null;
+    const [expandedShots, setExpandedShots] = useState<Set<string>>(() => {
+        if (typeof window === "undefined" || !expandStorageKey) return new Set();
+        try {
+            const raw = window.localStorage.getItem(expandStorageKey);
+            if (raw) {
+                const arr = JSON.parse(raw);
+                if (Array.isArray(arr)) return new Set(arr.filter(x => typeof x === "string"));
+            }
+        } catch { /* corrupt localStorage value — ignore */ }
+        return new Set();
+    });
+    // Persist on change.
+    useEffect(() => {
+        if (typeof window === "undefined" || !expandStorageKey) return;
+        try {
+            window.localStorage.setItem(expandStorageKey, JSON.stringify(Array.from(expandedShots)));
+        } catch { /* quota exceeded — ignore */ }
+    }, [expandedShots, expandStorageKey]);
+
+    const toggleShotExpanded = useCallback((shotId: string) => {
+        setExpandedShots(prev => {
+            const next = new Set(prev);
+            if (next.has(shotId)) next.delete(shotId);
+            else next.add(shotId);
+            return next;
+        });
+    }, []);
+    const expandAllShots = useCallback(() => {
+        const ids = shots.map(s => s.id);
+        // Force every inner section open — overrides each shot's sticky
+        // preference. Section keys must match what ParamsSection /
+        // CandidatesSection register inside their SectionShells.
+        overridePanelSectionState(ids, ["params", "candidates"], true);
+        setExpandedShots(new Set(ids));
+    }, [shots]);
+    const collapseAllShots = useCallback(() => {
+        // Don't reset section preferences here — sticky memory should
+        // survive a global collapse so re-expanding a shot returns to
+        // the user's chosen drawer state.
+        setExpandedShots(new Set());
+    }, []);
+
     // Debounced backend writer for workbench state. Coalesces rapid
     // changes (e.g. user clicking through T2I thumbs) into one PATCH
     // per shot per second. Per-shot map ensures one shot's pending
@@ -197,6 +250,9 @@ export default function StoryboardR2V() {
         patch: Parameters<typeof api.updateFrameWorkbench>[2],
     ) => {
         if (!currentProject?.id) return;
+        // Synthetic shot id (not yet materialized on backend) — skip; the
+        // workbench state will be re-applied after createFrame swaps the id.
+        if (shotId.startsWith("shot_")) return;
         const projectId = currentProject.id;
         const map = workbenchPendingRef.current;
         const existing = map.get(shotId);
@@ -206,27 +262,75 @@ export default function StoryboardR2V() {
         }
         const timer = window.setTimeout(() => {
             map.delete(shotId);
-            api.updateFrameWorkbench(projectId, shotId, merged).catch((err) => {
-                debugLog.warn("Studio", "Failed to persist workbench state:", err);
-            });
+            api.updateFrameWorkbench(projectId, shotId, merged)
+                .then(() => {
+                    // Sync store so other tabs (or remount on tab switch)
+                    // see the latest workbench state. Read store live to
+                    // avoid stale closure.
+                    const proj = useProjectStore.getState().currentProject;
+                    if (!proj || proj.id !== projectId) return;
+                    const nextFrames = (proj.frames ?? []).map((f: any) =>
+                        f.id === shotId ? { ...f, ...merged } : f,
+                    );
+                    updateProject(projectId, { frames: nextFrames });
+                })
+                .catch((err) => {
+                    debugLog.warn("Studio", "Failed to persist workbench state:", err);
+                });
         }, 1000);
         map.set(shotId, { timer, patch: merged });
-    }, [currentProject?.id]);
+    }, [currentProject?.id, updateProject]);
 
-    // Flush all pending writes on unmount so leaving the page doesn't
-    // strand the user's last change in the debounce window.
+    // Prompt edits hit a different endpoint (POST /frames/update with
+    // action_description) — debounced separately from workbench so a
+    // user typing fast doesn't push 6 PATCH /workbench every keystroke.
+    const promptPendingRef = useRef<Map<string, { timer: number; prompt: string }>>(new Map());
+    const persistPrompt = useCallback((shotId: string, prompt: string) => {
+        if (!currentProject?.id) return;
+        if (shotId.startsWith("shot_")) return;
+        const projectId = currentProject.id;
+        const map = promptPendingRef.current;
+        const existing = map.get(shotId);
+        if (existing) window.clearTimeout(existing.timer);
+        const timer = window.setTimeout(() => {
+            map.delete(shotId);
+            api.updateFrame(projectId, shotId, { action_description: prompt })
+                .then(() => {
+                    const proj = useProjectStore.getState().currentProject;
+                    if (!proj || proj.id !== projectId) return;
+                    const nextFrames = (proj.frames ?? []).map((f: any) =>
+                        f.id === shotId ? { ...f, action_description: prompt } : f,
+                    );
+                    updateProject(projectId, { frames: nextFrames });
+                })
+                .catch((err) => debugLog.warn("Studio", "persistPrompt failed", err));
+        }, 800);
+        map.set(shotId, { timer, prompt });
+    }, [currentProject?.id, updateProject]);
+
+    // Flush all pending writes on unmount (e.g. user switches step tab)
+    // so the last keystroke / param change isn't stranded in the debounce
+    // window. Both workbench AND prompt queues drain in parallel.
     useEffect(() => {
-        const map = workbenchPendingRef.current;
+        const wbMap = workbenchPendingRef.current;
+        const pMap = promptPendingRef.current;
         return () => {
             const projectId = currentProject?.id;
             if (!projectId) return;
-            for (const [shotId, entry] of Array.from(map.entries())) {
+            for (const [shotId, entry] of Array.from(wbMap.entries())) {
                 window.clearTimeout(entry.timer);
                 api.updateFrameWorkbench(projectId, shotId, entry.patch).catch(() => {
                     /* best-effort on teardown */
                 });
             }
-            map.clear();
+            wbMap.clear();
+            for (const [shotId, entry] of Array.from(pMap.entries())) {
+                window.clearTimeout(entry.timer);
+                api.updateFrame(projectId, shotId, { action_description: entry.prompt }).catch(() => {
+                    /* best-effort on teardown */
+                });
+            }
+            pMap.clear();
         };
     }, [currentProject?.id]);
 
@@ -234,10 +338,21 @@ export default function StoryboardR2V() {
     const scenes = currentProject?.scenes || [];
     const props = currentProject?.props || [];
 
+    // ────────────────────────────────────────────────────────────────────
+    // Shot mutations — Optimistic UI + 异步同步后端 + store 更新
+    //   Pattern: 立即改本地 state（无闪烁），后台 fire-and-forget call
+    //   到 backend，成功后 swap synthetic id with real id（addShot/duplicate）
+    //   并 updateProject(store) 让 currentProject.frames 保持权威。
+    //   失败仅 log warn，不回滚（避免 UI 闪烁；用户可重试）。
+    //   切 step tab → unmount 时 useEffect cleanup 已经 flush pending
+    //   debounce writes，所以打字到一半切走也不丢字。
+    // ────────────────────────────────────────────────────────────────────
+
     // Add a new shot after the given index
-    const addShot = useCallback((afterIndex: number) => {
+    const addShot = useCallback(async (afterIndex: number) => {
+        const synthId = `shot_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         const newShot: ShotNode = {
-            id: `shot_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            id: synthId,
             prompt: "",
             tabMode: "direct_r2v",
         };
@@ -246,48 +361,142 @@ export default function StoryboardR2V() {
             updated.splice(afterIndex + 1, 0, newShot);
             return updated;
         });
-    }, []);
+        // Issue 16 — newly-created shots default to expanded so the user
+        // can immediately operate on them. Existing shots keep their state.
+        setExpandedShots(prev => {
+            const next = new Set(prev);
+            next.add(synthId);
+            return next;
+        });
+        if (!currentProject?.id) return;
+        try {
+            const resp = await crudApi.createFrame(currentProject.id, {
+                scene_id: "",
+                action_description: "",
+                insert_at: afterIndex + 1,
+            });
+            const frames = Array.isArray(resp?.frames) ? resp.frames : null;
+            const realFrame = frames?.[Math.min(afterIndex + 1, frames.length - 1)];
+            if (realFrame?.id) {
+                setShots(prev => prev.map(s => s.id === synthId ? { ...s, id: realFrame.id } : s));
+                setExpandedShots(prev => {
+                    if (!prev.has(synthId)) return prev;
+                    const next = new Set(prev);
+                    next.delete(synthId);
+                    next.add(realFrame.id);
+                    return next;
+                });
+            }
+            if (frames) updateProject(currentProject.id, { frames });
+        } catch (err) {
+            debugLog.warn("Studio", "addShot backend persist failed", err);
+        }
+    }, [currentProject, updateProject]);
 
     // Delete a shot
-    const deleteShot = useCallback((index: number) => {
+    const deleteShot = useCallback(async (index: number) => {
+        const target = shots[index];
+        if (!target) return;
         setShots(prev => prev.filter((_, i) => i !== index));
-    }, []);
+        setExpandedShots(prev => {
+            if (!prev.has(target.id)) return prev;
+            const next = new Set(prev);
+            next.delete(target.id);
+            return next;
+        });
+        if (!currentProject?.id) return;
+        // Synthetic id never reached backend → nothing to delete remotely.
+        if (target.id.startsWith("shot_")) return;
+        try {
+            const resp = await crudApi.deleteFrame(currentProject.id, target.id);
+            const frames = Array.isArray(resp?.frames) ? resp.frames : null;
+            if (frames) updateProject(currentProject.id, { frames });
+        } catch (err) {
+            debugLog.warn("Studio", "deleteShot backend persist failed", err);
+        }
+    }, [shots, currentProject, updateProject]);
 
     // Move shot up/down
-    const moveShot = useCallback((index: number, direction: "up" | "down") => {
-        setShots(prev => {
-            const updated = [...prev];
-            const targetIndex = direction === "up" ? index - 1 : index + 1;
-            if (targetIndex < 0 || targetIndex >= updated.length) return prev;
-            [updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]];
-            return updated;
-        });
-    }, []);
+    const moveShot = useCallback(async (index: number, direction: "up" | "down") => {
+        const targetIndex = direction === "up" ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= shots.length) return;
+        const updated = [...shots];
+        [updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]];
+        setShots(updated);
+        if (!currentProject?.id) return;
+        const ids = updated.map(s => s.id);
+        // Reorder requires every id to be backed on backend — if any
+        // are still synthetic (createFrame in-flight), defer; the next
+        // move after createFrame settles will reconcile.
+        if (ids.some(id => id.startsWith("shot_"))) return;
+        try {
+            const resp = await crudApi.reorderFrames(currentProject.id, ids);
+            const frames = Array.isArray(resp?.frames) ? resp.frames : null;
+            if (frames) updateProject(currentProject.id, { frames });
+        } catch (err) {
+            debugLog.warn("Studio", "moveShot backend persist failed", err);
+        }
+    }, [shots, currentProject, updateProject]);
 
     // Duplicate a shot
-    const duplicateShot = useCallback((index: number) => {
+    const duplicateShot = useCallback(async (index: number) => {
+        const source = shots[index];
+        if (!source) return;
+        const synthId = `shot_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const newShot: ShotNode = {
+            ...source,
+            id: synthId,
+            // Generated artifacts don't carry over; user duplicates
+            // the *intent* of the shot, not the output.
+            videoUrl: undefined,
+            videoTaskId: undefined,
+            videoStatus: undefined,
+            t2iImageUrl: undefined,
+            t2iTaskId: undefined,
+            t2iStatus: undefined,
+        };
         setShots(prev => {
-            const source = prev[index];
-            const newShot: ShotNode = {
-                ...source,
-                id: `shot_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-                videoUrl: undefined,
-                videoTaskId: undefined,
-                videoStatus: undefined,
-                t2iImageUrl: undefined,
-                t2iTaskId: undefined,
-                t2iStatus: undefined,
-            };
             const updated = [...prev];
             updated.splice(index + 1, 0, newShot);
             return updated;
         });
-    }, []);
+        setExpandedShots(prev => {
+            const next = new Set(prev);
+            next.add(synthId);
+            return next;
+        });
+        if (!currentProject?.id) return;
+        // Source itself isn't on backend yet — best-effort: skip remote
+        // copy, the next workbench/prompt write will materialize it.
+        if (source.id.startsWith("shot_")) return;
+        try {
+            const resp = await crudApi.copyFrame(currentProject.id, source.id, index + 1);
+            const frames = Array.isArray(resp?.frames) ? resp.frames : null;
+            const realFrame = frames?.[index + 1];
+            if (realFrame?.id) {
+                setShots(prev => prev.map(s => s.id === synthId ? { ...s, id: realFrame.id } : s));
+                setExpandedShots(prev => {
+                    if (!prev.has(synthId)) return prev;
+                    const next = new Set(prev);
+                    next.delete(synthId);
+                    next.add(realFrame.id);
+                    return next;
+                });
+            }
+            if (frames) updateProject(currentProject.id, { frames });
+        } catch (err) {
+            debugLog.warn("Studio", "duplicateShot backend persist failed", err);
+        }
+    }, [shots, currentProject, updateProject]);
 
-    // Update shot prompt
+    // Update shot prompt — local immediate + debounced backend write
     const updatePrompt = useCallback((index: number, prompt: string) => {
-        setShots(prev => prev.map((s, i) => i === index ? { ...s, prompt } : s));
-    }, []);
+        setShots(prev => prev.map((s, i) => {
+            if (i !== index) return s;
+            persistPrompt(s.id, prompt);
+            return { ...s, prompt };
+        }));
+    }, [persistPrompt]);
 
     // Set shot tab mode + persist so the user's last-active tab
     // survives refresh.
@@ -460,7 +669,27 @@ export default function StoryboardR2V() {
                     ));
                     return;
                 }
-                const imageUrl = shot.t2iImageUrl || shot.imageUrl || "";
+                // Use the multi-frame-aware accessor so this legacy path
+                // stays in sync with the new ParamsSection batch path
+                // (Issue 15). `shot.t2iImageUrl` (legacy singular) and
+                // `shot.t2iImageUrls[selectedIndex]` should normally agree,
+                // but the singular field has occasionally lagged behind the
+                // plural one (e.g. async upload state mid-flight), causing
+                // HappyHorse to silently submit with no media.
+                const imageUrl = getActiveT2IImageUrl(shot) || shot.imageUrl || "";
+                if (!imageUrl) {
+                    // I2V without a first frame is guaranteed to fail with
+                    // "input.media required" on HappyHorse — surface inline
+                    // instead of letting it 502 mid-generation.
+                    setShotErrors(prev => ({
+                        ...prev,
+                        [shot.id]: t("i2vNeedsFirstFrame") || "请先上传或生成首帧再生成视频。",
+                    }));
+                    setShots(prev => prev.map((s, i) =>
+                        i === index ? { ...s, videoStatus: undefined } : s,
+                    ));
+                    return;
+                }
 
                 const task = await api.createVideoTask(
                     currentProject.id,
@@ -539,7 +768,33 @@ export default function StoryboardR2V() {
                 }));
                 return;
             }
+        } else {
+            // I2V tab pre-flight: same lesson as R2V — without a first
+            // frame, HappyHorse / Wan I2V fail with "input.media required"
+            // mid-generation (Issue 15). Reject up-front with inline error.
+            const probeImage = getActiveT2IImageUrl(shot) || shot.imageUrl || "";
+            if (!probeImage) {
+                setShotErrors(prev => ({
+                    ...prev,
+                    [shot.id]: t("i2vNeedsFirstFrame") || "请先上传或生成首帧再生成视频。",
+                }));
+                return;
+            }
         }
+
+        // Per-shot submission lockout (Issue 17). The earlier in-flight guard
+        // (`shot.videoStatus === "pending"|"processing"`) had a false positive
+        // problem: when a shot has multiple tasks (batch ×4), one fails + others
+        // still processing, retrying the failed one was BLOCKED by the others'
+        // status. Replace with a 500ms debounce on the SHOT specifically — that
+        // catches double-clicks / strict-mode double-fires without entangling
+        // status semantics.
+        if (submittingShotsRef.current.has(shot.id)) {
+            debugLog.warn("Studio", "generateVideoBatch: refused — same shot submitted < 500ms ago");
+            return;
+        }
+        submittingShotsRef.current.add(shot.id);
+        window.setTimeout(() => submittingShotsRef.current.delete(shot.id), 500);
         // Clear any prior error once this attempt is valid; success
         // path or backend-side rejection will overwrite if needed.
         setShotErrors(prev => {
@@ -589,6 +844,7 @@ export default function StoryboardR2V() {
                         imageBased ? referenceUrls : undefined,
                         params?.ratio ?? videoConfig.resolution,
                         tabMode,
+                        params?.watermark,
                     );
                     return task?.id ?? null;
                 }
@@ -625,6 +881,7 @@ export default function StoryboardR2V() {
                     undefined,
                     undefined,
                     tabMode,
+                    params?.watermark,
                 );
                 return task?.id ?? null;
             };
@@ -879,6 +1136,7 @@ export default function StoryboardR2V() {
             movementAmplitude: videoConfig.movementAmplitude,
             sound: videoConfig.sound,
             viduAudio: videoConfig.viduAudio,
+            watermark: videoConfig.watermark,
         };
     }, [videoConfig, shotCounts, shotSeeds]);
 
@@ -922,6 +1180,9 @@ export default function StoryboardR2V() {
                 movementAmplitude: next.movementAmplitude ?? prev.movementAmplitude,
                 sound: next.sound ?? prev.sound,
                 viduAudio: next.viduAudio ?? prev.viduAudio,
+                // Watermark — preserve undefined (means "model doesn't expose
+                // it") so swapping to a non-watermark-supporting model clears it.
+                watermark: next.watermark,
             };
             if (isR2v) {
                 updated.r2vModel = next.model;
@@ -1030,78 +1291,131 @@ export default function StoryboardR2V() {
         });
     }, []);
 
-    // Queue's jump-to-shot: scroll the shot's wrapper into view.
+    // Queue's jump-to-shot: scroll the shot's wrapper into view AND
+    // expand the shot panel + its sections (otherwise jumping to a
+    // collapsed shot lands the user on a 1-line strip and they have
+    // to expand manually).
     const handleJumpToShot = useCallback((frameId: string) => {
-        const el = shotWrapperRefs.current.get(frameId);
-        if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+        setExpandedShots(prev => {
+            if (prev.has(frameId)) return prev;
+            const next = new Set(prev);
+            next.add(frameId);
+            return next;
+        });
+        // Force inner sections open too — feels right when arriving from
+        // a queue task: you want to see Params + Candidates for that shot.
+        overridePanelSectionState([frameId], ["params", "candidates"], true);
+        // Scroll after the next paint so the newly-expanded body is
+        // measured correctly. RAF is sufficient — we don't need the
+        // full layout effect cycle.
+        requestAnimationFrame(() => {
+            const el = shotWrapperRefs.current.get(frameId);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
     }, []);
 
     // Active candidate URL resolver — many backend video URLs are
     // relative paths needing the asset prefix to render in <video>.
     const resolveAssetUrl = useCallback((u: string) => getAssetUrl(u), []);
 
+    // In-flight shot count for trailing slot stat
+    const totalInFlight = useMemo(
+        () => Object.values(shotCounts).reduce((acc: number, c: any) => acc + (c?.processing ?? 0) + (c?.pending ?? 0), 0),
+        [shotCounts],
+    );
+
     return (
+        // Layout v4: outer horizontal split. StepHeader belongs to main
+        // column (not page-wide), so the right TaskQueuePanel can be a
+        // true floor-to-ceiling sidebar with its own SidePanelHeader.
         <div className="h-full flex overflow-hidden relative">
         {/* Main column — pushed (compressed) when the queue panel opens
-            so the queue doesn't overlay content. The flex parent splits
-            available width between this main column and the side queue. */}
+            so the queue doesn't overlay content. */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-            {/* Top Toolbar — wraps to two rows on narrow viewports
-                so the model-name + queue button drop below the shot
-                counter instead of overflowing horizontally. */}
-            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-white/[0.06] bg-white/[0.02] backdrop-blur-xl shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-6">
-                <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-foreground">
-                        {shots.length} {shots.length === 1 ? "Shot" : "Shots"}
-                    </span>
-                    <motion.button
-                        whileHover={{ scale: 1.04 }}
-                        whileTap={{ scale: 0.96 }}
-                        onClick={() => addShot(shots.length - 1)}
-                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-                    >
-                        <Plus size={14} strokeWidth={2} />
-                        {t("addShot")}
-                    </motion.button>
-                </div>
-                <div className="flex items-center gap-2">
-                    {/* 画风 (Art Direction) pill — keeps the global
-                        style choice visible while users iterate on
-                        shots. Click jumps to the Art Direction step
-                        for editing. Hidden until art_direction is
-                        set. */}
-                    {currentProject?.art_direction?.style_config?.name ? (
+            <StepHeader
+                stepNumber={3}
+                icon={<Film />}
+                englishName="Storyboard"
+                title={tStep("storyboardTitle")}
+                subtitle={tStep("storyboardSubtitle")}
+                trailing={(
+                    <>
+                        {/* 画风 (Art Direction) pill — 上移到顶菜单 */}
+                        {currentProject?.art_direction?.style_config?.name ? (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    document.dispatchEvent(
+                                        new CustomEvent("lumenx:navigateStep", { detail: "art_direction" }),
+                                    );
+                                }}
+                                title={t("artStyleHint")}
+                                className="btn-tip hidden md:inline-flex items-center gap-1.5 rounded-md border border-glass-border bg-black/20 px-2.5 py-1.5 font-mono text-[10.5px] font-medium text-text-secondary transition-colors duration-fast ease-out-quart hover:border-accent/50 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/55"
+                            >
+                                <Palette size={11} aria-hidden="true" />
+                                <span className="text-foreground/95">{currentProject.art_direction.style_config.name}</span>
+                            </button>
+                        ) : null}
+                        {/* Current model name —— 简化的 mono chrome label */}
+                        <span className="hidden lg:inline font-mono text-[10px] uppercase tracking-[0.16em] text-text-muted">
+                            <span>{t("currentModel")}:</span>
+                            <span className="ml-1 text-foreground/95">{currentModelName}</span>
+                        </span>
+                        {/* Open task queue */}
+                        <TaskQueueButton
+                            inFlightCount={inFlightTaskCount}
+                            open={queueOpen}
+                            onToggle={() => setQueueOpen(v => !v)}
+                        />
+                    </>
+                )}
+            />
+            {/* Top Toolbar — 简化版：只保留 shot 计数 / + shot / 全展开-全折叠
+                model name + queue button + 画风 已上移到 StepHeader trailing. */}
+            <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 border-b border-white/[0.06] bg-white/[0.015] shrink-0 sm:px-6">
+                <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-text-muted">
+                    <span className="text-foreground font-medium">{shots.length}</span>
+                    <span className="ml-1.5">{shots.length === 1 ? "shot" : "shots"}</span>
+                    {totalInFlight > 0 ? <span className="ml-2 text-primary">· {totalInFlight} in flight</span> : null}
+                </span>
+                <motion.button
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => addShot(shots.length - 1)}
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                    <Plus size={13} strokeWidth={2} />
+                    {t("addShot")}
+                </motion.button>
+                {shots.length > 1 ? (
+                    <div className="ml-auto flex items-center gap-1">
                         <button
                             type="button"
-                            onClick={() => {
-                                document.dispatchEvent(
-                                    new CustomEvent("lumenx:navigateStep", { detail: "art_direction" }),
-                                );
-                            }}
-                            title={t("artStyleHint")}
-                            className="btn-tip inline-flex items-center gap-1.5 rounded-md border border-glass-border bg-black/20 px-2.5 py-1 font-mono text-chrome font-medium text-text-secondary transition-colors duration-fast ease-out-quart hover:border-accent/50 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/55"
+                            onClick={expandAllShots}
+                            title={t("expandAll")}
+                            className="-m-1 inline-flex h-7 items-center gap-1 rounded px-1.5 font-mono text-chrome-sm font-medium text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                         >
-                            <Palette size={11} aria-hidden="true" />
-                            <span className="hidden sm:inline">{t("artStyleLabel")}:</span>
-                            <span className="text-foreground/95">{currentProject.art_direction.style_config.name}</span>
+                            ▾▾ {t("expandAll")}
                         </button>
-                    ) : null}
-                    {/* Hide the verbose current-model label on narrow
-                        viewports — the model is also visible inside
-                        each shot's ParamsSection, so the toolbar can
-                        keep just the queue button. */}
-                    <span className="hidden text-[11px] text-text-secondary tracking-wide md:inline">
-                        {t("currentModel")}: <span className="text-foreground font-medium">{currentModelName}</span>
-                    </span>
-                    <TaskQueueButton
-                        inFlightCount={inFlightTaskCount}
-                        open={queueOpen}
-                        onToggle={() => setQueueOpen(v => !v)}
-                    />
-                </div>
+                        <button
+                            type="button"
+                            onClick={collapseAllShots}
+                            title={t("collapseAll")}
+                            className="-m-1 inline-flex h-7 items-center gap-1 rounded px-1.5 font-mono text-chrome-sm font-medium text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                        >
+                            ▴▴ {t("collapseAll")}
+                        </button>
+                    </div>
+                ) : null}
             </div>
+
+            {/* R2V v2 P2-a — Previous episode last-frames reference rail.
+                Renders only when this episode has a previous episode in
+                the same series. Collapsible, doesn't steal vertical space. */}
+            <PreviousEpisodeFramesRail
+                scriptId={currentProject?.id ?? null}
+                seriesId={currentProject?.series_id ?? null}
+            />
 
             {/* Shot List (Timeline) — px tightens on narrow so the
                 shot cards + their attached workbench panels keep
@@ -1116,17 +1430,14 @@ export default function StoryboardR2V() {
                     const isI2vTab = shot.tabMode === "t2i_i2v";
                     const modelList = shot.tabMode === "direct_r2v" ? VIDEO_R2V_MODELS : VIDEO_I2V_MODELS;
                     return (
-                    <motion.div
+                    /* Plain div (was motion.div) — staggered enter
+                       animation re-fired every time the user switched
+                       step tabs and came back, causing a noticeable
+                       全 list opacity flicker. ShotCard hover micro-
+                       motion is kept inside the card itself. */
+                    <div
                         key={shot.id}
                         ref={(el) => { shotWrapperRefs.current.set(shot.id, el); }}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            type: "spring",
-                            stiffness: 100,
-                            damping: 20,
-                            delay: Math.min(index * 0.03, 0.3),
-                        }}
                     >
                         <ShotCard
                             shot={shot}
@@ -1168,11 +1479,15 @@ export default function StoryboardR2V() {
                                     }
                                     : undefined
                             }
+                            expanded={expandedShots.has(shot.id)}
+                            onToggleExpanded={() => toggleShotExpanded(shot.id)}
                         />
-                        {/* Attached workbench: params on top + (optional)
-                            T2I首帧 strip inline + candidates panel below.
-                            Connector line in ShotPanel hints "child of". */}
-                        <ShotPanel>
+                        {/* Attached workbench: params + (optional) T2I首帧
+                            strip + candidates panel rendered as sibling
+                            sections. Each owns its own collapse via
+                            SectionShell — no extra drawer wrapper. */}
+                        {expandedShots.has(shot.id) ? (
+                        <div className="ml-2 mr-1 mt-1.5 rounded-lg border border-glass-border bg-black/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_2px_12px_-6px_rgba(0,0,0,0.5)] backdrop-blur-[2px] motion-safe:animate-[shotPanelIn_220ms_cubic-bezier(0.22,1,0.36,1)_both] md:ml-5">
                             <ParamsSection
                                 shotId={shot.id}
                                 modelList={modelList}
@@ -1184,10 +1499,12 @@ export default function StoryboardR2V() {
                                 errorMessage={shotErrors[shot.id] ?? null}
                             />
                             {isI2vTab ? (
-                                <div className="border-t border-white/[0.04] px-3 py-2.5">
+                                <div className="border-t border-glass-border">
                                     <T2ISubsection
                                         imageUrls={shot.t2iImageUrls ?? []}
                                         selectedIndex={shot.t2iSelectedIndex ?? 0}
+                                        storyboardFrameUrl={shot.imageUrl || undefined}
+                                        promptIsEmpty={!shot.prompt.trim()}
                                         generating={shot.t2iStatus === "pending" || shot.t2iStatus === "processing"}
                                         inFlightTaskId={shot.t2iTaskId}
                                         inFlightStatus={shot.t2iStatus}
@@ -1209,11 +1526,93 @@ export default function StoryboardR2V() {
                                             return next;
                                         }))}
                                         onGenerate={() => generateT2I(index)}
+                                        onUpload={async (file) => {
+                                            // Issue 10: upload an external image as a T2I首帧 candidate.
+                                            // Backend appends + auto-selects; we mirror state from the
+                                            // returned frame (single source of truth for the URL the
+                                            // server actually persisted).
+                                            //
+                                            // Frontend may hold a synthetic shot id (`shot_<ts>_<rand>`)
+                                            // for shots created via the + button that haven't been
+                                            // persisted yet. The backend has no such frame_id → 404.
+                                            // Lazy-create the frame on backend first, then upload.
+                                            if (!currentProject) return { code: "network", detail: "no current project" };
+                                            try {
+                                                let effectiveFrameId = shot.id;
+                                                const isSynthetic = effectiveFrameId.startsWith("shot_");
+                                                if (isSynthetic) {
+                                                    // Materialize the shot on backend before any
+                                                    // frame-scoped op. Send minimum viable payload —
+                                                    // the prompt + tab mode survives via separate
+                                                    // workbench PATCH calls already triggered elsewhere.
+                                                    try {
+                                                        const created = await crudApi.createFrame(currentProject.id, {
+                                                            scene_id: "",
+                                                            action_description: shot.prompt || "",
+                                                            insert_at: index,
+                                                        } as any);
+                                                        // Find the newly inserted frame by index in the response
+                                                        const newFrame = Array.isArray(created?.frames)
+                                                            ? created.frames[Math.min(index, created.frames.length - 1)]
+                                                            : null;
+                                                        if (newFrame?.id) {
+                                                            effectiveFrameId = newFrame.id;
+                                                            // Swap synthetic id → backend id locally so
+                                                            // subsequent ops (workbench persist, generate, etc.)
+                                                            // hit the real frame.
+                                                            setShots(prev => prev.map((s, j) =>
+                                                                j === index ? { ...s, id: newFrame.id } : s,
+                                                            ));
+                                                        }
+                                                    } catch (createErr: any) {
+                                                        debugLog.error("Studio", "Lazy createFrame failed", createErr);
+                                                        const cdetail = createErr?.response?.data?.detail || createErr?.message || "create frame failed";
+                                                        return { code: "server", detail: `先创建镜头失败：${cdetail}` };
+                                                    }
+                                                }
+
+                                                const updatedFrame = await api.uploadT2IFrame(
+                                                    currentProject.id,
+                                                    effectiveFrameId,
+                                                    file,
+                                                );
+                                                if (!updatedFrame) return { code: "network", detail: "empty response" };
+                                                const nextUrls: string[] = updatedFrame.t2i_image_urls ?? [];
+                                                const nextIdx: number = typeof updatedFrame.t2i_selected_index === "number"
+                                                    ? updatedFrame.t2i_selected_index
+                                                    : Math.max(0, nextUrls.length - 1);
+                                                setShots(prev => prev.map((s, j) => {
+                                                    if (j !== index) return s;
+                                                    return {
+                                                        ...s,
+                                                        t2iImageUrls: nextUrls,
+                                                        t2iSelectedIndex: nextIdx,
+                                                        t2iImageUrl: nextUrls[nextIdx],
+                                                        t2iStatus: "completed",
+                                                    };
+                                                }));
+                                                return undefined;
+                                            } catch (err: any) {
+                                                debugLog.error("Studio", "T2I upload failed", err);
+                                                const status = err?.response?.status;
+                                                // Always surface the backend detail string so the
+                                                // user can self-diagnose ("frame not found", "OSS
+                                                // write denied", etc.) instead of "请重试".
+                                                const detail = err?.response?.data?.detail
+                                                    || err?.message
+                                                    || `HTTP ${status ?? "?"}`;
+                                                if (status === 413) return { code: "size", detail: String(detail) };
+                                                if (status === 415) return { code: "type", detail: String(detail) };
+                                                if (status === 404) return { code: "not_found", detail: String(detail) };
+                                                if (status && status >= 500) return { code: "server", detail: String(detail) };
+                                                return { code: "network", detail: String(detail) };
+                                            }
+                                        }}
                                         resolveUrl={resolveAssetUrl}
                                     />
                                 </div>
                             ) : null}
-                            <div className="border-t border-white/[0.04] px-3 py-2.5">
+                            <div className="border-t border-glass-border">
                                 <CandidatesSection
                                     shotId={shot.id}
                                     tasks={shotTasks}
@@ -1229,8 +1628,9 @@ export default function StoryboardR2V() {
                                     resolveUrl={resolveAssetUrl}
                                 />
                             </div>
-                        </ShotPanel>
-                    </motion.div>
+                        </div>
+                        ) : null}
+                    </div>
                     );
                 })}
 

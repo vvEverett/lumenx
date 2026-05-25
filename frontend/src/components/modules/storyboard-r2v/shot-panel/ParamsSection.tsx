@@ -23,6 +23,7 @@ import { useTranslations } from "next-intl";
 import type { I2VModelConfig, DurationConfig, ModelParamSupport } from "@/lib/modelCatalog";
 import { usePanelSectionState } from "./usePanelSectionState";
 import SectionShell from "./SectionShell";
+import WorkflowActionButton from "@/components/shared/WorkflowActionButton";
 
 /** Snapshot of every configurable param this panel can collect.
  *  Sub-fields are kept Optional so a model that doesn't expose a
@@ -43,6 +44,9 @@ export interface ParamsState {
     sound?: boolean;
     viduAudio?: boolean;
     shotType?: string;
+    /** Embed provider watermark in output. undefined = use provider default
+     *  (typically off); explicit false/true is user choice. */
+    watermark?: boolean;
 }
 
 interface ParamsSectionProps {
@@ -126,6 +130,10 @@ export default function ParamsSection({
             movementAmplitude: np.movementAmplitude?.default ?? params.movementAmplitude,
             sound: typeof np.sound === "boolean" ? np.sound : params.sound,
             viduAudio: typeof np.viduAudio === "boolean" ? np.viduAudio : params.viduAudio,
+            // Watermark: new model exposes the capability → reset to off (false);
+            // new model doesn't expose → drop (undefined). Preserving across swap
+            // would silently send a watermark flag the new model rejects.
+            watermark: np.watermark ? (typeof params.watermark === "boolean" ? params.watermark : false) : undefined,
             // negativePrompt intentionally preserved
         });
     }, [modelList, params, onChange]);
@@ -139,7 +147,8 @@ export default function ParamsSection({
         !!modelParams.movementAmplitude ||
         !!modelParams.sound ||
         !!modelParams.viduAudio ||
-        !!modelParams.shotType;
+        !!modelParams.shotType ||
+        !!modelParams.watermark;
 
     const generating = inFlightCount > 0;
 
@@ -149,6 +158,11 @@ export default function ParamsSection({
             open={open}
             onToggle={() => setOpen(!open)}
             subtitle={activeModel ? `${activeModel.name}` : undefined}
+            trailing={inFlightCount > 0 ? (
+                <span className="rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary">
+                    {`${inFlightCount} ${t("inFlightShort")}`}
+                </span>
+            ) : undefined}
         >
             <div className="space-y-3">
                 {/* Model picker — pills wrap. */}
@@ -372,6 +386,14 @@ export default function ParamsSection({
                                         />
                                     </ParamRow>
                                 ) : null}
+                                {modelParams.watermark ? (
+                                    <ParamRow label="Watermark">
+                                        <ToggleControl
+                                            value={!!params.watermark}
+                                            onChange={(v) => set("watermark", v)}
+                                        />
+                                    </ParamRow>
+                                ) : null}
                                 {modelParams.shotType ? (
                                     <ParamRow label="Shot type">
                                         <PillCluster
@@ -407,25 +429,20 @@ export default function ParamsSection({
                     "Generate ×N → Generating N…" label flip from
                     causing layout shift (P2-6). */}
                 <div className="flex items-center justify-end pt-1">
-                    <button
-                        type="button"
+                    <WorkflowActionButton
+                        variant="primary"
+                        size="md"
+                        loading={generating}
+                        leftIcon={!generating ? <Sparkles /> : undefined}
                         onClick={() => onGenerate(params)}
-                        disabled={generateDisabled || generating}
+                        disabled={generateDisabled}
                         title={generateDisabledReason}
-                        className="inline-flex min-w-[160px] items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 font-display text-display-sm font-semibold tracking-tight text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_6px_16px_-6px_rgba(100,108,255,0.55)] transition-all duration-fast ease-out-quart hover:bg-primary/92 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.28),0_8px_22px_-6px_rgba(100,108,255,0.65)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
+                        className="min-w-[160px]"
                     >
-                        {generating ? (
-                            <>
-                                <Loader2 size={14} className="animate-spin" aria-hidden="true" />
-                                {t("generatingBatch", { count: inFlightCount })}
-                            </>
-                        ) : (
-                            <>
-                                <Sparkles size={14} aria-hidden="true" />
-                                {t("generateBatch", { count: params.count })}
-                            </>
-                        )}
-                    </button>
+                        {generating
+                            ? t("generatingBatch", { count: inFlightCount })
+                            : t("generateBatch", { count: params.count })}
+                    </WorkflowActionButton>
                 </div>
             </div>
         </SectionShell>
@@ -509,7 +526,14 @@ function DurationControl({
             />
         );
     }
-    // slider
+    // slider — pair with a small editable number input so users can type
+    // a precise duration (e.g. 7 with step=1) instead of dragging. Both
+    // controls stay in sync; the input clamps to cfg.min/cfg.max on blur
+    // so typing 999 doesn't silently send an over-range value.
+    const clamp = (n: number) => {
+        if (Number.isNaN(n)) return value;
+        return Math.min(cfg.max, Math.max(cfg.min, Math.round(n / cfg.step) * cfg.step));
+    };
     return (
         <div className="flex items-center gap-2">
             <input
@@ -519,12 +543,36 @@ function DurationControl({
                 step={cfg.step}
                 value={value}
                 onChange={(e) => onChange(parseInt(e.target.value, 10))}
-                aria-label="Duration in seconds"
+                aria-label="Duration in seconds (drag to adjust)"
                 className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
             />
-            <span className="w-10 shrink-0 text-right font-mono text-body-sm tabular-nums text-foreground">
-                {value}s
-            </span>
+            <div className="flex shrink-0 items-center gap-0.5">
+                <input
+                    type="number"
+                    min={cfg.min}
+                    max={cfg.max}
+                    step={cfg.step}
+                    value={value}
+                    onChange={(e) => {
+                        // Allow free typing; only apply when result is a number in range.
+                        // Empty string is treated as "no change yet" — wait for blur.
+                        const raw = e.target.value;
+                        if (raw === "") return;
+                        const parsed = parseInt(raw, 10);
+                        if (!Number.isNaN(parsed)) onChange(clamp(parsed));
+                    }}
+                    onBlur={(e) => {
+                        // Final clamp on blur covers the "user typed 999 and clicked away"
+                        // case where onChange's mid-typing clamp would have looked jumpy.
+                        const parsed = parseInt(e.target.value, 10);
+                        const clamped = clamp(parsed);
+                        if (clamped !== value) onChange(clamped);
+                    }}
+                    aria-label={`Duration in seconds (type a value between ${cfg.min} and ${cfg.max})`}
+                    className="w-12 rounded border border-glass-border bg-black/30 px-1.5 py-0.5 text-right font-mono text-body-sm tabular-nums text-foreground outline-none transition-colors duration-fast ease-out-quart focus:border-primary/55 focus-visible:ring-1 focus-visible:ring-primary/45 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <span className="font-mono text-body-sm text-text-muted">s</span>
+            </div>
         </div>
     );
 }
@@ -602,5 +650,6 @@ function countAdvancedParams(mp: ModelParamSupport): number {
     if (mp.viduAudio) n++;
     if (mp.promptExtend) n++;
     if (mp.shotType) n++;
+    if (mp.watermark) n++;
     return n;
 }
