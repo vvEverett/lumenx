@@ -1481,6 +1481,20 @@ export default function StoryboardR2V() {
                             }
                             expanded={expandedShots.has(shot.id)}
                             onToggleExpanded={() => toggleShotExpanded(shot.id)}
+                            /* PR-3c · 闭环生成: ShotCard 内全宽生成行 + count selector.
+                               canGenerate: direct_r2v 需 prompt; t2i_i2v 还需 first frame. */
+                            generateCount={paramsState.count}
+                            canGenerate={
+                                shot.prompt.trim().length > 0
+                                && (
+                                    shot.tabMode === "direct_r2v"
+                                    || !!shot.t2iImageUrl
+                                    || (shot.t2iImageUrls?.length ?? 0) > 0
+                                )
+                            }
+                            onSetGenerateCount={(n) => handleShotParamsChange(shot, { ...paramsState, count: n })}
+                            onGenerateBatch={(n) => generateVideoBatch(index, n, paramsState)}
+                            inFlightCount={shotInFlight}
                         />
                         {/* Attached workbench: t2i_i2v 模式下渲染顺序为
                             Step 1 (T2ISubsection) → Step 2 (ParamsSection)

@@ -14,6 +14,8 @@ import {
     Maximize2,
     PanelBottomOpen,
     PanelBottomClose,
+    Sparkles,
+    Loader2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import AssetChipBar from "./AssetChipBar";
@@ -97,6 +99,16 @@ interface ShotCardProps {
      *  top-right corner toggles this. */
     expanded: boolean;
     onToggleExpanded: () => void;
+    /** PR-3c · 闭环生成. Generation 移到 ShotCard 内的全宽行 (Action
+     *  Bar 之后, disclosure bar 之前), 含 count selector 同行. Host
+     *  传入 current count + handlers + canGenerate gate.
+     *  Spec: r2v-workflow-v3-unified.md §4.3.1 / Q12. */
+    generateCount?: number;
+    canGenerate?: boolean;
+    onSetGenerateCount?: (count: number) => void;
+    onGenerateBatch?: (count: number) => void;
+    /** Active in-flight count for label flip (生成 ×N → 生成中 · N). */
+    inFlightCount?: number;
 }
 
 export default function ShotCard({
@@ -119,6 +131,11 @@ export default function ShotCard({
     onCancelVideo,
     expanded,
     onToggleExpanded,
+    generateCount = 1,
+    canGenerate = true,
+    onSetGenerateCount,
+    onGenerateBatch,
+    inFlightCount = 0,
 }: ShotCardProps) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -643,6 +660,60 @@ export default function ShotCard({
                                 actions row, users couldn't find it (user feedback
                                 grill Q11). Spec: r2v-workflow-v3-unified.md §4.3.1
                                 / §4.3.2. */}
+                        </div>
+
+                        {/* PR-3c · 闭环生成行: count selector + 主生成按钮.
+                            生成是 shot 的核心 action, 移到 ShotCard 内全宽行
+                            让用户不展开 attached panel 也能生成. count 同行
+                            (×1/×2/×4/×6) 让"几个变体"成为 inline 决定.
+                            Spec: r2v-workflow-v3-unified.md §4.3.1 / Q12. */}
+                        <div className="mt-2 flex items-center gap-2">
+                            <div className="flex items-center gap-1 shrink-0">
+                                {[1, 2, 4, 6].map((n) => {
+                                    const active = generateCount === n;
+                                    return (
+                                        <button
+                                            key={n}
+                                            type="button"
+                                            onClick={() => onSetGenerateCount?.(n)}
+                                            aria-pressed={active}
+                                            aria-label={`Generate ${n} at a time`}
+                                            className={`grid h-9 w-9 place-items-center rounded-md border font-mono text-[11px] font-medium transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${
+                                                active
+                                                    ? "border-primary/55 bg-primary/15 text-primary"
+                                                    : "border-glass-border bg-black/20 text-text-secondary hover:border-white/20 hover:text-foreground"
+                                            }`}
+                                        >
+                                            ×{n}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <motion.button
+                                whileHover={canGenerate && inFlightCount === 0 ? { scale: 1.005 } : undefined}
+                                whileTap={canGenerate && inFlightCount === 0 ? { scale: 0.995 } : undefined}
+                                type="button"
+                                onClick={() => onGenerateBatch?.(generateCount)}
+                                disabled={!canGenerate || inFlightCount > 0}
+                                title={!canGenerate
+                                    ? (shot.tabMode === "t2i_i2v"
+                                        ? "请先在上方生成或上传首帧"
+                                        : "请先输入提示词")
+                                    : undefined}
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-4 py-2 font-sans text-[13px] font-semibold tracking-tight transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 disabled:cursor-not-allowed disabled:opacity-40 bg-primary text-white border border-[rgba(100,108,255,0.65)] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(60,68,200,0.45),0_4px_14px_-2px_rgba(100,108,255,0.45)] hover:bg-[#7a82ff] hover:border-[rgba(100,108,255,0.85)] disabled:hover:bg-primary disabled:hover:border-[rgba(100,108,255,0.65)]"
+                            >
+                                {inFlightCount > 0 ? (
+                                    <>
+                                        <Loader2 size={14} className="animate-spin" strokeWidth={2} />
+                                        <span>{`生成中 · ${inFlightCount}`}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles size={14} strokeWidth={2} />
+                                        <span>{`生成 ×${generateCount}`}</span>
+                                    </>
+                                )}
+                            </motion.button>
                         </div>
 
                         {/* PR-3b · 参数 / Takes disclosure bar — 全宽显眼入口

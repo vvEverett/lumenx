@@ -72,7 +72,8 @@ interface ParamsSectionProps {
     errorMessage?: string | null;
 }
 
-const COUNT_OPTIONS = [1, 2, 4, 6] as const;
+// COUNT_OPTIONS removed in PR-3c — count selector relocated to ShotCard's
+// inline generation row. ShotCard owns the canonical [1,2,4,6] list now.
 
 export default function ParamsSection({
     shotId,
@@ -199,30 +200,13 @@ export default function ParamsSection({
                     />
                 </ParamRow>
 
-                {/* Count (batch size) */}
-                <ParamRow label="Count">
-                    <div className="flex items-center gap-1">
-                        {COUNT_OPTIONS.map((n) => {
-                            const active = params.count === n;
-                            return (
-                                <button
-                                    key={n}
-                                    type="button"
-                                    onClick={() => set("count", n)}
-                                    aria-pressed={active}
-                                    aria-label={`Generate ${n} at a time`}
-                                    className={`grid h-8 w-10 place-items-center rounded-md border font-mono text-body-sm font-medium transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${
-                                        active
-                                            ? "border-primary/55 bg-primary/15 text-primary"
-                                            : "border-glass-border bg-black/20 text-text-secondary hover:border-white/20 hover:text-foreground"
-                                    }`}
-                                >
-                                    ×{n}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </ParamRow>
+                {/* Count row removed in PR-3c — moved into ShotCard's
+                    inline generation row (count selector + 生成 ×N).
+                    params.count state is still owned here (via ParamsState)
+                    and synced from ShotCard via onSetGenerateCount →
+                    handleShotParamsChange. ParamsSection no longer renders
+                    count UI to avoid two competing surfaces for the same
+                    state. */}
 
                 {/* Resolution */}
                 {modelParams.resolution ? (
