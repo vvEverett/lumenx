@@ -894,6 +894,9 @@
     "t2iAddMenuGenerate": "Generate from prompt",
     "t2iAddMenuUpload": "Upload image",
     "t2iAddTooltip": "Add a first-frame candidate",
+    "t2iCompactReroll": "Reroll",
+    "t2iCompactRerollTooltip": "Generate another first frame with the current prompt (added to candidates)",
+    "t2iCompactRerollDisabled": "Type a prompt above first",
     "t2iStoryboardBadge": "Storyboard",
     "t2iStoryboardBadgeTooltip": "From the Storyboard stage render"
   },

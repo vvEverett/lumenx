@@ -15,6 +15,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
     Loader2, Plus, X, Sparkles, Upload, Image as ImageIcon, Check, Pin, ChevronDown, ChevronUp,
+    RefreshCw,
 } from "lucide-react";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
@@ -330,7 +331,11 @@ function Compact({
     const showStoryboardThumb = imageUrls.length === 0 && !!storyboardFrameUrl;
     const storyboardActive = showStoryboardThumb;
 
-    const [expanded, setExpanded] = useState(false);
+    // PR-3 grill Q14 (C) — candidates row default 展开:
+    // 让用户立刻看到"已有 N 张可选 / 当前正在用第几张"，建立"first
+    // frame 是多变体"的 mental model. 之前 default collapsed 导致
+    // candidates 在 hover popover 后才被发现.
+    const [expanded, setExpanded] = useState(true);
     // processing 时强制展开，让用户看见 spinner
     const forcedOpen = generating && (inFlightStatus === "pending" || inFlightStatus === "processing");
     const open = expanded || forcedOpen;
@@ -407,6 +412,22 @@ function Compact({
                     · {countLabel}
                 </span>
                 <div className="ml-auto flex items-center gap-0.5">
+                    {/* PR-3 grill Q14 (D) — Reroll button: explicit "再抽一张"
+                        action, surfaces the "regenerate first frame with current
+                        prompt" capability that was previously hidden in the
+                        hover popover behind "+". Direct onGenerate call (no
+                        popover step), disabled when prompt is empty. */}
+                    <button
+                        type="button"
+                        onClick={onGenerate}
+                        disabled={promptIsEmpty || generating}
+                        aria-label={t("t2iCompactReroll")}
+                        title={promptIsEmpty ? t("t2iCompactRerollDisabled") : t("t2iCompactRerollTooltip")}
+                        className="btn-tip inline-flex items-center gap-1 px-1.5 h-7 rounded font-mono text-[10.5px] uppercase tracking-tight text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+                    >
+                        <RefreshCw size={11} strokeWidth={1.8} aria-hidden="true" className={generating ? "animate-spin" : undefined} />
+                        <span>{t("t2iCompactReroll")}</span>
+                    </button>
                     <button
                         type="button"
                         onClick={() => setExpanded((v) => !v)}

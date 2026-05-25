@@ -894,6 +894,9 @@
     "t2iAddMenuGenerate": "由提示词生成",
     "t2iAddMenuUpload": "上传图片",
     "t2iAddTooltip": "新增首帧候选",
+    "t2iCompactReroll": "再抽一张",
+    "t2iCompactRerollTooltip": "用当前提示词再抽一张首帧（结果加入候选）",
+    "t2iCompactRerollDisabled": "请先在上方填写提示词",
     "t2iStoryboardBadge": "Storyboard",
     "t2iStoryboardBadgeTooltip": "来自 Storyboard 阶段生成的图"
   },
