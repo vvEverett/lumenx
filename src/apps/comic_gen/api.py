@@ -2563,14 +2563,61 @@ class GenerateLineAudioRequest(BaseModel):
     speed: float = 1.0
     pitch: float = 1.0
     volume: int = 50
+    instructions: Optional[str] = None  # PR-3j · chip emotion + free text
 
 
 @app.post("/projects/{script_id}/frames/{frame_id}/audio", response_model=Script)
 def generate_line_audio(script_id: str, frame_id: str, request: GenerateLineAudioRequest):
     """Generates audio for a specific frame with parameters."""
     try:
-        updated_script = pipeline.generate_dialogue_line(script_id, frame_id, request.speed, request.pitch, request.volume)
+        updated_script = pipeline.generate_dialogue_line(
+            script_id, frame_id,
+            request.speed, request.pitch, request.volume,
+            instructions=request.instructions,
+        )
         return signed_response(updated_script)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/projects/{script_id}/dialogue_audio/batch", response_model=Script)
+def generate_dialogue_audio_batch(script_id: str):
+    """PR-3j · Generate audio for every frame that has dialogue.
+
+    Idempotent re-use: frames whose audio is already up-to-date (matching
+    text/voice/instructions hash) are skipped. Stale + missing frames get
+    regenerated using each character's bound voice.
+    """
+    from .audio import dialogue_audio_is_stale
+    try:
+        script = pipeline.get_script(script_id)
+        if not script:
+            raise HTTPException(status_code=404, detail="Script not found")
+        char_lookup = {c.id: c for c in script.characters}
+        generated = 0
+        skipped = 0
+        failed = 0
+        for frame in script.frames:
+            if not frame.dialogue:
+                continue
+            speaker = None
+            if frame.character_ids:
+                speaker = char_lookup.get(frame.character_ids[0])
+            if not speaker or not speaker.voice_id:
+                continue
+            if frame.audio_url and not dialogue_audio_is_stale(frame, speaker):
+                skipped += 1
+                continue
+            try:
+                pipeline.generate_dialogue_line(script_id, frame.id)
+                generated += 1
+            except Exception as exc:
+                logger.error(f"[batch_dialogue_audio] frame={frame.id} error={exc}")
+                failed += 1
+        logger.info(f"[batch_dialogue_audio] script={script_id} generated={generated} skipped={skipped} failed={failed}")
+        return signed_response(script)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -306,6 +306,12 @@ class StoryboardFrame(BaseModel):
     audio_url: Optional[str] = Field(None, description="URL of the generated dialogue audio")
     audio_error: Optional[str] = Field(None, description="Audio generation error message")
     sfx_url: Optional[str] = Field(None, description="URL of the generated sound effect")
+    # PR-3j · Stale detection for dialogue audio. text_hash combines
+    # dialogue text + voice_id + instructions; UI flags audio as STALE
+    # when current state hashes differently than the snapshot.
+    dialogue_text_hash: Optional[str] = Field(None, description="MD5 of (dialogue|voice_id|instructions) at audio generation time")
+    dialogue_voice_id: Optional[str] = Field(None, description="Voice id used to generate the current audio")
+    dialogue_instructions: Optional[str] = Field(None, description="Emotion/style instructions used for the current audio")
     
     selected_video_id: Optional[str] = Field(None, description="ID of the selected VideoTask for this frame")
     locked: bool = Field(False, description="Whether this frame is locked from regeneration")

@@ -2640,24 +2640,49 @@ class ComicGenPipeline:
         self._save_data()
         return script
 
-    def generate_dialogue_line(self, script_id: str, frame_id: str, speed: float = 1.0, pitch: float = 1.0, volume: int = 50) -> Script:
-        """Generates audio for a specific line with parameters."""
+    def generate_dialogue_line(
+        self,
+        script_id: str,
+        frame_id: str,
+        speed: float = 1.0,
+        pitch: float = 1.0,
+        volume: int = 50,
+        instructions: Optional[str] = None,
+    ) -> Script:
+        """Generates audio for a specific frame with parameters.
+
+        PR-3j: accepts `instructions` (chip emotion + free text). For
+        custom voices (clone/design) we resolve the target_model/family
+        override here so generation reuses the registered voice model.
+        """
         script = self.scripts.get(script_id)
         if not script:
             raise ValueError("Script not found")
-            
+
         frame = next((f for f in script.frames if f.id == frame_id), None)
         if not frame:
             raise ValueError("Frame not found")
-            
+
         if frame.dialogue:
             speaker = None
             if frame.character_ids:
                 speaker = next((c for c in script.characters if c.id == frame.character_ids[0]), None)
-            
+
             if speaker:
-                self.audio_generator.generate_dialogue(frame, speaker, speed, pitch, volume)
-                
+                model_override = None
+                family_override = None
+                if speaker.voice_id:
+                    custom = self.find_custom_voice(speaker.voice_id)
+                    if custom:
+                        model_override = custom.target_model
+                        family_override = custom.family
+                self.audio_generator.generate_dialogue(
+                    frame, speaker, speed, pitch, volume,
+                    instructions=instructions,
+                    model_override=model_override,
+                    family_override=family_override,
+                )
+
         self._save_data()
         return script
 

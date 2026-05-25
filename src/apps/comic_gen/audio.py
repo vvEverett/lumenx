@@ -1,11 +1,31 @@
 import os
 import time
-from typing import Dict, Any, List
+import hashlib
+from typing import Dict, Any, List, Optional
 from .models import StoryboardFrame, Character, GenerationStatus
 from ...utils import get_logger
 from ...audio.tts import TTSProcessor
 
 logger = get_logger(__name__)
+
+
+def _compute_dialogue_hash(text: str, voice_id: Optional[str], instructions: Optional[str]) -> str:
+    """PR-3j · Snapshot hash for stale detection. Frame is STALE when current
+    (dialogue|voice_id|instructions) hash != stored snapshot."""
+    payload = f"{text or ''}|{voice_id or ''}|{instructions or ''}"
+    return hashlib.md5(payload.encode("utf-8")).hexdigest()
+
+
+def dialogue_audio_is_stale(frame: StoryboardFrame, character: Optional[Character]) -> bool:
+    """True when frame.audio_url exists but its snapshot no longer matches
+    the current (dialogue|voice|instructions) state."""
+    if not frame.audio_url:
+        return False
+    if not frame.dialogue_text_hash:
+        return True  # legacy frame without snapshot — treat as stale
+    voice_id = character.voice_id if character else frame.dialogue_voice_id
+    current = _compute_dialogue_hash(frame.dialogue or "", voice_id, frame.dialogue_instructions)
+    return current != frame.dialogue_text_hash
 
 class AudioGenerator:
     def __init__(self, config: Dict[str, Any] = None):
@@ -54,7 +74,17 @@ class AudioGenerator:
                 {"id": "longshu_v2", "name": "龙书 (播报男) - CosyVoice", "gender": "Male", "family": "cosyvoice", "origin": "system"},
             ]
 
-    def generate_dialogue(self, frame: StoryboardFrame, character: Character, speed: float = 1.0, pitch: float = 1.0, volume: int = 50) -> StoryboardFrame:
+    def generate_dialogue(
+        self,
+        frame: StoryboardFrame,
+        character: Character,
+        speed: float = 1.0,
+        pitch: float = 1.0,
+        volume: int = 50,
+        instructions: Optional[str] = None,
+        model_override: Optional[str] = None,
+        family_override: Optional[str] = None,
+    ) -> StoryboardFrame:
         """Generates TTS audio for the dialogue."""
         if not frame.dialogue:
             return frame
@@ -63,7 +93,7 @@ class AudioGenerator:
 
         text = frame.dialogue
 
-        logger.info(f"Generating dialogue for {character.name}: {text} (Speed: {speed}, Pitch: {pitch}, Volume: {volume})")
+        logger.info(f"Generating dialogue for {character.name}: {text} (Speed: {speed}, Pitch: {pitch}, Volume: {volume}, instr: {instructions or '-'})")
 
         if not self.tts:
             frame.status = GenerationStatus.FAILED
@@ -77,30 +107,54 @@ class AudioGenerator:
             logger.warning(f"No voice_id for character {character.name}, cannot generate audio")
             return frame
 
-        return self._real_generate_dialogue(frame, character, text, speed, pitch, volume)
+        return self._real_generate_dialogue(
+            frame, character, text, speed, pitch, volume,
+            instructions=instructions,
+            model_override=model_override,
+            family_override=family_override,
+        )
 
-    def _real_generate_dialogue(self, frame: StoryboardFrame, character: Character, text: str, speed: float, pitch: float, volume: int) -> StoryboardFrame:
+    def _real_generate_dialogue(
+        self,
+        frame: StoryboardFrame,
+        character: Character,
+        text: str,
+        speed: float,
+        pitch: float,
+        volume: int,
+        instructions: Optional[str] = None,
+        model_override: Optional[str] = None,
+        family_override: Optional[str] = None,
+    ) -> StoryboardFrame:
         """Generate dialogue using real TTS."""
         try:
             output_path = os.path.join(self.output_dir, 'dialogue', f"{frame.id}.mp3")
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            
-            # Use character's assigned voice
+
             voice = character.voice_id
-            
-            # Call TTSProcessor with speed/pitch
-            self.tts.synthesize(text, output_path, voice=voice, speech_rate=speed, pitch_rate=pitch, volume=volume)
-            
-            # Store relative path for frontend serving
+
+            self.tts.synthesize(
+                text, output_path, voice=voice,
+                speech_rate=speed, pitch_rate=pitch, volume=volume,
+                instructions=instructions,
+                model_override=model_override,
+                family_override=family_override,
+            )
+
             rel_path = os.path.relpath(output_path, "output")
             frame.audio_url = rel_path
+            frame.audio_error = None
             frame.status = GenerationStatus.COMPLETED
-            
+            # PR-3j · snapshot for stale detection
+            frame.dialogue_voice_id = voice
+            frame.dialogue_instructions = instructions
+            frame.dialogue_text_hash = _compute_dialogue_hash(text, voice, instructions)
+
         except Exception as e:
             logger.error(f"TTS generation failed for frame {frame.id}: {e}")
             frame.status = GenerationStatus.FAILED
             frame.audio_error = f"TTS generation failed: {str(e)}"
-            
+
         return frame
 
     def _mock_generate_dialogue(self, frame: StoryboardFrame, character: Character, text: str, speed: float, pitch: float, volume: int) -> StoryboardFrame:
