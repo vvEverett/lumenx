@@ -37,6 +37,29 @@
     "actionCreateNew": "Create as new in series",
     "actionSkip": "Keep local-only"
   },
+  "voicePicker": {
+    "title": "Pick voice",
+    "close": "Close",
+    "tabSystem": "System",
+    "tabClone": "My Clones",
+    "tabDesign": "My Designs",
+    "recommended": "Recommended",
+    "basedOnCharacter": "based on character ({gender})",
+    "groupCosyvoice": "CosyVoice standard",
+    "groupStandardZh": "Qwen3-TTS standard",
+    "groupDialect": "Dialect",
+    "groupInternational": "International",
+    "cloneEmptyTitle": "Voice cloning — coming soon",
+    "cloneEmptyBody": "Upload a 10-20s reference clip and let AI clone a custom voice for this character.",
+    "comingSoonInPR3h": "Ships in PR-3h",
+    "designEmptyTitle": "Voice design — coming soon",
+    "designEmptyBody": "Describe the voice in one sentence (e.g. 'warm 30-something female') and AI generates a custom voice.",
+    "comingSoonInPR3i": "Ships in PR-3i",
+    "noSelection": "Pick a voice",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "playFailed": "Preview failed — please retry"
+  },
   "previousFramesRail": {
     "title": "Previous episode ending",
     "framesCount": "{count, plural, =1 {1 frame} other {# frames}}",
@@ -137,7 +160,10 @@
     "createAndGenerate": "Create (awaiting generation)",
     "cancel": "Cancel",
     "nameRequired": "Please enter a name",
-    "seriesRequired": "Episode not linked to a series — cannot manage shared assets"
+    "seriesRequired": "Episode not linked to a series — cannot manage shared assets",
+    "voiceBindNone": "No voice bound",
+    "voiceBindAdd": "Bind a voice for this character",
+    "voiceBindChange": "Change voice"
   },
   "common": {
     "save": "Save",

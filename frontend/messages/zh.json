@@ -37,6 +37,29 @@
     "actionCreateNew": "作为新角色加入系列",
     "actionSkip": "本集本地保留"
   },
+  "voicePicker": {
+    "title": "选择音色",
+    "close": "关闭",
+    "tabSystem": "系统音色",
+    "tabClone": "我的复刻",
+    "tabDesign": "我的设计",
+    "recommended": "推荐",
+    "basedOnCharacter": "基于角色 {gender}",
+    "groupCosyvoice": "CosyVoice 标准",
+    "groupStandardZh": "Qwen3-TTS 标准",
+    "groupDialect": "方言",
+    "groupInternational": "国际",
+    "cloneEmptyTitle": "声音复刻 — 即将上线",
+    "cloneEmptyBody": "上传一段 10-20 秒的参考音频，让 AI 复刻成专属角色音色。",
+    "comingSoonInPR3h": "PR-3h 即将交付",
+    "designEmptyTitle": "声音设计 — 即将上线",
+    "designEmptyBody": "用一句话描述期望的声音（如「温柔知性女声，30 岁左右」），AI 从零生成专属音色。",
+    "comingSoonInPR3i": "PR-3i 即将交付",
+    "noSelection": "请选择音色",
+    "cancel": "取消",
+    "apply": "应用",
+    "playFailed": "试听失败，请重试"
+  },
   "previousFramesRail": {
     "title": "上一集结尾分镜",
     "framesCount": "{count} 帧",
@@ -137,7 +160,10 @@
     "createAndGenerate": "创建（待生成）",
     "cancel": "取消",
     "nameRequired": "请输入名称",
-    "seriesRequired": "本集尚未关联到系列，无法管理共享素材"
+    "seriesRequired": "本集尚未关联到系列，无法管理共享素材",
+    "voiceBindNone": "未绑定音色",
+    "voiceBindAdd": "为该角色绑定音色",
+    "voiceBindChange": "更换音色"
   },
   "common": {
     "save": "保存",
