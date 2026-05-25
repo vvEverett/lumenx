@@ -730,6 +730,7 @@ function CastCard({ item }: { item: CastItem }) {
                     characterGender={character.gender}
                     currentVoiceId={voiceId}
                     onApply={handleApplyVoice}
+                    seriesId={currentProject?.series_id || null}
                 />
             )}
         </>

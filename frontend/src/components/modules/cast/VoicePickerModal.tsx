@@ -20,11 +20,12 @@
  *
  * Spec: r2v-workflow-v3-unified.md §4.2 + Q2-Q5 + Q15
  */
-import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Play, Pause, Check, Sparkles, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { X, Play, Pause, Check, Sparkles, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { api, type VoiceMeta } from "@/lib/api";
+import { api, type VoiceMeta, type CustomVoice } from "@/lib/api";
 import { getAssetUrl } from "@/lib/utils";
+import VoiceCloneModal from "./VoiceCloneModal";
 
 // L1.5 推荐: gender-based curated 4 voices (Q4 推荐)
 // Hard-coded "通用最不会出错"组合。LLM-based L4 推荐 stub for future PR.
@@ -49,6 +50,9 @@ interface VoicePickerModalProps {
     previewText?: string;
     currentVoiceId?: string;
     onApply: (voiceId: string, voiceName: string) => void;
+    /** PR-3h · Series id enables the 我的复刻 / 我的设计 tabs. When null,
+     *  those tabs show "请先关联到系列" message (orphan projects). */
+    seriesId?: string | null;
 }
 
 type Tab = "system" | "clone" | "design";
@@ -61,15 +65,18 @@ export default function VoicePickerModal({
     previewText,
     currentVoiceId,
     onApply,
+    seriesId,
 }: VoicePickerModalProps) {
     const t = useTranslations("voicePicker");
     const [tab, setTab] = useState<Tab>("system");
     const [voices, setVoices] = useState<VoiceMeta[]>([]);
+    const [customVoices, setCustomVoices] = useState<CustomVoice[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedId, setSelectedId] = useState<string | undefined>(currentVoiceId);
     const [playingId, setPlayingId] = useState<string | null>(null);
     const [previewingId, setPreviewingId] = useState<string | null>(null);
+    const [cloneModalOpen, setCloneModalOpen] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // Sync selected when current changes / modal opens
@@ -77,18 +84,57 @@ export default function VoicePickerModal({
         if (isOpen) setSelectedId(currentVoiceId);
     }, [isOpen, currentVoiceId]);
 
+    // PR-3h · refresh custom voices list (called on open + after clone)
+    const refreshCustomVoices = useCallback(async () => {
+        if (!seriesId) return;
+        try {
+            const list = await api.listCustomVoices(seriesId);
+            setCustomVoices(list);
+        } catch (e) {
+            console.error("Failed to load custom voices:", e);
+        }
+    }, [seriesId]);
+
     // Load voices once when modal opens
     useEffect(() => {
         if (!isOpen) return;
         let cancelled = false;
         setLoading(true);
         setError(null);
-        api.getVoices()
-            .then((vs) => { if (!cancelled) setVoices(vs); })
+        Promise.all([
+            api.getVoices(),
+            seriesId ? api.listCustomVoices(seriesId).catch(() => []) : Promise.resolve([]),
+        ])
+            .then(([vs, customs]) => {
+                if (!cancelled) {
+                    setVoices(vs);
+                    setCustomVoices(customs);
+                }
+            })
             .catch((e) => { if (!cancelled) setError(e?.message || "Failed to load voices"); })
             .finally(() => { if (!cancelled) setLoading(false); });
         return () => { cancelled = true; };
-    }, [isOpen]);
+    }, [isOpen, seriesId]);
+
+    // PR-3h · handle clone result — refresh list + auto-select new clone
+    const handleCloneCreated = async (newVoice: CustomVoice) => {
+        await refreshCustomVoices();
+        setSelectedId(newVoice.id);
+        setTab("clone"); // ensure we're showing the clone tab so user sees their new voice
+    };
+
+    // PR-3h · delete a custom voice (Tab 2/3 trash icon)
+    const handleDeleteCustom = async (voiceId: string) => {
+        if (!seriesId) return;
+        if (!window.confirm(t("confirmDelete"))) return;
+        try {
+            await api.deleteCustomVoice(seriesId, voiceId);
+            await refreshCustomVoices();
+            if (selectedId === voiceId) setSelectedId(undefined);
+        } catch (e) {
+            console.error("Failed to delete custom voice:", e);
+        }
+    };
 
     // Stop any in-flight audio when closing
     useEffect(() => {
@@ -101,21 +147,21 @@ export default function VoicePickerModal({
 
     const sampleText = previewText || SAMPLE_TEXT_TEMPLATE(characterName);
 
-    const handlePreview = async (voice: VoiceMeta) => {
-        // Stop currently playing first (only one ▶ at a time per Q5 edge-case 3)
+    // PR-3h · unified preview-by-id (works for both system VoiceMeta and CustomVoice)
+    const handlePreviewById = async (voiceId: string) => {
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current = null;
-            if (playingId === voice.id) {
+            if (playingId === voiceId) {
                 setPlayingId(null);
                 return;  // toggle off
             }
             setPlayingId(null);
         }
-        setPreviewingId(voice.id);
+        setPreviewingId(voiceId);
         try {
             const { url } = await api.previewVoice({
-                voice_id: voice.id,
+                voice_id: voiceId,
                 text: sampleText,
             });
             const audio = new Audio(getAssetUrl(url));
@@ -128,7 +174,7 @@ export default function VoicePickerModal({
                 setError(t("playFailed"));
             };
             audioRef.current = audio;
-            setPlayingId(voice.id);
+            setPlayingId(voiceId);
             await audio.play();
         } catch (e: any) {
             setError(e?.message || "Preview failed");
@@ -136,6 +182,9 @@ export default function VoicePickerModal({
             setPreviewingId(null);
         }
     };
+
+    const handlePreview = (voice: VoiceMeta) => handlePreviewById(voice.id);
+    const handlePreviewCustom = (cv: CustomVoice) => handlePreviewById(cv.id);
 
     // L1.5 recommended subset based on character gender
     const recommended = useMemo<VoiceMeta[]>(() => {
@@ -264,11 +313,27 @@ export default function VoicePickerModal({
                     )}
 
                     {!loading && !error && tab === "clone" && (
-                        <EmptyPlaceholder
-                            title={t("cloneEmptyTitle")}
-                            body={t("cloneEmptyBody")}
-                            hint={t("comingSoonInPR3h")}
-                        />
+                        seriesId ? (
+                            <CustomVoiceList
+                                t={t}
+                                voices={customVoices.filter((cv) => cv.origin === "clone")}
+                                selectedId={selectedId}
+                                playingId={playingId}
+                                previewingId={previewingId}
+                                onSelect={setSelectedId}
+                                onPreview={(cv) => handlePreviewCustom(cv)}
+                                onDelete={handleDeleteCustom}
+                                onCreate={() => setCloneModalOpen(true)}
+                                createLabel={t("cloneCreateBtn")}
+                                emptyTitle={t("cloneEmptyTitle")}
+                                emptyBody={t("cloneEmptyBody")}
+                            />
+                        ) : (
+                            <NeedsSeriesPlaceholder
+                                title={t("cloneEmptyTitle")}
+                                body={t("cloneNeedsSeries")}
+                            />
+                        )
                     )}
 
                     {!loading && !error && tab === "design" && (
@@ -297,8 +362,11 @@ export default function VoicePickerModal({
                         <button
                             onClick={() => {
                                 if (!selectedId) return;
-                                const meta = voices.find(v => v.id === selectedId);
-                                onApply(selectedId, meta?.name || selectedId);
+                                // PR-3h · lookup in both system + custom pools
+                                const systemMeta = voices.find(v => v.id === selectedId);
+                                const customMeta = customVoices.find(cv => cv.id === selectedId);
+                                const name = systemMeta?.name || customMeta?.label || selectedId;
+                                onApply(selectedId, name);
                                 onClose();
                             }}
                             disabled={!selectedId || selectedId === currentVoiceId}
@@ -309,6 +377,16 @@ export default function VoicePickerModal({
                     </div>
                 </div>
             </div>
+
+            {/* PR-3h · Voice clone sub-modal (Q16.2 B) */}
+            {seriesId && (
+                <VoiceCloneModal
+                    isOpen={cloneModalOpen}
+                    onClose={() => setCloneModalOpen(false)}
+                    seriesId={seriesId}
+                    onCreated={handleCloneCreated}
+                />
+            )}
         </div>
     );
 }
@@ -427,6 +505,122 @@ function EmptyPlaceholder({ title, body, hint }: { title: string; body: string; 
             <p className="text-foreground font-medium">{title}</p>
             <p className="mt-1 text-body-sm text-text-secondary max-w-md">{body}</p>
             <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">{hint}</p>
+        </div>
+    );
+}
+
+function NeedsSeriesPlaceholder({ title, body }: { title: string; body: string }) {
+    return (
+        <div className="grid place-items-center py-16 text-center">
+            <Sparkles size={32} className="text-text-muted/40 mb-3" />
+            <p className="text-foreground font-medium">{title}</p>
+            <p className="mt-1 text-body-sm text-text-secondary max-w-md">{body}</p>
+        </div>
+    );
+}
+
+/** PR-3h · List of CustomVoices with create button + per-card delete. */
+function CustomVoiceList({
+    t,
+    voices,
+    selectedId,
+    playingId,
+    previewingId,
+    onSelect,
+    onPreview,
+    onDelete,
+    onCreate,
+    createLabel,
+    emptyTitle,
+    emptyBody,
+}: {
+    t: (key: string) => string;
+    voices: CustomVoice[];
+    selectedId?: string;
+    playingId: string | null;
+    previewingId: string | null;
+    onSelect: (id: string) => void;
+    onPreview: (voice: CustomVoice) => void;
+    onDelete: (id: string) => void;
+    onCreate: () => void;
+    createLabel: string;
+    emptyTitle: string;
+    emptyBody: string;
+}) {
+    return (
+        <div className="space-y-4">
+            {/* Create button (always visible at top) */}
+            <button
+                onClick={onCreate}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-4 py-3 text-[13px] font-medium text-primary hover:bg-primary/10 hover:border-primary/60 transition-colors"
+            >
+                <Plus size={14} />
+                {createLabel}
+            </button>
+
+            {voices.length === 0 ? (
+                <div className="grid place-items-center py-10 text-center">
+                    <p className="text-foreground font-medium">{emptyTitle}</p>
+                    <p className="mt-1 text-body-sm text-text-secondary max-w-md">{emptyBody}</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+                    {voices.map((cv) => {
+                        const isSelected = selectedId === cv.id;
+                        const isPlaying = playingId === cv.id;
+                        const isPreviewing = previewingId === cv.id;
+                        return (
+                            <div
+                                key={cv.id}
+                                onClick={() => onSelect(cv.id)}
+                                className={`relative cursor-pointer rounded-lg border p-3 transition-colors ${
+                                    isSelected
+                                        ? "border-primary bg-[rgba(100,108,255,0.10)]"
+                                        : "border-glass-border bg-glass hover:border-white/15"
+                                }`}
+                            >
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-[13px] font-medium text-foreground" title={cv.label}>
+                                            {cv.label}
+                                        </p>
+                                        <p className="mt-0.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-text-muted">
+                                            {cv.origin === "clone" ? t("originClone") : t("originDesign")}
+                                            <span className="mx-1 text-text-muted/40">·</span>
+                                            {cv.target_model}
+                                        </p>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-1">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onPreview(cv); }}
+                                            aria-label="Play preview"
+                                            className={`inline-flex h-7 w-7 items-center justify-center rounded-md border transition-colors ${
+                                                isPlaying
+                                                    ? "border-primary bg-primary/15 text-primary"
+                                                    : "border-glass-border bg-black/30 text-text-secondary hover:border-white/20 hover:text-foreground"
+                                            }`}
+                                        >
+                                            {isPreviewing ? <Loader2 size={12} className="animate-spin" /> : isPlaying ? <Pause size={12} /> : <Play size={12} />}
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onDelete(cv.id); }}
+                                            aria-label="Delete custom voice"
+                                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-glass-border bg-black/30 text-text-muted hover:border-danger/40 hover:bg-danger/10 hover:text-danger transition-colors"
+                                        >
+                                            <Trash2 size={11} />
+                                        </button>
+                                    </div>
+                                </div>
+                                {isSelected && (
+                                    <div className="absolute top-1.5 right-1.5 grid h-5 w-5 place-items-center rounded-full bg-primary text-white">
+                                        <Check size={11} strokeWidth={2.5} />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }
