@@ -26,6 +26,7 @@ import { useTranslations } from "next-intl";
 import { api, type VoiceMeta, type CustomVoice } from "@/lib/api";
 import { getAssetUrl } from "@/lib/utils";
 import VoiceCloneModal from "./VoiceCloneModal";
+import VoiceDesignModal from "./VoiceDesignModal";
 
 // L1.5 推荐: gender-based curated 4 voices (Q4 推荐)
 // Hard-coded "通用最不会出错"组合。LLM-based L4 推荐 stub for future PR.
@@ -53,6 +54,8 @@ interface VoicePickerModalProps {
     /** PR-3h · Series id enables the 我的复刻 / 我的设计 tabs. When null,
      *  those tabs show "请先关联到系列" message (orphan projects). */
     seriesId?: string | null;
+    /** PR-3i · Character description for 一键转 voice_prompt LLM helper. */
+    characterDescription?: string;
 }
 
 type Tab = "system" | "clone" | "design";
@@ -66,6 +69,7 @@ export default function VoicePickerModal({
     currentVoiceId,
     onApply,
     seriesId,
+    characterDescription,
 }: VoicePickerModalProps) {
     const t = useTranslations("voicePicker");
     const [tab, setTab] = useState<Tab>("system");
@@ -77,6 +81,7 @@ export default function VoicePickerModal({
     const [playingId, setPlayingId] = useState<string | null>(null);
     const [previewingId, setPreviewingId] = useState<string | null>(null);
     const [cloneModalOpen, setCloneModalOpen] = useState(false);
+    const [designModalOpen, setDesignModalOpen] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // Sync selected when current changes / modal opens
@@ -121,6 +126,13 @@ export default function VoicePickerModal({
         await refreshCustomVoices();
         setSelectedId(newVoice.id);
         setTab("clone"); // ensure we're showing the clone tab so user sees their new voice
+    };
+
+    // PR-3i · handle design result — refresh list + auto-select new design
+    const handleDesignCreated = async (newVoice: CustomVoice) => {
+        await refreshCustomVoices();
+        setSelectedId(newVoice.id);
+        setTab("design");
     };
 
     // PR-3h · delete a custom voice (Tab 2/3 trash icon)
@@ -337,11 +349,27 @@ export default function VoicePickerModal({
                     )}
 
                     {!loading && !error && tab === "design" && (
-                        <EmptyPlaceholder
-                            title={t("designEmptyTitle")}
-                            body={t("designEmptyBody")}
-                            hint={t("comingSoonInPR3i")}
-                        />
+                        seriesId ? (
+                            <CustomVoiceList
+                                t={t}
+                                voices={customVoices.filter((cv) => cv.origin === "design")}
+                                selectedId={selectedId}
+                                playingId={playingId}
+                                previewingId={previewingId}
+                                onSelect={setSelectedId}
+                                onPreview={(cv) => handlePreviewCustom(cv)}
+                                onDelete={handleDeleteCustom}
+                                onCreate={() => setDesignModalOpen(true)}
+                                createLabel={t("designCreateBtn")}
+                                emptyTitle={t("designEmptyTitle")}
+                                emptyBody={t("designEmptyBody")}
+                            />
+                        ) : (
+                            <NeedsSeriesPlaceholder
+                                title={t("designEmptyTitle")}
+                                body={t("designNeedsSeries")}
+                            />
+                        )
                     )}
                 </div>
 
@@ -385,6 +413,16 @@ export default function VoicePickerModal({
                     onClose={() => setCloneModalOpen(false)}
                     seriesId={seriesId}
                     onCreated={handleCloneCreated}
+                />
+            )}
+            {/* PR-3i · Voice design sub-modal */}
+            {seriesId && (
+                <VoiceDesignModal
+                    isOpen={designModalOpen}
+                    onClose={() => setDesignModalOpen(false)}
+                    seriesId={seriesId}
+                    characterDescription={characterDescription}
+                    onCreated={handleDesignCreated}
                 />
             )}
         </div>
@@ -494,17 +532,6 @@ function VoiceCard({
                     <Check size={11} strokeWidth={2.5} />
                 </div>
             )}
-        </div>
-    );
-}
-
-function EmptyPlaceholder({ title, body, hint }: { title: string; body: string; hint: string }) {
-    return (
-        <div className="grid place-items-center py-16 text-center">
-            <Sparkles size={32} className="text-text-muted/40 mb-3" />
-            <p className="text-foreground font-medium">{title}</p>
-            <p className="mt-1 text-body-sm text-text-secondary max-w-md">{body}</p>
-            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">{hint}</p>
         </div>
     );
 }
