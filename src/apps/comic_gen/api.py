@@ -2354,6 +2354,69 @@ def get_voices():
     return pipeline.audio_generator.get_available_voices()
 
 
+class VoicePreviewRequest(BaseModel):
+    """PR-3g #3 · request shape for /voice/preview endpoint.
+
+    Backs the Voice picker modal's inline ▶ button. Frontend hits this
+    when user previews a voice card; backend either returns a cached
+    URL or generates fresh audio via TTSProcessor.
+    """
+    voice_id: str
+    text: str
+    speed: float = 1.0
+    pitch: float = 1.0
+    volume: int = 50
+    instructions: Optional[str] = None
+
+
+@app.post("/voice/preview")
+def voice_preview(request: VoicePreviewRequest):
+    """Generate or fetch cached preview audio for a voice.
+
+    Cache key = md5(voice_id|text|speed|pitch|volume|instructions). First
+    call triggers TTSProcessor.synthesize() and writes to
+    output/cache/voice_preview/{key}.mp3. Subsequent identical calls
+    return the cached URL instantly.
+
+    Spec: r2v-workflow-v3-unified.md §4.2.3 (cache strategy) + Q5 b/c.
+    """
+    import hashlib
+    if not pipeline.audio_generator.tts:
+        raise HTTPException(
+            status_code=503,
+            detail="TTS service unavailable. Check DASHSCOPE_API_KEY configuration.",
+        )
+
+    cache_dir = "output/cache/voice_preview"
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_key = hashlib.md5(
+        f"{request.voice_id}|{request.text}|{request.speed}|{request.pitch}|{request.volume}|{request.instructions or ''}".encode("utf-8")
+    ).hexdigest()
+    cache_path = os.path.join(cache_dir, f"{cache_key}.mp3")
+    cached = os.path.exists(cache_path)
+
+    if not cached:
+        try:
+            pipeline.audio_generator.tts.synthesize(
+                text=request.text,
+                output_path=cache_path,
+                voice=request.voice_id,
+                speech_rate=request.speed,
+                pitch_rate=request.pitch,
+                volume=request.volume,
+                instructions=request.instructions,
+            )
+        except Exception as e:
+            logger.error(f"[/voice/preview] TTS error voice={request.voice_id}: {e}")
+            raise HTTPException(status_code=500, detail=f"TTS generation failed: {e}")
+
+    # Static mount /files maps to output/, so the relative path under output/
+    # becomes the URL path frontend can hit. signed_response wraps for OSS
+    # signing when configured, no-op otherwise.
+    url = f"cache/voice_preview/{cache_key}.mp3"
+    return signed_response({"url": url, "cached": cached})
+
+
 class GenerateLineAudioRequest(BaseModel):
     speed: float = 1.0
     pitch: float = 1.0

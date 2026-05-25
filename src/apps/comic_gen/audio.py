@@ -20,20 +20,38 @@ class AudioGenerator:
             logger.warning(f"Failed to initialize TTS Processor: {e}. Using mock mode.")
             self.tts = None
 
-    def get_available_voices(self) -> List[Dict[str, str]]:
-        """Returns a list of available voices."""
+    def get_available_voices(self) -> List[Dict[str, Any]]:
+        """Returns a list of available voices with full registry metadata.
+
+        Shape expanded in PR-3g #3 — frontend voice picker (Q15.5 B) needs
+        family/dialect/lang_primary/supports_instruction to render the
+        3 tabs (系统音色 / 我的复刻 / 我的设计) with dialect/international
+        sub-groupings inside 系统音色.
+        """
         if self.tts:
             voices_dict = TTSProcessor.list_voices()
             return [
-                {"id": key, "name": f"{meta['name']} - CosyVoice", "gender": meta.get('gender', 'Unknown'), "model": meta.get('model', 'cosyvoice-v2')}
-                for key, meta in voices_dict.items()
+                {
+                    # Use actual model_id (server sends "Cherry" not "qwen3_cherry")
+                    # so frontend can pass it back unchanged for synthesis.
+                    "id": meta['model_id'],
+                    "name": meta['name'],
+                    "gender": meta.get('gender', 'Unknown'),
+                    "model": meta.get('model', 'cosyvoice-v2'),
+                    "family": meta.get('family', 'cosyvoice'),
+                    "supports_instruction": meta.get('supports_instruction', False),
+                    "dialect": meta.get('dialect'),
+                    "lang_primary": meta.get('lang_primary'),
+                    "origin": "system",  # custom voices (clone/design) come from a separate endpoint
+                }
+                for meta in voices_dict.values()
             ]
         else:
             return [
-                {"id": "longxiaochun", "name": "龙小淳 (知性女) - CosyVoice", "gender": "Female"},
-                {"id": "longyue", "name": "龙悦 (温柔女) - CosyVoice", "gender": "Female"},
-                {"id": "longcheng", "name": "龙诚 (睿智青年) - CosyVoice", "gender": "Male"},
-                {"id": "longshu", "name": "龙书 (播报男) - CosyVoice", "gender": "Male"},
+                {"id": "longxiaochun_v2", "name": "龙小淳 (知性女) - CosyVoice", "gender": "Female", "family": "cosyvoice", "origin": "system"},
+                {"id": "longyue_v2", "name": "龙悦 (温柔女) - CosyVoice", "gender": "Female", "family": "cosyvoice", "origin": "system"},
+                {"id": "longcheng_v2", "name": "龙诚 (睿智青年) - CosyVoice", "gender": "Male", "family": "cosyvoice", "origin": "system"},
+                {"id": "longshu_v2", "name": "龙书 (播报男) - CosyVoice", "gender": "Male", "family": "cosyvoice", "origin": "system"},
             ]
 
     def generate_dialogue(self, frame: StoryboardFrame, character: Character, speed: float = 1.0, pitch: float = 1.0, volume: int = 50) -> StoryboardFrame:

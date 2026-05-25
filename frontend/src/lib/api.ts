@@ -28,6 +28,27 @@ export const API_URL = getApiUrl();
 
 export type ProviderMode = "dashscope" | "vendor";
 
+/**
+ * PR-3g #3 · TTS voice metadata returned by GET /voices.
+ * Family-aware fields (family/dialect/lang_primary/supports_instruction)
+ * power the Voice picker modal's tabbed UI (Q15.5 B):
+ *   Tab 1 系统音色 → origin === "system"
+ *   Tab 2 我的复刻 → origin === "clone"   (PR-3h)
+ *   Tab 3 我的设计 → origin === "design"  (PR-3i)
+ * Inside Tab 1, group by family (cosyvoice / qwen3) + dialect markers.
+ */
+export interface VoiceMeta {
+    id: string;
+    name: string;
+    gender: "Male" | "Female" | "Neutral" | "Unknown";
+    model: string;                                            // backend model id (cosyvoice-v3-flash / qwen3-tts-flash / ...)
+    family: "cosyvoice" | "qwen3";
+    supports_instruction: boolean;
+    dialect?: string | null;                                  // 'shanghai' | 'beijing' | 'sichuan' | 'cantonese' | etc.
+    lang_primary?: string | null;                             // 'es' | 'ru' | 'it' | 'ko' | 'ja' | 'de' | 'fr' for international
+    origin: "system" | "clone" | "design";
+}
+
 export interface EnvConfigPayload {
     DASHSCOPE_API_KEY?: string;
     ALIBABA_CLOUD_ACCESS_KEY_ID?: string;
@@ -680,9 +701,42 @@ export const api = {
         return res.data;
     },
 
-    getVoices: async () => {
+    getVoices: async (): Promise<VoiceMeta[]> => {
         const response = await fetch(`${API_URL}/voices`);
         if (!response.ok) throw new Error("Failed to fetch voices");
+        return response.json();
+    },
+
+    /**
+     * PR-3g #3 · Voice picker modal inline ▶ preview.
+     * Backend caches by md5(voice_id|text|speed|pitch|volume|instructions);
+     * first call generates, subsequent calls return cached URL instantly.
+     * Returns relative URL under /files (e.g. "cache/voice_preview/abc.mp3").
+     */
+    previewVoice: async (params: {
+        voice_id: string;
+        text: string;
+        speed?: number;
+        pitch?: number;
+        volume?: number;
+        instructions?: string;
+    }): Promise<{ url: string; cached: boolean }> => {
+        const response = await fetch(`${API_URL}/voice/preview`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                voice_id: params.voice_id,
+                text: params.text,
+                speed: params.speed ?? 1.0,
+                pitch: params.pitch ?? 1.0,
+                volume: params.volume ?? 50,
+                instructions: params.instructions ?? null,
+            }),
+        });
+        if (!response.ok) {
+            const detail = await response.text();
+            throw new Error(`Voice preview failed: ${response.status} ${detail}`);
+        }
         return response.json();
     },
 
