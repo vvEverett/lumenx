@@ -12,12 +12,16 @@ import {
     ImageIcon,
     AtSign,
     Maximize2,
+    PanelBottomOpen,
+    PanelBottomClose,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import AssetChipBar from "./AssetChipBar";
 import PromptExpandModal from "./PromptExpandModal";
 import PolishPanel from "./PolishPanel";
 import { PendingTaskAffordance } from "@/components/shared/PendingTaskAffordance";
+import PreviewImage from "@/components/shared/preview/PreviewImage";
+import PreviewVideo from "@/components/shared/preview/PreviewVideo";
 import { useProjectStore } from "@/store/projectStore";
 
 export interface ShotNode {
@@ -48,6 +52,11 @@ export interface ShotNode {
     videoUrl?: string;
     videoTaskId?: string;
     videoStatus?: "pending" | "processing" | "completed" | "failed";
+    /** Issue 16 — final take selection (Z plan). Set in Assembly stage; read
+     *  by Storyboard's ShotCard top preview as the canonical "this is the
+     *  shipped output". Falls back to latest starred / latest completed /
+     *  first frame when null. */
+    finalTakeId?: string | null;
     /** Every video task this shot has spawned, oldest first. Each tab
      *  (t2i_i2v / direct_r2v) gets its own list — see videoTaskIdsByTab.
      *  Empty / missing → no history (e.g. legacy shots). */
@@ -82,6 +91,12 @@ interface ShotCardProps {
      *  after the soft-stuck threshold (60 s by default). Caller should
      *  hit the backend cancel endpoint and refresh local state. */
     onCancelVideo?: () => Promise<void> | void;
+    /** Issue 16 — per-shot expand state (P plan). When false, the
+     *  Setup/Takes chips below the card are hidden entirely (zero chrome
+     *  residue). When true, chips render. The chevron in the card's
+     *  top-right corner toggles this. */
+    expanded: boolean;
+    onToggleExpanded: () => void;
 }
 
 export default function ShotCard({
@@ -102,6 +117,8 @@ export default function ShotCard({
     onOpenDrawer,
     onInsertAsset,
     onCancelVideo,
+    expanded,
+    onToggleExpanded,
 }: ShotCardProps) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -128,6 +145,36 @@ export default function ShotCard({
         }
         return out;
     }, [shot.tabMode, shot.prompt, characters])();
+
+    // polishImageUrls — feed vision-capable polish (Issue 13) with the
+    // images the polish actually needs to "see":
+    //   • i2v: the active first frame (T2I selection if any, else the
+    //     Storyboard render). No frame yet → empty → text-only polish.
+    //   • r2v: each referenced character's avatar/headshot/full body
+    //     image, dedup'd by id. No references → empty → text-only.
+    const polishImageUrls = useCallback((): string[] => {
+        if (shot.tabMode === "direct_r2v") {
+            const out: string[] = [];
+            const seen = new Set<string>();
+            const tagPattern = /\[character\d*:([^\]]+)\]/g;
+            let m;
+            while ((m = tagPattern.exec(shot.prompt)) !== null) {
+                const [, name] = m;
+                const char = characters.find((c: any) => c.name === name);
+                if (!char || seen.has(char.id)) continue;
+                seen.add(char.id);
+                const url = char.headshot_image_url || char.image_url || char.full_body_image_url
+                    || (char.full_body_asset?.variants?.[0]?.url);
+                if (url) out.push(url);
+            }
+            return out.slice(0, 4); // cap at 4 to keep payload reasonable
+        }
+        // i2v: prefer active T2I image; fall back to storyboard frame.
+        const active = (shot.t2iImageUrls && shot.t2iImageUrls.length > 0)
+            ? shot.t2iImageUrls[Math.max(0, Math.min(shot.t2iSelectedIndex ?? 0, shot.t2iImageUrls.length - 1))]
+            : (shot.t2iImageUrl || shot.imageUrl);
+        return active ? [active] : [];
+    }, [shot.tabMode, shot.prompt, shot.t2iImageUrls, shot.t2iSelectedIndex, shot.t2iImageUrl, shot.imageUrl, characters])();
 
     // castAvatars — character avatar group for the "Cast:" row above
     // the prompt textarea (L5 borrow from 火山剧创's 出镜角色). De-
@@ -187,24 +234,11 @@ export default function ShotCard({
         if (shot.tabMode === "t2i_i2v") {
             if (shot.videoUrl) {
                 return (
-                    <div className="w-full aspect-video relative group/preview">
-                        <video
-                            src={shot.videoUrl}
-                            className="w-full h-full object-cover"
-                            muted
-                            loop
-                            onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
-                            onMouseLeave={(e) => {
-                                (e.target as HTMLVideoElement).pause();
-                                (e.target as HTMLVideoElement).currentTime = 0;
-                            }}
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
-                            <div className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                                <Play size={18} className="text-white ml-0.5" />
-                            </div>
-                        </div>
-                    </div>
+                    <PreviewVideo
+                        src={shot.videoUrl}
+                        alt={t("generatedVideo") || "Generated video"}
+                        className="w-full aspect-video"
+                    />
                 );
             }
             if (shot.videoStatus === "processing" || shot.videoStatus === "pending") {
@@ -232,11 +266,24 @@ export default function ShotCard({
                 );
             }
             if (shot.t2iImageUrl) {
+                // Fixed: was rendering raw `<img src={shot.t2iImageUrl}>` —
+                // shot.t2iImageUrl is a relative path (e.g. "uploads/t2i_xxx.jpg")
+                // which the browser resolved against the current origin → 404 →
+                // broken icon + "Generated frame" alt fallback. PreviewImage
+                // routes through getAssetUrl() (Issue 14).
+                //
+                // Issue 15: bottom badge label changed to "next: generate
+                // video →" so the user knows the first frame is in place and
+                // the next step is downstream, not another image gen.
                 return (
-                    <div className="w-full aspect-video relative group/preview">
-                        <img src={shot.t2iImageUrl} alt="Generated frame" className="w-full h-full object-cover" />
-                        <div className="absolute bottom-2 left-2 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/90 text-white font-medium backdrop-blur-sm">
-                            {t("t2iCompleted")}
+                    <div className="w-full aspect-video relative">
+                        <PreviewImage
+                            src={shot.t2iImageUrl}
+                            alt={t("t2iCompleted") || "First frame"}
+                            className="w-full h-full"
+                        />
+                        <div className="absolute bottom-2 left-2 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/90 text-white font-medium backdrop-blur-sm pointer-events-none">
+                            {t("generateVideoNext")}
                         </div>
                     </div>
                 );
@@ -264,12 +311,17 @@ export default function ShotCard({
                     </div>
                 );
             }
+            // I2V tab, no first frame yet — the active CTA is in the
+            // Step 1 panel below (Hero state), not here. Just signal
+            // "waiting for a first frame" so the user knows where to
+            // act (Issue 15).
             return (
                 <div className="w-full aspect-video flex flex-col items-center justify-center gap-2 text-text-secondary/60">
                     <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
                         <ImageIcon size={18} strokeWidth={1.5} />
                     </div>
-                    <span className="text-[11px] font-medium">{t("generateImage")}</span>
+                    <span className="text-[11px] font-medium">{t("generateImageOrUpload")}</span>
+                    <span className="text-[10px] text-text-muted">↓ Step 1</span>
                 </div>
             );
         }
@@ -277,24 +329,11 @@ export default function ShotCard({
         // Direct R2V mode
         if (shot.videoUrl) {
             return (
-                <div className="w-full aspect-video relative group/preview">
-                    <video
-                        src={shot.videoUrl}
-                        className="w-full h-full object-cover"
-                        muted
-                        loop
-                        onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
-                        onMouseLeave={(e) => {
-                            (e.target as HTMLVideoElement).pause();
-                            (e.target as HTMLVideoElement).currentTime = 0;
-                        }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
-                        <div className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                            <Play size={18} className="text-white ml-0.5" />
-                        </div>
-                    </div>
-                </div>
+                <PreviewVideo
+                    src={shot.videoUrl}
+                    alt={t("generatedVideo") || "Generated video"}
+                    className="w-full aspect-video"
+                />
             );
         }
         if (shot.videoStatus === "processing" || shot.videoStatus === "pending") {
@@ -412,7 +451,8 @@ export default function ShotCard({
                         </button>
                     </div>
 
-                    {/* Shot number badge */}
+                    {/* Shot number badge — expand toggle moved to Action Bar
+                        (bottom-left cluster) for closer reach. */}
                     <div className="flex items-center gap-2">
                         <div className="text-[10px] font-mono text-text-muted tabular-nums">
                             #{String(index + 1).padStart(2, "0")}
@@ -450,19 +490,22 @@ export default function ShotCard({
                                             key={c.id}
                                             type="button"
                                             onClick={() => {
+                                                // R2V v2: "assets" step id renamed to "cast" for R2V workflow.
+                                                // ShotCard only appears inside StoryboardR2V (R2V-only),
+                                                // so always navigate to the new cast step.
                                                 document.dispatchEvent(
-                                                    new CustomEvent("lumenx:navigateStep", { detail: "assets" }),
+                                                    new CustomEvent("lumenx:navigateStep", { detail: "cast" }),
                                                 );
                                             }}
                                             title={c.name}
                                             className="grid h-6 w-6 place-items-center overflow-hidden rounded-full border-2 border-surface bg-elevated transition-all duration-fast ease-out-quart hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                                         >
                                             {c.avatarUrl ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img
+                                                <PreviewImage
                                                     src={c.avatarUrl}
                                                     alt={c.name}
-                                                    className="h-full w-full object-cover"
+                                                    className="h-full w-full"
+                                                    noLightbox
                                                 />
                                             ) : (
                                                 <span className="font-mono text-[9px] font-medium text-text-secondary">
@@ -530,6 +573,7 @@ export default function ShotCard({
                             tabMode={shot.tabMode}
                             scriptId={currentProjectId ?? ""}
                             slots={r2vSlots}
+                            imageUrls={polishImageUrls}
                             onApply={onUpdatePrompt}
                         />
 
@@ -592,7 +636,46 @@ export default function ShotCard({
                                     <Trash2 size={13} strokeWidth={1.5} />
                                 </motion.button>
                             </div>
+
+                            {/* Expand/collapse chip removed in PR-3b — replaced by
+                                the full-width disclosure bar below Action Bar.
+                                Visual weight 5-10× higher; previously buried in
+                                actions row, users couldn't find it (user feedback
+                                grill Q11). Spec: r2v-workflow-v3-unified.md §4.3.1
+                                / §4.3.2. */}
                         </div>
+
+                        {/* PR-3b · 参数 / Takes disclosure bar — 全宽显眼入口
+                            (Q11 B). Action Bar 下方独立行，控制 attached panel
+                            显隐. v1 不带 params summary; summary 是 polish 留作
+                            follow-up. */}
+                        <motion.button
+                            whileHover={{ scale: 1.005 }}
+                            whileTap={{ scale: 0.995 }}
+                            type="button"
+                            onClick={onToggleExpanded}
+                            aria-expanded={expanded}
+                            aria-label={expanded ? t("collapseShot") : t("expandShot")}
+                            className={`mt-2 w-full inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2 font-mono text-[11px] font-medium uppercase tracking-[0.14em] transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${
+                                expanded
+                                    ? "border-primary/40 bg-primary/12 text-primary hover:bg-primary/20"
+                                    : "border-glass-border bg-black/30 text-text-secondary hover:border-white/20 hover:bg-white/[0.06] hover:text-foreground"
+                            }`}
+                        >
+                            <span className="flex items-center gap-2">
+                                {expanded ? (
+                                    <PanelBottomClose size={13} strokeWidth={1.6} aria-hidden="true" />
+                                ) : (
+                                    <PanelBottomOpen size={13} strokeWidth={1.6} aria-hidden="true" />
+                                )}
+                                <span>{expanded ? t("collapseShotShort") : t("expandShotShort")}</span>
+                            </span>
+                            {expanded ? (
+                                <ChevronUp size={12} strokeWidth={2} className="opacity-60" aria-hidden="true" />
+                            ) : (
+                                <ChevronDown size={12} strokeWidth={2} className="opacity-60" aria-hidden="true" />
+                            )}
+                        </motion.button>
                     </div>
                 </div>
             </div>
