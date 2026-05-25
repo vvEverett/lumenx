@@ -45,6 +45,21 @@ export interface EnvConfigPayload {
     [key: string]: string | Record<string, string> | undefined;
 }
 
+// R2V v2 Phase 4 — Cross-episode reconcile types
+export interface ReconcileSuggestion {
+    local_id: string;
+    local_name: string;
+    suggested_series_id: string | null;
+    suggested_series_name: string | null;
+    confidence: number;
+}
+
+export interface ReconcileAction {
+    local_id: string;
+    action: "merge_into_series" | "create_new_in_series" | "skip";
+    target_series_id?: string;
+}
+
 export interface VideoTask {
     id: string;
     project_id: string;
@@ -78,6 +93,14 @@ export interface VideoTask {
      *  parse with null/undefined; CandidatesSection falls back to
      *  generation_mode to bucket them in that case. */
     workbench_tab?: "t2i_i2v" | "direct_r2v" | null;
+    /** Provider-side identifiers (Issue 17). Used by TaskQueuePanel to let
+     *  users copy IDs into the provider's console (Bailian / 百炼 etc.) for
+     *  diagnosis. Different platforms use different naming — these are
+     *  normalized canonical fields. provider_request_id may be absent for
+     *  platforms that don't expose one (Vidu / PixVerse). */
+    provider_name?: string | null;
+    provider_task_id?: string | null;
+    provider_request_id?: string | null;
 }
 
 export const api = {
@@ -148,7 +171,11 @@ export const api = {
         // Storyboard R2V workbench tab the user clicked Generate from.
         // Distinct from generationMode (backend dispatcher); workbench_tab
         // lets the candidates panel group takes per UI tab on refresh.
-        workbenchTab?: "t2i_i2v" | "direct_r2v"
+        workbenchTab?: "t2i_i2v" | "direct_r2v",
+        // Watermark toggle — supported across wan / kling / vidu / pixverse /
+        // happyhorse video. undefined = leave to provider default (typically
+        // off); explicit boolean is user's Advanced-section choice.
+        watermark?: boolean
     ) => {
         const res = await axios.post(`${API_URL}/projects/${id}/video_tasks`, {
             image_url,
@@ -176,8 +203,31 @@ export const api = {
             // HappyHorse
             reference_image_urls: referenceImageUrls,
             ratio,
+            watermark,
             workbench_tab: workbenchTab,
         });
+        return res.data;
+    },
+
+    /** Upload an external image as a T2I首帧 candidate for an I2V flow.
+     *  Backend appends to the frame's t2i_image_urls history and auto-
+     *  selects the new image (it becomes the active首帧, unlocking
+     *  Step 2). Returns the updated frame.
+     *
+     *  Validation lives on the backend:
+     *   - ≤ 8 MB (413 if exceeded)
+     *   - jpg/jpeg/png/webp only (415 if not)
+     *  The caller does cheap front-side checks first to avoid a
+     *  round-trip on obvious rejects (file type / size from the File
+     *  object) and surfaces backend errors verbatim otherwise. */
+    uploadT2IFrame: async (scriptId: string, frameId: string, file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await axios.post(
+            `${API_URL}/projects/${scriptId}/frames/${frameId}/upload_t2i`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } },
+        );
         return res.data;
     },
 
@@ -488,20 +538,55 @@ export const api = {
     },
 
     // NOTE: polishPrompt removed - use refineFramePrompt for storyboard prompts
-    polishVideoPrompt: async (draftPrompt: string, feedback: string = "", scriptId: string = "") => {
+    //
+    // 后端契约（#117）：
+    //   成功 → 200 + { prompt_cn, prompt_en }
+    //   失败 → 502 + { detail: { reason, message_zh, message_en, prompt_cn?, prompt_en? } }
+    //     reason ∈ is_configured_false | api_error | json_parse_error | missing_keys | model_echo
+    //     model_echo 是 warning（带原文），其余是 hard error。
+    //
+    // prevCn（#119）：迭代时传入上一次 CN 实现双语锚点；首次留空。
+    // Issue 13: image_urls + polish_model added.
+    //   image_urls: I2V — pass active first frame URL (T2I selection or
+    //     storyboard frame); R2V — pass reference image URLs. Empty/omit
+    //     for T2I-only / no-frame shots ⇒ backend falls back to text-only.
+    //   polishModel: explicit override; "" lets backend resolve from
+    //     project/series PromptConfig.polish_model, then default.
+    polishVideoPrompt: async (
+        draftPrompt: string,
+        feedback: string = "",
+        scriptId: string = "",
+        prevCn: string = "",
+        imageUrls: string[] = [],
+        polishModel: string = "",
+    ) => {
         const res = await axios.post(`${API_URL}/video/polish_prompt`, {
             draft_prompt: draftPrompt,
             feedback: feedback,
             script_id: scriptId,
+            prev_cn: prevCn,
+            image_urls: imageUrls,
+            polish_model: polishModel,
         });
         return res.data;
     },
-    polishR2VPrompt: async (draftPrompt: string, slots: { description: string }[], feedback: string = "", scriptId: string = "") => {
+    polishR2VPrompt: async (
+        draftPrompt: string,
+        slots: { description: string }[],
+        feedback: string = "",
+        scriptId: string = "",
+        prevCn: string = "",
+        imageUrls: string[] = [],
+        polishModel: string = "",
+    ) => {
         const res = await axios.post(`${API_URL}/video/polish_r2v_prompt`, {
             draft_prompt: draftPrompt,
             slots: slots,
             feedback: feedback,
             script_id: scriptId,
+            prev_cn: prevCn,
+            image_urls: imageUrls,
+            polish_model: polishModel,
         });
         return res.data;
     },
@@ -692,6 +777,19 @@ export const api = {
     // ============================================
 
     // Series CRUD
+    createSeriesV2: async (
+        title: string,
+        opts: { description?: string; workflow_mode?: string; content_mode?: "scripted" | "freeform" } = {},
+    ) => {
+        const response = await axios.post(`${API_URL}/series`, {
+            title,
+            description: opts.description ?? "",
+            workflow_mode: opts.workflow_mode ?? "r2v",
+            content_mode: opts.content_mode ?? "scripted",
+        });
+        return response.data;
+    },
+
     createSeries: async (title: string, description?: string, workflowMode?: string) => {
         const response = await axios.post(`${API_URL}/series`, { title, description, workflow_mode: workflowMode || "r2v" });
         return response.data;
@@ -704,9 +802,126 @@ export const api = {
         const response = await axios.get(`${API_URL}/series/${seriesId}`);
         return response.data;
     },
-    updateSeries: async (seriesId: string, data: { title?: string; description?: string }) => {
+    updateSeries: async (
+        seriesId: string,
+        data: { title?: string; description?: string; art_direction?: any },
+    ) => {
         const response = await axios.put(`${API_URL}/series/${seriesId}`, data);
         return response.data;
+    },
+
+    /** R2V v2 Phase 3 — fetch previous episode raw snippet + AI summary cache state.
+     *  P2-a extended response with last_frames for Storyboard cross-step rail. */
+    getPreviousEpisodeSummary: async (scriptId: string): Promise<{
+        has_previous: boolean;
+        previous_episode_id: string | null;
+        previous_episode_title: string | null;
+        raw_snippet: string;
+        ai_summary: string | null;
+        ai_summary_stale: boolean;
+        last_frames?: Array<{
+            id: string;
+            action_description: string;
+            thumbnail_url: string | null;
+            video_url: string | null;
+        }>;
+    }> => {
+        const res = await axios.get(`${API_URL}/projects/${scriptId}/previous_episode`);
+        return res.data;
+    },
+
+    /** On-demand generate AI summary of previous episode (user-triggered). */
+    generatePreviousEpisodeSummary: async (scriptId: string): Promise<{
+        ai_summary: string;
+        ai_summary_stale: boolean;
+        previous_episode_id: string;
+        previous_episode_title: string;
+    }> => {
+        const res = await axios.post(`${API_URL}/projects/${scriptId}/previous_episode/summary`);
+        return res.data;
+    },
+
+    /** R2V v2 Phase 4 — fetch reconcile suggestions for this episode's
+     *  extracted entities vs the parent series's shared library. */
+    getReconcileSuggestions: async (scriptId: string): Promise<{
+        characters: ReconcileSuggestion[];
+        scenes: ReconcileSuggestion[];
+        props: ReconcileSuggestion[];
+    }> => {
+        const res = await axios.get(`${API_URL}/projects/${scriptId}/reconcile/suggestions`);
+        return res.data;
+    },
+
+    /** Apply user-confirmed reconcile decisions. */
+    applyReconcile: async (
+        scriptId: string,
+        decisions: {
+            characters?: ReconcileAction[];
+            scenes?: ReconcileAction[];
+            props?: ReconcileAction[];
+        },
+    ) => {
+        const res = await axios.post(`${API_URL}/projects/${scriptId}/reconcile/apply`, decisions);
+        return res.data;
+    },
+
+    /** R2V v2 Phase 5 — series-scope quick-create CRUD for Cast modal. */
+    createSeriesAsset: async (
+        seriesId: string,
+        kind: "characters" | "scenes" | "props",
+        data: { name: string; description?: string; persona?: string; image_url?: string; voice_id?: string },
+    ) => {
+        const res = await axios.post(`${API_URL}/series/${seriesId}/${kind}`, data);
+        return res.data;
+    },
+
+    /** R2V v2 Phase 2 — clear project-level art_direction (return to series inherit). */
+    clearProjectArtDirection: async (scriptId: string) => {
+        const res = await axios.post(`${API_URL}/projects/${scriptId}/art_direction/clear`);
+        return res.data;
+    },
+
+    /** R2V v2 P2-b — next-episode hook prediction state. */
+    getNextEpisodeHook: async (scriptId: string): Promise<{
+        has_text: boolean;
+        hook: string | null;
+        stale: boolean;
+    }> => {
+        const res = await axios.get(`${API_URL}/projects/${scriptId}/next_hook`);
+        return res.data;
+    },
+
+    /** Generate hook prediction (user-triggered). */
+    generateNextEpisodeHook: async (scriptId: string): Promise<{
+        hook: string;
+        stale: boolean;
+    }> => {
+        const res = await axios.post(`${API_URL}/projects/${scriptId}/next_hook`);
+        return res.data;
+    },
+
+    /** Manually edit / clear hook cache. */
+    updateNextEpisodeHook: async (scriptId: string, hook: string | null) => {
+        const res = await axios.put(`${API_URL}/projects/${scriptId}/next_hook`, { hook });
+        return res.data;
+    },
+
+    /** R2V v2 P1-c — cross-episode character appearances (for @ helper). */
+    getCharacterAppearances: async (seriesId: string, characterId: string): Promise<{
+        character: { id: string; name: string; persona: string; description: string };
+        appearances: Array<{ episode_id: string; episode_number: number | null; episode_title: string; frame_count: number }>;
+        total_frames: number;
+    }> => {
+        const res = await axios.get(`${API_URL}/series/${seriesId}/characters/${characterId}/appearances`);
+        return res.data;
+    },
+
+    /** R2V v2 P1-b — manually edit / clear last_episode_summary cache. */
+    updateLastEpisodeSummary: async (scriptId: string, aiSummary: string | null) => {
+        const res = await axios.put(`${API_URL}/projects/${scriptId}/last_episode_summary`, {
+            ai_summary: aiSummary,
+        });
+        return res.data;
     },
     deleteSeries: async (seriesId: string) => {
         const response = await axios.delete(`${API_URL}/series/${seriesId}`);

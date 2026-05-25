@@ -117,6 +117,22 @@ class VideoTask(BaseModel):
     reference_image_urls: List[str] = Field(default_factory=list, description="Reference image URLs for HappyHorse R2V (max 9)")
     ratio: Optional[str] = Field(None, description="Aspect ratio for HappyHorse T2V/R2V: 16:9, 9:16, 1:1, 4:3, 3:4")
     audio_setting: Optional[str] = Field(None, description="Audio setting for HappyHorse V2V: auto/origin")
+    # Watermark toggle — supported by wan/kling/vidu/pixverse/happyhorse video models.
+    # None = use provider default (most providers leave it off); True/False = explicit user choice.
+    watermark: Optional[bool] = Field(None, description="Whether to embed a provider watermark in the rendered clip")
+    # Provider-side identifiers (Issue 17). Persisted from the model's API response
+    # so the user can paste them into the provider's console (e.g. Bailian / 百炼)
+    # to diagnose failures without re-running. Different providers use different
+    # naming — the canonical fields here normalize to "task_id" + "request_id":
+    #   - DashScope (wan / qwen / happyhorse): task_id (output.task_id) + request_id
+    #   - Kling: task_id (kling/vendor mode) + request_id (header X-Kling-Request-Id)
+    #   - Vidu: task_id only
+    #   - PixVerse: task_id only
+    # provider_name labels the platform so the UI can render "dashscope: 1ce3..."
+    # rather than guessing from model_name.
+    provider_name: Optional[str] = Field(None, description="Which provider handled this task (dashscope / kling / vidu / pixverse / etc.)")
+    provider_task_id: Optional[str] = Field(None, description="Provider-side task ID; pasteable into the provider's console for diagnosis")
+    provider_request_id: Optional[str] = Field(None, description="Provider-side request ID for support tickets (optional — not all providers return one)")
     # User annotations on this take (抽卡 review). Storyboard's candidates
     # panel lets the user star multiple takes as a shortlist and attach a
     # short free-text label (≤20 chars). 🎬 final-take selection happens
@@ -138,18 +154,34 @@ class Character(BaseModel):
     id: str = Field(..., description="Unique identifier for the character")
     name: str = Field(..., description="Name of the character")
     description: str = Field(..., description="Physical appearance and personality description")
-    
+
+    # R2V v2 Phase 4 — persona grouping. The character.id is the *visual
+    # unit* (e.g. "young Zhang San" vs "adult Zhang San" are two ids).
+    # persona is a free-text label grouping multiple visual variants of
+    # the same "person". v1 schema only; v2 surfaces grouping in UI.
+    persona: str = Field("", description="Persona group label (multiple visual variants of the same person share a persona)")
+
     # New Attributes
     age: Optional[str] = Field(None, description="Age of the character")
     gender: Optional[str] = Field(None, description="Gender of the character")
     clothing: Optional[str] = Field(None, description="Clothing description")
     visual_weight: int = Field(3, description="Visual importance weight (1-5)")
     
-    # === NEW: Asset Activation v2 - Unified Asset Units ===
-    # Each unit holds both static images and motion references
-    full_body: Optional[AssetUnit] = Field(default_factory=AssetUnit, description="Full Body asset unit (Master)")
-    three_views: Optional[AssetUnit] = Field(default_factory=AssetUnit, description="Three Views asset unit")
-    head_shot: Optional[AssetUnit] = Field(default_factory=AssetUnit, description="Headshot/Avatar asset unit")
+    # === R2V v2 Phase 5: Unified reference sheet ===
+    # Single master sheet (multi-view or single portrait both OK) replaces
+    # the 3-AssetUnit split. Legacy `full_body / three_views / head_shot`
+    # kept readable for backward compat but new code writes here.
+    reference_sheet: Optional[AssetUnit] = Field(
+        default_factory=AssetUnit,
+        description="Single master reference sheet (R2V v2). Multi-view or single portrait both supported.",
+    )
+
+    # === LEGACY (pre R2V v2): Asset Activation v2 — three separate units ===
+    # Frontend now collapses to reference_sheet; legacy fields are read
+    # with fallback during transition. Will be deprecated in a future release.
+    full_body: Optional[AssetUnit] = Field(default_factory=AssetUnit, description="[LEGACY → reference_sheet] Full Body asset unit")
+    three_views: Optional[AssetUnit] = Field(default_factory=AssetUnit, description="[LEGACY] Three Views asset unit")
+    head_shot: Optional[AssetUnit] = Field(default_factory=AssetUnit, description="[LEGACY] Headshot/Avatar asset unit")
     
     # === LEGACY: Kept for backwards compatibility ===
     # Level 1: Full Body (Master)
@@ -300,6 +332,15 @@ class StoryboardFrame(BaseModel):
         1,
         description="Last-chosen Generate ×N batch size for this shot (1-6).",
     )
+    # Issue 16 — final take selection. Set in Assembly (per the chosen take
+    # from this frame's video_tasks), read by Storyboard's ShotCard top
+    # preview to display the canonical "this is the version that ships"
+    # output. None = no explicit pick yet → ShotCard preview falls back to
+    # latest starred / latest completed / first frame.
+    final_take_id: Optional[str] = Field(
+        None,
+        description="Task ID of the chosen final take for this frame (singular). Set in Assembly stage; read by Storyboard.",
+    )
 
 class ModelSettings(BaseModel):
     """Model selection settings for different generation stages"""
@@ -329,6 +370,9 @@ class PromptConfig(BaseModel):
     storyboard_polish: str = Field("", description="Custom system prompt for storyboard polish (Prompt C)")
     video_polish: str = Field("", description="Custom system prompt for video I2V polish (Prompt D)")
     r2v_polish: str = Field("", description="Custom system prompt for video R2V polish (Prompt E)")
+    # Polish 调用使用的 LLM 模型。空 = 用 LLMAdapter 默认（qwen3.6-plus）。
+    # 显式覆盖时用于切到 vision-capable 或更便宜的模型（qwen3.6-flash、kimi-k2.6 等）。
+    polish_model: str = Field("", description="Override LLM model id used for polish calls; empty = use system default")
 
 class Script(BaseModel):
     id: str = Field(..., description="Unique identifier for the script project")
@@ -364,6 +408,32 @@ class Script(BaseModel):
     series_id: Optional[str] = Field(None, description="ID of the parent Series, None for standalone projects")
     episode_number: Optional[int] = Field(None, description="Episode number within the Series")
 
+    # R2V v2 Phase 3 — "Previously on..." panel cache.
+    # Generated AI summary of the PREVIOUS episode's script (qwen3.6-plus),
+    # invalidated when the previous episode's original_text changes
+    # (revision-tracked). User opts in to AI generation; raw text snippet
+    # is always available regardless of cache.
+    last_episode_summary_cache: Optional[str] = Field(
+        None,
+        description="Cached AI summary of the previous episode's script.",
+    )
+    last_episode_summary_revision: Optional[str] = Field(
+        None,
+        description="Hash/marker of previous episode original_text when the cache was built.",
+    )
+
+    # R2V v2 P2-b — "Hook for next episode" prediction cache.
+    # AI-generated based on THIS episode's ending; helps the author
+    # think about what kicks off next episode while still composing.
+    next_hook_cache: Optional[str] = Field(
+        None,
+        description="Cached AI prediction of next-episode opening hook.",
+    )
+    next_hook_revision: Optional[str] = Field(
+        None,
+        description="Hash/marker of THIS episode's original_text when the hook cache was built.",
+    )
+
     created_at: float
     updated_at: float
 
@@ -390,6 +460,11 @@ class Series(BaseModel):
 
     # Workflow mode for all episodes in this series
     workflow_mode: str = Field("i2v_legacy", description="Workflow mode: 'r2v' or 'i2v_legacy'")
+
+    # R2V v2 Phase 6 — content source mode. Orthogonal to workflow_mode.
+    # 'scripted'  = traditional flow (Script step parses entities first)
+    # 'freeform'  = user creates shots/cast directly (no script parse step)
+    content_mode: str = Field("scripted", description="Content mode: 'scripted' or 'freeform' — affects R2V step sequence")
 
     # Episode references
     episode_ids: List[str] = Field(default_factory=list, description="Ordered list of Episode/Script IDs")

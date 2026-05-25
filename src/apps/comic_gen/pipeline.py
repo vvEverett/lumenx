@@ -246,6 +246,46 @@ class ComicGenPipeline:
                 logger.warning("update_frame_workbench: save failed")
             return frame
 
+    def upload_t2i_frame(
+        self,
+        script_id: str,
+        frame_id: str,
+        file_path: str,
+    ) -> Optional["StoryboardFrame"]:
+        """Append an uploaded image to a frame's T2I history and auto-select it.
+
+        Mirrors `update_frame_workbench`'s clamping rules (≤ _T2I_HISTORY_LIMIT
+        FIFO; t2i_selected_index → index of the newly appended URL). Caller is
+        expected to have already saved the file under output/uploads/ and pass
+        the relative URL path the frontend can resolve via /files.
+
+        Returns the updated frame, or None if script/frame can't be found.
+        """
+        with self._save_lock:
+            script = self.scripts.get(script_id)
+            if not script:
+                return None
+            frames = getattr(script, "frames", None) or []
+            frame = next((f for f in frames if getattr(f, "id", None) == frame_id), None)
+            if not frame:
+                return None
+            current = list(getattr(frame, "t2i_image_urls", None) or [])
+            current.append(file_path)
+            # Same FIFO cap as update_frame_workbench so uploads can't grow
+            # the history unbounded either.
+            if len(current) > self._T2I_HISTORY_LIMIT:
+                current = current[-self._T2I_HISTORY_LIMIT:]
+            frame.t2i_image_urls = current
+            # Newly uploaded image becomes the active首帧 — Issue 10 design
+            # requires the upload immediately unlocks Step 2.
+            frame.t2i_selected_index = len(current) - 1
+            frame.updated_at = time.time()
+            try:
+                self._save_data()
+            except Exception:
+                logger.warning("upload_t2i_frame: save failed")
+            return frame
+
     def mark_video_task_failed(
         self, script_id: str, task_id: str, error_message: str
     ) -> bool:
@@ -1636,7 +1676,7 @@ class ComicGenPipeline:
         self._save_data()
         return script
 
-    def create_video_task(self, script_id: str, image_url: str, prompt: str, duration: int = 5, seed: int = None, resolution: str = "720p", generate_audio: bool = False, audio_url: str = None, prompt_extend: bool = True, negative_prompt: str = None, model: str = "wan2.7-i2v", frame_id: str = None, shot_type: str = "single", generation_mode: str = "i2v", reference_video_urls: list = None, reference_image_urls: list = None, ratio: str = None, mode: str = None, sound: str = None, cfg_scale: float = None, vidu_audio: bool = None, movement_amplitude: str = None, workbench_tab: Optional[str] = None) -> Tuple[Script, str]:
+    def create_video_task(self, script_id: str, image_url: str, prompt: str, duration: int = 5, seed: int = None, resolution: str = "720p", generate_audio: bool = False, audio_url: str = None, prompt_extend: bool = True, negative_prompt: str = None, model: str = "wan2.7-i2v", frame_id: str = None, shot_type: str = "single", generation_mode: str = "i2v", reference_video_urls: list = None, reference_image_urls: list = None, ratio: str = None, watermark: Optional[bool] = None, mode: str = None, sound: str = None, cfg_scale: float = None, vidu_audio: bool = None, movement_amplitude: str = None, workbench_tab: Optional[str] = None) -> Tuple[Script, str]:
         """Creates a new video generation task."""
         script = self.get_script(script_id)
         if not script:
@@ -1737,6 +1777,7 @@ class ComicGenPipeline:
             reference_video_urls=reference_video_urls or [],
             reference_image_urls=reference_image_urls or [],
             ratio=ratio,
+            watermark=watermark,
             mode=mode,
             sound=sound,
             cfg_scale=cfg_scale,
@@ -2347,6 +2388,18 @@ class ComicGenPipeline:
                 )
             else:
                 # Default: Wanx model
+                # Issue 17: persist provider IDs (Bailian / DashScope task_id +
+                # request_id) onto our VideoTask the moment wanx gets them, BEFORE
+                # the long polling loop. Lets the user copy them from the queue
+                # panel even mid-generation if the task hangs.
+                def _capture_provider_ids(provider_name: str, ptask_id: Optional[str], preq_id: Optional[str]) -> None:
+                    task.provider_name = provider_name
+                    task.provider_task_id = ptask_id
+                    task.provider_request_id = preq_id
+                    try:
+                        self._save_data()
+                    except Exception:
+                        logger.warning("Failed to persist provider IDs mid-flight; will retry at task completion")
                 video_path, _ = self.video_generator.model.generate(
                     prompt=task.prompt,
                     output_path=output_path,
@@ -2365,9 +2418,13 @@ class ComicGenPipeline:
                     ref_video_urls=task.reference_video_urls if task.generation_mode == "r2v" else None,
                     ref_image_urls=task.reference_image_urls if task.generation_mode == "r2v" else None,
                     ratio=task.ratio,
+                    # Pass watermark explicitly; wanx.generate's default is False so
+                    # None becomes False, matching "leave to provider default = off".
+                    watermark=bool(task.watermark) if task.watermark is not None else False,
                     audio_setting=task.audio_setting,
                     camera_motion=None,
-                    subject_motion=None
+                    subject_motion=None,
+                    on_provider_ids=_capture_provider_ids,
                 )
             
             task.video_url = os.path.relpath(output_path, "output")
@@ -2904,7 +2961,7 @@ class ComicGenPipeline:
         with self._save_lock:
             self._save_series_data_unlocked()
 
-    def create_series(self, title: str, description: str = "", workflow_mode: str = "i2v_legacy") -> Series:
+    def create_series(self, title: str, description: str = "", workflow_mode: str = "i2v_legacy", content_mode: str = "scripted") -> Series:
         """Create a new Series."""
         with self._save_lock:
             series = Series(
@@ -2912,6 +2969,7 @@ class ComicGenPipeline:
                 title=title,
                 description=description,
                 workflow_mode=workflow_mode,
+                content_mode=content_mode,
                 created_at=time.time(),
                 updated_at=time.time(),
             )
