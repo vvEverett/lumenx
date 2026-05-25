@@ -18,12 +18,13 @@
  * can manage tasks, queue, and shot-state updates.
  */
 import { useCallback, useMemo } from "react";
-import { Loader2, Sparkles, Dices, X } from "lucide-react";
+import { Dices, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { I2VModelConfig, DurationConfig, ModelParamSupport } from "@/lib/modelCatalog";
 import { usePanelSectionState } from "./usePanelSectionState";
 import SectionShell from "./SectionShell";
-import WorkflowActionButton from "@/components/shared/WorkflowActionButton";
+// PR-3c · Loader2/Sparkles/WorkflowActionButton removed with the Generate
+// CTA — generation lives in ShotCard's inline row now.
 
 /** Snapshot of every configurable param this panel can collect.
  *  Sub-fields are kept Optional so a model that doesn't expose a
@@ -58,17 +59,16 @@ interface ParamsSectionProps {
     title: string;
     params: ParamsState;
     onChange: (next: ParamsState) => void;
-    onGenerate: (params: ParamsState) => void;
-    /** When true, Generate is disabled (e.g. provider key missing,
-     *  task already in-flight). Tooltip shows the reason. */
-    generateDisabled?: boolean;
-    generateDisabledReason?: string;
-    /** Active in-flight count for this shot — flips the button text
-     *  to "Generating…" while a batch is running. */
+    /** Active in-flight count for this shot — shown as a small badge
+     *  on the SectionShell title bar so users see ongoing tasks even
+     *  when the params section is collapsed. */
     inFlightCount?: number;
-    /** Inline error to show under the Generate button (e.g.
+    /** Inline error to show under params section (e.g.
      *  "happyhorse-1.0-r2v needs reference images"). Host owns the
-     *  validation; this component just renders the message. */
+     *  validation; this component just renders the message.
+     *  PR-3c · Generate-related props (onGenerate / generateDisabled /
+     *  generateDisabledReason) removed: generation triggered from
+     *  ShotCard's inline row. */
     errorMessage?: string | null;
 }
 
@@ -81,9 +81,6 @@ export default function ParamsSection({
     title,
     params,
     onChange,
-    onGenerate,
-    generateDisabled = false,
-    generateDisabledReason,
     inFlightCount = 0,
     errorMessage,
 }: ParamsSectionProps) {
@@ -150,8 +147,6 @@ export default function ParamsSection({
         !!modelParams.viduAudio ||
         !!modelParams.shotType ||
         !!modelParams.watermark;
-
-    const generating = inFlightCount > 0;
 
     return (
         <SectionShell
@@ -408,26 +403,13 @@ export default function ParamsSection({
                     </div>
                 ) : null}
 
-                {/* Generate CTA — display tier per P0-2 (the focal
-                    action on this surface). min-w-[160px] prevents the
-                    "Generate ×N → Generating N…" label flip from
-                    causing layout shift (P2-6). */}
-                <div className="flex items-center justify-end pt-1">
-                    <WorkflowActionButton
-                        variant="primary"
-                        size="md"
-                        loading={generating}
-                        leftIcon={!generating ? <Sparkles /> : undefined}
-                        onClick={() => onGenerate(params)}
-                        disabled={generateDisabled}
-                        title={generateDisabledReason}
-                        className="min-w-[160px]"
-                    >
-                        {generating
-                            ? t("generatingBatch", { count: inFlightCount })
-                            : t("generateBatch", { count: params.count })}
-                    </WorkflowActionButton>
-                </div>
+                {/* Generate CTA removed in PR-3c — generation is now
+                    triggered from ShotCard's inline generation row
+                    (Action Bar 下方全宽行 with count selector + 主按钮).
+                    ParamsSection focuses purely on parameter config now;
+                    no action button surface here. errorMessage above is
+                    still useful when host validation fails (e.g., R2V
+                    model with no references). */}
             </div>
         </SectionShell>
     );

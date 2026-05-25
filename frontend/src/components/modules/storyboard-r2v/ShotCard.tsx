@@ -667,7 +667,7 @@ export default function ShotCard({
                             让用户不展开 attached panel 也能生成. count 同行
                             (×1/×2/×4/×6) 让"几个变体"成为 inline 决定.
                             Spec: r2v-workflow-v3-unified.md §4.3.1 / Q12. */}
-                        <div className="mt-2 flex items-center gap-2">
+                        <div className="mt-2 flex items-center justify-end gap-2">
                             <div className="flex items-center gap-1 shrink-0">
                                 {[1, 2, 4, 6].map((n) => {
                                     const active = generateCount === n;
@@ -700,7 +700,7 @@ export default function ShotCard({
                                         ? "请先在上方生成或上传首帧"
                                         : "请先输入提示词")
                                     : undefined}
-                                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-4 py-2 font-sans text-[13px] font-semibold tracking-tight transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 disabled:cursor-not-allowed disabled:opacity-40 bg-primary text-white border border-[rgba(100,108,255,0.65)] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(60,68,200,0.45),0_4px_14px_-2px_rgba(100,108,255,0.45)] hover:bg-[#7a82ff] hover:border-[rgba(100,108,255,0.85)] disabled:hover:bg-primary disabled:hover:border-[rgba(100,108,255,0.65)]"
+                                className="inline-flex items-center justify-center gap-1.5 rounded-md px-5 py-2 min-w-[140px] font-sans text-[13px] font-semibold tracking-tight transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 disabled:cursor-not-allowed disabled:opacity-40 bg-primary text-white border border-[rgba(100,108,255,0.65)] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(60,68,200,0.45),0_4px_14px_-2px_rgba(100,108,255,0.45)] hover:bg-[#7a82ff] hover:border-[rgba(100,108,255,0.85)] disabled:hover:bg-primary disabled:hover:border-[rgba(100,108,255,0.65)]"
                             >
                                 {inFlightCount > 0 ? (
                                     <>
@@ -716,37 +716,36 @@ export default function ShotCard({
                             </motion.button>
                         </div>
 
-                        {/* PR-3b · 参数 / Takes disclosure bar — 全宽显眼入口
-                            (Q11 B). Action Bar 下方独立行，控制 attached panel
-                            显隐. v1 不带 params summary; summary 是 polish 留作
-                            follow-up. */}
-                        <motion.button
-                            whileHover={{ scale: 1.005 }}
-                            whileTap={{ scale: 0.995 }}
-                            type="button"
-                            onClick={onToggleExpanded}
-                            aria-expanded={expanded}
-                            aria-label={expanded ? t("collapseShot") : t("expandShot")}
-                            className={`mt-2 w-full inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2 font-mono text-[11px] font-medium uppercase tracking-[0.14em] transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${
-                                expanded
-                                    ? "border-primary/40 bg-primary/12 text-primary hover:bg-primary/20"
-                                    : "border-glass-border bg-black/30 text-text-secondary hover:border-white/20 hover:bg-white/[0.06] hover:text-foreground"
-                            }`}
-                        >
-                            <span className="flex items-center gap-2">
+                        {/* PR-3b · 参数 / Takes disclosure bar — 控制 attached
+                            panel 显隐. Right-aligned 适宜宽度 (跟生成行对齐,
+                            不全宽，避免视觉过重). */}
+                        <div className="mt-2 flex justify-end">
+                            <motion.button
+                                whileHover={{ scale: 1.005 }}
+                                whileTap={{ scale: 0.995 }}
+                                type="button"
+                                onClick={onToggleExpanded}
+                                aria-expanded={expanded}
+                                aria-label={expanded ? t("collapseShot") : t("expandShot")}
+                                className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 font-mono text-[11px] font-medium uppercase tracking-[0.14em] transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${
+                                    expanded
+                                        ? "border-primary/40 bg-primary/12 text-primary hover:bg-primary/20"
+                                        : "border-glass-border bg-black/30 text-text-secondary hover:border-white/20 hover:bg-white/[0.06] hover:text-foreground"
+                                }`}
+                            >
                                 {expanded ? (
                                     <PanelBottomClose size={13} strokeWidth={1.6} aria-hidden="true" />
                                 ) : (
                                     <PanelBottomOpen size={13} strokeWidth={1.6} aria-hidden="true" />
                                 )}
                                 <span>{expanded ? t("collapseShotShort") : t("expandShotShort")}</span>
-                            </span>
-                            {expanded ? (
-                                <ChevronUp size={12} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-                            ) : (
-                                <ChevronDown size={12} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-                            )}
-                        </motion.button>
+                                {expanded ? (
+                                    <ChevronUp size={12} strokeWidth={2} className="opacity-60" aria-hidden="true" />
+                                ) : (
+                                    <ChevronDown size={12} strokeWidth={2} className="opacity-60" aria-hidden="true" />
+                                )}
+                            </motion.button>
+                        </div>
                     </div>
                 </div>
             </div>

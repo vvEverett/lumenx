@@ -1631,7 +1631,6 @@ export default function StoryboardR2V() {
                                     title={isI2vTab ? "I2V Params" : "R2V Params"}
                                     params={paramsState}
                                     onChange={(next) => handleShotParamsChange(shot, next)}
-                                    onGenerate={(p) => generateVideoBatch(index, p.count, p)}
                                     inFlightCount={shotInFlight}
                                     errorMessage={shotErrors[shot.id] ?? null}
                                 />
