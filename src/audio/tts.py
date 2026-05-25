@@ -48,6 +48,63 @@ VOICES = {
     # === cosyvoice-v3 voices (require cosyvoice-v3-flash or cosyvoice-v3-plus) ===
     'longanyang': {'model_id': 'longanyang', 'name': '龙安阳 (阳光少年)', 'gender': 'Male', 'model': 'cosyvoice-v3-flash'},
     'longanhuan': {'model_id': 'longanhuan', 'name': '龙安欢 (活力女)', 'gender': 'Female', 'model': 'cosyvoice-v3-flash'},
+    # === Qwen3-TTS voices (PR-3g Stage A — added 2026-05-25 from official doc)
+    # Use qwen3-tts-flash for standard / qwen3-tts-instruct-flash for instructions
+    # control. Voice IDs are case-sensitive (Cherry not cherry). Supports 10 langs:
+    # zh / en / fr / de / ru / it / es / pt / ja / ko.
+    # `family: 'qwen3'` is the new optional metadata - existing CosyVoice entries
+    # implicitly family='cosyvoice'. Will be migrated to explicit field in next commit.
+    # === Standard Mandarin voices ===
+    'Cherry': {'model_id': 'Cherry', 'name': 'Cherry · 芊悦 (阳光积极)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Serena': {'model_id': 'Serena', 'name': 'Serena · 苏瑶 (温柔小姐姐)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Ethan': {'model_id': 'Ethan', 'name': 'Ethan · 晨煦 (阳光温暖男)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Chelsie': {'model_id': 'Chelsie', 'name': 'Chelsie · 千雪 (二次元虚拟女友)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Momo': {'model_id': 'Momo', 'name': 'Momo · 茉兔 (撒娇搞怪)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Vivian': {'model_id': 'Vivian', 'name': 'Vivian · 十三 (拽拽小暴躁)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Moon': {'model_id': 'Moon', 'name': 'Moon · 月白 (率性帅气男)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Maia': {'model_id': 'Maia', 'name': 'Maia · 四月 (知性温柔)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Kai': {'model_id': 'Kai', 'name': 'Kai · 凯 (耳朵 SPA 男)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Nofish': {'model_id': 'Nofish', 'name': 'Nofish · 不吃鱼 (设计师不卷舌)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Bella': {'model_id': 'Bella', 'name': 'Bella · 萌宝 (小萝莉)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Eldric Sage': {'model_id': 'Eldric Sage', 'name': 'Eldric Sage · 沧明子 (沉稳睿智老者)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Mia': {'model_id': 'Mia', 'name': 'Mia · 乖小妹 (温顺乖巧)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Mochi': {'model_id': 'Mochi', 'name': 'Mochi · 沙小弥 (聪明伶俐童声男)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Bellona': {'model_id': 'Bellona', 'name': 'Bellona · 燕铮莺 (声音洪亮人物鲜活)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Vincent': {'model_id': 'Vincent', 'name': 'Vincent · 田叔 (沙哑烟嗓江湖)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Bunny': {'model_id': 'Bunny', 'name': 'Bunny · 萌小姬 (萌属性小萝莉)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Neil': {'model_id': 'Neil', 'name': 'Neil · 阿闻 (新闻主持人)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Elias': {'model_id': 'Elias', 'name': 'Elias · 墨讲师 (严谨知识讲解女)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Arthur': {'model_id': 'Arthur', 'name': 'Arthur · 徐大爷 (旱烟嗓村奇闻)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Nini': {'model_id': 'Nini', 'name': 'Nini · 邻家妹妹 (糯米糍甜腻)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Seren': {'model_id': 'Seren', 'name': 'Seren · 小婉 (助眠温和)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Pip': {'model_id': 'Pip', 'name': 'Pip · 顽屁小孩 (调皮捣蛋男童)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Stella': {'model_id': 'Stella', 'name': 'Stella · 少女阿月 (迷糊少女→正义)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': True},
+    'Jennifer': {'model_id': 'Jennifer', 'name': 'Jennifer · 詹妮弗 (电影质感美语女)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': False},
+    'Ryan': {'model_id': 'Ryan', 'name': 'Ryan · 甜茶 (戏感炸裂男)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': False},
+    'Katerina': {'model_id': 'Katerina', 'name': 'Katerina · 卡捷琳娜 (御姐韵律)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': False},
+    'Aiden': {'model_id': 'Aiden', 'name': 'Aiden · 艾登 (美语大男孩)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': False},
+    # === Qwen3 dialect voices (extremely valuable for Chinese drama creation) ===
+    'Jada': {'model_id': 'Jada', 'name': 'Jada · 上海-阿珍 (沪上阿姐)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'dialect': 'shanghai', 'supports_instruction': False},
+    'Dylan': {'model_id': 'Dylan', 'name': 'Dylan · 北京-晓东 (胡同少年)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'dialect': 'beijing', 'supports_instruction': False},
+    'Li': {'model_id': 'Li', 'name': 'Li · 南京-老李 (耐心瑜伽老师)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'dialect': 'nanjing', 'supports_instruction': False},
+    'Marcus': {'model_id': 'Marcus', 'name': 'Marcus · 陕西-秦川 (老陕实在)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'dialect': 'shaanxi', 'supports_instruction': False},
+    'Roy': {'model_id': 'Roy', 'name': 'Roy · 闽南-阿杰 (台湾哥仔诙谐)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'dialect': 'minnan', 'supports_instruction': False},
+    'Peter': {'model_id': 'Peter', 'name': 'Peter · 天津-李彼得 (相声捧哏)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'dialect': 'tianjin', 'supports_instruction': False},
+    'Sunny': {'model_id': 'Sunny', 'name': 'Sunny · 四川-晴儿 (川妹子甜)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'dialect': 'sichuan', 'supports_instruction': False},
+    'Eric': {'model_id': 'Eric', 'name': 'Eric · 四川-程川 (跳脱成都男)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'dialect': 'sichuan', 'supports_instruction': False},
+    'Rocky': {'model_id': 'Rocky', 'name': 'Rocky · 粤语-阿强 (幽默风趣)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'dialect': 'cantonese', 'supports_instruction': False},
+    'Kiki': {'model_id': 'Kiki', 'name': 'Kiki · 粤语-阿清 (港妹闺蜜)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'dialect': 'cantonese', 'supports_instruction': False},
+    # === Qwen3 international voices (multilingual) ===
+    'Bodega': {'model_id': 'Bodega', 'name': 'Bodega · 博德加 (西班牙大叔)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'lang_primary': 'es', 'supports_instruction': False},
+    'Sonrisa': {'model_id': 'Sonrisa', 'name': 'Sonrisa · 索尼莎 (拉美开朗大姐)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'lang_primary': 'es', 'supports_instruction': False},
+    'Alek': {'model_id': 'Alek', 'name': 'Alek · 阿列克 (战斗民族冷暖)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'lang_primary': 'ru', 'supports_instruction': False},
+    'Dolce': {'model_id': 'Dolce', 'name': 'Dolce · 多尔切 (慵懒意大利)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'lang_primary': 'it', 'supports_instruction': False},
+    'Sohee': {'model_id': 'Sohee', 'name': 'Sohee · 素熙 (韩国温柔欧尼)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'lang_primary': 'ko', 'supports_instruction': False},
+    'Ono Anna': {'model_id': 'Ono Anna', 'name': 'Ono Anna · 小野杏 (鬼灵精怪青梅)', 'gender': 'Female', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'lang_primary': 'ja', 'supports_instruction': False},
+    'Lenn': {'model_id': 'Lenn', 'name': 'Lenn · 莱恩 (理性德国青年)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'lang_primary': 'de', 'supports_instruction': False},
+    'Emilien': {'model_id': 'Emilien', 'name': 'Emilien · 埃米尔安 (浪漫法国大哥)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'lang_primary': 'fr', 'supports_instruction': False},
+    'Andre': {'model_id': 'Andre', 'name': 'Andre · 安德雷 (磁性沉稳男)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': False},
+    'Radio Gol': {'model_id': 'Radio Gol', 'name': 'Radio Gol · 拉迪奥·戈尔 (足球诗人解说男)', 'gender': 'Male', 'model': 'qwen3-tts-flash', 'family': 'qwen3', 'supports_instruction': False},
 }
 
 
