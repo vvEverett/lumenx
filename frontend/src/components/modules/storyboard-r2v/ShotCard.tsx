@@ -602,9 +602,14 @@ export default function ShotCard({
                             onInsertAsset={handleInsertAssetFromChip}
                         />
 
-                        {/* Action Bar */}
-                        <div className="flex items-center justify-between mt-0.5">
-                            <div className="flex items-center gap-0.5">
+                        {/* PR-3c+ · 底部一体化 action 行:
+                            左 = shot actions (@ ↑ ↓ ⊙ ×) -- 之前悬空在 chip
+                                  bar 下方，现移到底部跟生成行同一区域.
+                            右 = generation cluster (count selector + 生成 ×N).
+                            一行解决"所有 shot operations + generate"，
+                            不再两段隔离视觉. */}
+                        <div className="mt-2 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-0.5 shrink-0">
                                 <motion.button
                                     whileHover={{ scale: 1.08 }}
                                     whileTap={{ scale: 0.92 }}
@@ -654,20 +659,7 @@ export default function ShotCard({
                                 </motion.button>
                             </div>
 
-                            {/* Expand/collapse chip removed in PR-3b — replaced by
-                                the full-width disclosure bar below Action Bar.
-                                Visual weight 5-10× higher; previously buried in
-                                actions row, users couldn't find it (user feedback
-                                grill Q11). Spec: r2v-workflow-v3-unified.md §4.3.1
-                                / §4.3.2. */}
-                        </div>
-
-                        {/* PR-3c · 闭环生成行: count selector + 主生成按钮.
-                            生成是 shot 的核心 action, 移到 ShotCard 内全宽行
-                            让用户不展开 attached panel 也能生成. count 同行
-                            (×1/×2/×4/×6) 让"几个变体"成为 inline 决定.
-                            Spec: r2v-workflow-v3-unified.md §4.3.1 / Q12. */}
-                        <div className="mt-2 flex items-center justify-end gap-2">
+                            <div className="flex items-center gap-2">
                             <div className="flex items-center gap-1 shrink-0">
                                 {[1, 2, 4, 6].map((n) => {
                                     const active = generateCount === n;
@@ -714,6 +706,7 @@ export default function ShotCard({
                                     </>
                                 )}
                             </motion.button>
+                            </div>
                         </div>
 
                         {/* PR-3b · 参数 / Takes disclosure bar — 控制 attached
