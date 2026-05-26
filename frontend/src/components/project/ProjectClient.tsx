@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Palette, Layout, Film, Share2, Mic, Music, BookOpen, Users, Video, Settings, Key, MessageSquareCode, Clapperboard } from "lucide-react";
+import { Palette, Layout, Film, BookOpen, Users, Video, Settings, Key, MessageSquareCode, Clapperboard } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useProjectStore } from "@/store/projectStore";
 import PipelineSidebar from "@/components/layout/PipelineSidebar";
@@ -17,9 +17,6 @@ import VideoAssembly from "@/components/modules/VideoAssembly";
 import ConsistencyVault from "@/components/modules/ConsistencyVault";
 import ArtDirection from "@/components/modules/ArtDirection";
 import StoryboardComposer from "@/components/modules/StoryboardComposer";
-import VoiceActingStudio from "@/components/modules/VoiceActingStudio";
-import FinalMixStudio from "@/components/modules/FinalMixStudio";
-import ExportStudio from "@/components/modules/ExportStudio";
 import ModelSettingsModal from "@/components/common/ModelSettingsModal";
 import EnvConfigDialog from "@/components/project/EnvConfigDialog";
 import PromptConfigModal from "@/components/project/PromptConfigModal";
@@ -28,6 +25,12 @@ import dynamic from "next/dynamic";
 
 const CreativeCanvas = dynamic(() => import("@/components/canvas/CreativeCanvas"), { ssr: false });
 
+// PR-3m · Steps 7-9 (Voice / Final Mix / Export) deprecated. Their
+// functionality moved into:
+//   - Voice  → Cast voice binding + Storyboard DialogueAudioRow (PR-3g-3j)
+//   - Mix    → Assembly Mix phase tab (PR-3k)
+//   - Export → Assembly Export phase tab (PR-3k)
+// Both legacy and unified projects now share the 6-step shape.
 const LEGACY_STEPS = [
     { id: "script", label: "1. Script", icon: BookOpen },
     { id: "art_direction", label: "2. Art Direction", icon: Palette },
@@ -35,9 +38,6 @@ const LEGACY_STEPS = [
     { id: "storyboard", label: "4. Storyboard", icon: Layout },
     { id: "motion", label: "5. Motion", icon: Video },
     { id: "assembly", label: "6. Assembly", icon: Film },
-    { id: "audio", label: "7. Voice", icon: Mic, comingSoon: true },
-    { id: "mix", label: "8. Final Mix", icon: Music, comingSoon: true },
-    { id: "export", label: "9. Export", icon: Share2, comingSoon: true },
 ];
 
 // PR-3f (r2v-workflow-v3) — Unified workflow: 5 steps including Cast.
@@ -226,9 +226,6 @@ export default function ProjectClient({ id, breadcrumbSegments }: { id: string; 
                     {activeStep === "storyboard_r2v" && <StoryboardR2V />}
                     {activeStep === "motion" && <VideoGenerator />}
                     {activeStep === "assembly" && <VideoAssembly />}
-                    {activeStep === "audio" && <VoiceActingStudio />}
-                    {activeStep === "mix" && <FinalMixStudio />}
-                    {activeStep === "export" && <ExportStudio />}
                 </div>
                 {/* PropertiesPanel removed in R2V v2. Each step now owns
                     its own side rail (Script → "Previously on..."; Cast/
