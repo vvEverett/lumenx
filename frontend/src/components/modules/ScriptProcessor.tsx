@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Wand2, User, MapPin, Box, ChevronRight, ChevronLeft, Save, Sparkles, Plus, Trash2, X, ScrollText, PanelRightOpen, PanelRightClose } from "lucide-react";
 import { api, crudApi } from "@/lib/api";
 import { useProjectStore } from "@/store/projectStore";
+import { toast } from "@/store/toastStore";
 import StepHeader from "@/components/shared/StepHeader";
 import WorkflowActionButton from "@/components/shared/WorkflowActionButton";
 import PreviousEpisodeSummary from "@/components/modules/PreviousEpisodeSummary";
@@ -94,20 +95,48 @@ export default function ScriptProcessor() {
     const handleAnalyze = async () => {
         // Silent return on empty script used to make the button look like
         // a no-op when users hit it before typing — now we surface the
-        // reason so they understand why nothing happened.
+        // reason via the toast system (replaces native alert).
         if (!script.trim()) {
-            alert(ts("scriptEmpty"));
+            toast.warning(ts("scriptEmpty"), {
+                projectId: currentProject?.id,
+                projectTitle: currentProject?.title,
+            });
             return;
         }
+        const projectId = currentProject?.id;
+        const projectTitle = currentProject?.title;
+        const toastId = toast.progress(ts("analyzingScript"), {
+            projectId,
+            projectTitle,
+            body: ts("analyzingScriptBody"),
+        });
         try {
             await analyzeProject(script);
-            if (currentProject?.series_id) {
+            const refreshed = useProjectStore.getState().currentProject;
+            const charCount = refreshed?.characters?.length ?? 0;
+            const sceneCount = refreshed?.scenes?.length ?? 0;
+            const propCount = refreshed?.props?.length ?? 0;
+            toast.update(toastId, {
+                kind: "success",
+                title: ts("analysisDone"),
+                body: ts("analysisDoneBody", { c: charCount, s: sceneCount, p: propCount }),
+                autoCloseMs: 7000,
+            });
+            if (refreshed?.series_id) {
                 setReconcileOpen(true);
             }
         } catch (error: any) {
             console.error("Failed to analyze script:", error);
             const errorMessage = error?.response?.data?.detail || error?.message || "未知错误";
-            alert(ts("analysisFailed", { error: errorMessage }));
+            toast.update(toastId, {
+                kind: "error",
+                title: ts("analysisFailedShort"),
+                body: String(errorMessage).slice(0, 240),
+                action: {
+                    label: ts("retry"),
+                    onClick: () => { handleAnalyze(); },
+                },
+            });
         }
     };
 
@@ -129,7 +158,10 @@ export default function ScriptProcessor() {
             updateProject(currentProject.id, updatedProject);
         } catch (error) {
             console.error("Failed to delete node:", error);
-            alert(ts("deleteFailed"));
+            toast.error(ts("deleteFailed"), {
+                projectId: currentProject?.id,
+                projectTitle: currentProject?.title,
+            });
         }
     };
 
@@ -149,7 +181,10 @@ export default function ScriptProcessor() {
             setIsCreateDialogOpen(false);
         } catch (error) {
             console.error("Failed to create node:", error);
-            alert(ts("createFailed"));
+            toast.error(ts("createFailed"), {
+                projectId: currentProject?.id,
+                projectTitle: currentProject?.title,
+            });
         }
     };
 
@@ -254,7 +289,10 @@ function CreateEntityDialog({ onClose, onCreate }: { onClose: () => void; onCrea
     const [type, setType] = useState<"character" | "scene" | "prop">("character");
 
     const handleSubmit = () => {
-        if (!name.trim()) return alert(ts("nameRequired"));
+        if (!name.trim()) {
+            toast.warning(ts("nameRequired"));
+            return;
+        }
         onCreate({ name, description: desc, type });
     };
 
