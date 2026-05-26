@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
-import { Plus, Palette, Film } from "lucide-react";
+import { Plus, Palette, Film, Loader2 } from "lucide-react";
 import StepHeader from "@/components/shared/StepHeader";
 import PreviousEpisodeFramesRail from "./storyboard-r2v/PreviousEpisodeFramesRail";
 import { useTranslations } from "next-intl";
@@ -14,6 +14,9 @@ import type { BatchSummary } from "./storyboard-r2v/shot-panel/CandidatesSection
 import { getR2vRouteModelId, isR2vImageBased, VIDEO_I2V_MODELS, VIDEO_R2V_MODELS, DEFAULT_I2V_MODEL_ID, DEFAULT_R2V_MODEL_ID } from "@/lib/modelCatalog";
 import ShotCard, { type ShotNode } from "./storyboard-r2v/ShotCard";
 import DialogueAudioRow from "./storyboard-r2v/DialogueAudioRow";
+import StoryboardGenerateDialog from "./storyboard-r2v/StoryboardGenerateDialog";
+import { toast } from "@/store/toastStore";
+import { Wand2 } from "lucide-react";
 import AssetDrawer from "./storyboard-r2v/AssetDrawer";
 import { type VideoConfig, DEFAULT_VIDEO_CONFIG } from "./storyboard-r2v/VideoConfigModal";
 import {
@@ -396,6 +399,69 @@ export default function StoryboardR2V() {
             debugLog.warn("Studio", "addShot backend persist failed", err);
         }
     }, [currentProject, updateProject]);
+
+    // PR-3 followup · LLM storyboard generation. State + handler live at
+    // the StoryboardR2V level (not in a sub-component) because the toast
+    // lifecycle survives the dialog closing and we need the parent to
+    // setShots() when the new frames come back.
+    const [genDialogOpen, setGenDialogOpen] = useState(false);
+    const [generating, setGenerating] = useState(false);
+
+    const handleGenerateStoryboard = useCallback(async () => {
+        if (!currentProject?.id) return;
+        const projectId = currentProject.id;
+        const projectTitle = currentProject.title || "—";
+        setGenerating(true);
+        const toastId = toast.progress(t("genToastStart"), {
+            projectId,
+            projectTitle,
+            body: t("genToastStartBody"),
+        });
+        try {
+            const updated = await api.generateStoryboard(projectId);
+            const newFrameCount = Array.isArray(updated?.frames) ? updated.frames.length : 0;
+            updateProject(projectId, updated);
+            // Re-derive shots from the response so the UI reflects the
+            // freshly-generated frames without waiting for a refetch.
+            if (Array.isArray(updated?.frames)) {
+                setShots(
+                    updated.frames.map((frame: any) =>
+                        migrateShotNode({
+                            id: frame.id,
+                            prompt: frame.action_description || "",
+                            tabMode: (frame.workbench_tab_mode as "t2i_i2v" | "direct_r2v" | undefined)
+                                ?? (currentProject.default_generation_mode === "i2v" ? "t2i_i2v" : "direct_r2v"),
+                            videoUrl: frame.video_url || undefined,
+                            videoStatus: frame.video_url ? ("completed" as const) : undefined,
+                            imageUrl: frame.rendered_image_url || frame.image_url || undefined,
+                            t2iImageUrls: Array.isArray(frame.t2i_image_urls) ? frame.t2i_image_urls : [],
+                            t2iSelectedIndex: typeof frame.t2i_selected_index === "number"
+                                ? frame.t2i_selected_index : 0,
+                        }),
+                    ),
+                );
+            }
+            toast.update(toastId, {
+                kind: "success",
+                title: t("genToastDone", { count: newFrameCount }),
+                body: t("genToastDoneBody"),
+                autoCloseMs: 7000,
+            });
+        } catch (err: any) {
+            const detail = err?.response?.data?.detail || err?.message || t("genToastErrUnknown");
+            toast.update(toastId, {
+                kind: "error",
+                title: t("genToastErr"),
+                body: String(detail).slice(0, 200),
+                action: {
+                    label: t("genToastRetry"),
+                    onClick: () => { handleGenerateStoryboard(); },
+                },
+            });
+        } finally {
+            setGenerating(false);
+        }
+    }, [currentProject, updateProject, t]);
 
     // Delete a shot
     const deleteShot = useCallback(async (index: number) => {
@@ -1391,6 +1457,18 @@ export default function StoryboardR2V() {
                     <Plus size={13} strokeWidth={2} />
                     {t("addShot")}
                 </motion.button>
+                {/* LLM-generate frames from script. Always visible; dialog
+                    runs pre-flight checks and surfaces "needs script /
+                    needs entities" friendly errors with quick-jump. */}
+                <button
+                    type="button"
+                    onClick={() => setGenDialogOpen(true)}
+                    disabled={generating}
+                    className="inline-flex h-7 items-center gap-1.5 rounded px-2.5 font-mono text-[10.5px] uppercase tracking-[0.14em] font-medium text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors disabled:opacity-40"
+                >
+                    {generating ? <Loader2 size={11} className="animate-spin" /> : <Wand2 size={11} />}
+                    {generating ? t("genInFlight") : t("genShots")}
+                </button>
                 {/* PR-3j · Batch generate dialogue audio for every frame with
                     dialogue. Skips frames whose hash still matches. */}
                 <BatchDialogueAudioButton
@@ -1439,6 +1517,38 @@ export default function StoryboardR2V() {
                 shot cards + their attached workbench panels keep
                 breathing room without overflowing. */}
             <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 sm:px-6">
+                {shots.length === 0 && (
+                    <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center px-6">
+                        <div className="rounded-2xl border border-glass-border bg-glass p-8 max-w-lg">
+                            <div className="mx-auto w-12 h-12 grid place-items-center rounded-full bg-primary/10 border border-primary/30 mb-4">
+                                <Wand2 size={20} className="text-primary" />
+                            </div>
+                            <h3 className="text-display font-medium text-foreground">{t("emptyTitle")}</h3>
+                            <p className="text-body-sm text-text-secondary mt-1.5 max-w-md mx-auto leading-relaxed">
+                                {t("emptyBody")}
+                            </p>
+                            <div className="mt-5 flex items-center justify-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setGenDialogOpen(true)}
+                                    disabled={generating}
+                                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-md bg-primary text-white border border-[rgba(100,108,255,0.65)] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.14)] hover:bg-[#7a82ff] disabled:opacity-40 transition-colors text-[13px] font-semibold"
+                                >
+                                    {generating ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
+                                    {generating ? t("genInFlight") : t("emptyCTA")}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => addShot(-1)}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md bg-glass border border-glass-border text-text-secondary hover:text-foreground hover:bg-hover-bg transition-colors text-[12px]"
+                                >
+                                    <Plus size={12} />
+                                    {t("emptyManualAdd")}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {shots.map((shot, index) => {
                     const shotTasks = tasksForShot(shot);
                     const shotInFlight = shotTasks.filter(
@@ -1759,6 +1869,18 @@ export default function StoryboardR2V() {
                 resolveUrl={resolveAssetUrl}
             />
         ) : null}
+        {/* LLM-generate frames dialog */}
+        <StoryboardGenerateDialog
+            isOpen={genDialogOpen}
+            onClose={() => setGenDialogOpen(false)}
+            project={currentProject as any}
+            existingShotCount={shots.length}
+            onConfirm={handleGenerateStoryboard}
+            onJumpToScript={() => {
+                setGenDialogOpen(false);
+                window.dispatchEvent(new CustomEvent("navigateStep", { detail: "script" }));
+            }}
+        />
         </div>
     );
 }

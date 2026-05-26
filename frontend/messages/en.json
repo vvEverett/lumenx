@@ -112,6 +112,23 @@
       "serious": "Serious"
     }
   },
+  "storyboardGen": {
+    "title": "✨ Generate shots from script",
+    "close": "Close",
+    "forProject": "Project:",
+    "preflightTitle": "Pre-flight check",
+    "checkText": "Script text is ready",
+    "checkTextHint": "Needs at least 40 chars of script. Go back to the Script step to paste or edit.",
+    "checkChars": "Entities have been extracted",
+    "checkCharsHint": "Click 提取实体 in the Script step first — AI uses character / scene info for better shot decomposition.",
+    "goFixInScript": "Go fix in Script step",
+    "willReplaceWarning": "Continuing will wipe the existing {count} shots and replace them with AI-generated ones. Cannot be undone.",
+    "freshHint": "First-time generation — AI will split shots, place scenes, and assign characters.",
+    "generate": "Generate",
+    "replaceAndGenerate": "Replace & generate",
+    "generating": "Generating...",
+    "cancel": "Cancel"
+  },
   "voiceDesign": {
     "title": "Design a new voice",
     "close": "Close",
@@ -901,6 +918,19 @@
     "noRefVideosAvailable": "No reference videos available. Generate Motion References in the Assets step first."
   },
   "storyboardR2V": {
+    "genShots": "✨ Generate shots",
+    "genInFlight": "Generating...",
+    "emptyTitle": "No shots yet",
+    "emptyBody": "Generate shots from the script in one click (recommended), or add manually to start from scratch.",
+    "emptyCTA": "Generate shots from script",
+    "emptyManualAdd": "Add manually",
+    "genToastStart": "Generating shots...",
+    "genToastStartBody": "Running AI analysis on the script — usually 30-90s, you can keep working.",
+    "genToastDone": "✨ Generated {count} shots",
+    "genToastDoneBody": "Shots are now in the storyboard — pick first frames or jump straight into video.",
+    "genToastErr": "Generation failed",
+    "genToastErrUnknown": "Unknown error",
+    "genToastRetry": "Retry",
     "shots": "Shots",
     "shot": "Shot",
     "addShot": "Add Shot",
