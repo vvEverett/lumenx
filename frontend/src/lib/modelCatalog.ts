@@ -224,8 +224,25 @@ function isVisibleModel(model: CatalogModel, surface: VisibilitySurface): boolea
 }
 
 function getVisibleModels(group: SelectionGroup, surface: VisibilitySurface): CatalogModel[] {
-    return SORTED_MODEL_ENTRIES.filter(
+    // Strict match: model declared its primary selection_group as `group`.
+    const direct = SORTED_MODEL_ENTRIES.filter(
         (model) => model.ui.selection_group === group && isVisibleModel(model, surface)
+    );
+    // Capability fallback: when the strict bucket is empty for t2i/i2i (the
+    // current catalog ships only `image`-group models that can do both),
+    // accept any visible image-group model that declares the matching
+    // capability. Without this, resolveModelId() always falls through to
+    // catalog defaults — meaning user-picked t2i/i2i selections silently
+    // revert on the next render. (See PR-3* assembly model picker bug.)
+    if (direct.length > 0 || (group !== 't2i' && group !== 'i2i')) {
+        return direct;
+    }
+    const capability = group; // 't2i' | 'i2i'
+    return SORTED_MODEL_ENTRIES.filter(
+        (model) =>
+            model.ui.selection_group === 'image' &&
+            model.capabilities.includes(capability) &&
+            isVisibleModel(model, surface)
     );
 }
 

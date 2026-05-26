@@ -32,9 +32,9 @@ class TestModelCatalog:
         # the Atelier/Studio image generation path.
         assert catalog["defaults"]["model_settings"] == {
             "t2i_model": "wan2.7-image-pro",
-            "i2i_model": "wan2.7-image",
+            "i2i_model": "wan2.7-image-pro",
             "image_model": "wan2.7-image-pro",
-            "i2v_model": "wan2.7-i2v",
+            "i2v_model": "happyhorse-1.0-i2v",
         }
 
         models = catalog["models"]
@@ -139,8 +139,8 @@ class TestModelCatalog:
         defaults = get_default_model_settings(MODEL_CATALOG_ROOT)
 
         assert defaults.t2i_model == "wan2.7-image-pro"
-        assert defaults.i2i_model == "wan2.7-image"
-        assert defaults.i2v_model == "wan2.7-i2v"
+        assert defaults.i2i_model == "wan2.7-image-pro"
+        assert defaults.i2v_model == "happyhorse-1.0-i2v"
 
     def test_validation_report_passes_for_repo_catalog(self):
         catalog = build_catalog_dict(MODEL_CATALOG_ROOT)
@@ -165,10 +165,10 @@ class TestModelCatalog:
     def test_validation_report_detects_default_visibility_regression(self):
         catalog = build_catalog_dict(MODEL_CATALOG_ROOT)
         broken_catalog = deepcopy(catalog)
-        # Target the current default I2V model (wan2.7-i2v) so the
-        # validation actually fires — the previous default (wan2.6-i2v)
-        # is no longer authoritative.
-        broken_catalog["models"]["wan2.7-i2v"]["ui"]["visible_in"] = [
+        # Target the current default I2V model (happyhorse-1.0-i2v after
+        # the 2026-05-26 catalog meta switch) so the validation actually
+        # fires — the previous default (wan2.7-i2v) is no longer authoritative.
+        broken_catalog["models"]["happyhorse-1.0-i2v"]["ui"]["visible_in"] = [
             "project_settings",
             "series_settings",
             "global_settings",

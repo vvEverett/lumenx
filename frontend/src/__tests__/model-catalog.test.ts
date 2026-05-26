@@ -5,6 +5,7 @@ import {
     DEFAULT_MODEL_SETTINGS,
     GLOBAL_I2I_MODELS,
     GLOBAL_I2V_MODELS,
+    GLOBAL_IMAGE_MODELS,
     GLOBAL_T2I_MODELS,
     R2V_ROUTE_MODEL_ID,
     R2V_SELECTION_MODEL_ID,
@@ -38,17 +39,17 @@ describe('model catalog selectors', () => {
         // settings at the consumer layer.
         expect(DEFAULT_MODEL_SETTINGS).toMatchObject({
             t2i_model: 'wan2.7-image-pro',
-            i2i_model: 'wan2.7-image',
-            i2v_model: 'wan2.7-i2v',
+            i2i_model: 'wan2.7-image-pro',
+            i2v_model: 'happyhorse-1.0-i2v',
             image_model: 'wan2.7-image-pro',
         });
 
         // The 't2i' and 'i2i' selection_group surfaces moved to 'image'
-        // in Phase 2, leaving the legacy selectors empty (callers use
-        // GLOBAL_IMAGE_MODELS now). Asserted explicitly so any future
-        // re-population gets caught.
-        expect(GLOBAL_T2I_MODELS.map((model) => model.id)).toEqual([]);
-        expect(GLOBAL_I2I_MODELS.map((model) => model.id)).toEqual([]);
+        // in Phase 2. The resolver now falls through to visible image-group
+        // models so user picks (e.g. Wan 2.7 Image Pro) persist through
+        // resolveModelId() instead of silently reverting to the default.
+        expect(GLOBAL_T2I_MODELS.map((model) => model.id)).toEqual(GLOBAL_IMAGE_MODELS.map((m) => m.id));
+        expect(GLOBAL_I2I_MODELS.map((model) => model.id)).toEqual(GLOBAL_IMAGE_MODELS.map((m) => m.id));
 
         // Ordered DESC by ui.order; ties broken by display_name asc.
         expect(GLOBAL_I2V_MODELS.map((model) => model.id)).toEqual([
@@ -83,8 +84,8 @@ describe('model catalog fallbacks', () => {
             )
         ).toMatchObject({
             t2i_model: 'wan2.7-image-pro',
-            i2i_model: 'wan2.7-image',
-            i2v_model: 'wan2.7-i2v',
+            i2i_model: 'wan2.7-image-pro',
+            i2v_model: 'happyhorse-1.0-i2v',
         });
     });
 
@@ -155,10 +156,11 @@ describe('model catalog fallbacks', () => {
 
         // An r2v canonical id normalizes to the matching legacy id
         // (wan2.6-r2v), which is hidden in the i2v surface — so the
-        // resolver falls back to the current i2v default (wan2.7-i2v).
-        // Previously this assertion expected the resolver to remap r2v
-        // into the parent i2v legacy id; that behavior was dropped
-        // when r2v ids gained explicit modality suffixes.
+        // resolver falls back to the current i2v default (happyhorse-1.0-i2v
+        // since the 2026-05-26 catalog meta switch). Previously this
+        // assertion expected the resolver to remap r2v into the parent
+        // i2v legacy id; that behavior was dropped when r2v ids gained
+        // explicit modality suffixes.
         expect(
             resolveCompatModelSettings(
                 {
@@ -166,7 +168,7 @@ describe('model catalog fallbacks', () => {
                 },
                 'global_settings'
             ).i2v_model
-        ).toBe('wan2.7-i2v');
+        ).toBe('happyhorse-1.0-i2v');
 
         expect(compatI2vModels.map((model) => model.id)).toContain('wan2.6-i2v');
         expect(compatI2vModels.some((model) => model.id === 'wan/wan2.6-video#i2v')).toBe(false);
