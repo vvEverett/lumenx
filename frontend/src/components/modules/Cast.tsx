@@ -19,7 +19,7 @@
  *   · NO inspector right rail yet (Q9 decision: 3-section flat, no inspector)
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Users, MapPin, Box, ImageIcon, AlertTriangle, Sparkles, Plus, Upload, X, Loader2, Play, Pause, Volume2 } from "lucide-react";
+import { Users, MapPin, Box, ImageIcon, AlertTriangle, Sparkles, Plus, Upload, X, Loader2, Play, Pause, Volume2, Wand2, Layers } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useProjectStore } from "@/store/projectStore";
 import { api } from "@/lib/api";
@@ -28,6 +28,7 @@ import StepHeader from "@/components/shared/StepHeader";
 import PreviewImage from "@/components/shared/preview/PreviewImage";
 import WorkflowActionButton from "@/components/shared/WorkflowActionButton";
 import VoicePickerModal from "./cast/VoicePickerModal";
+import CastWorkbenchModal from "./cast/CastWorkbenchModal";
 
 type AssetKind = "character" | "scene" | "prop";
 
@@ -79,6 +80,9 @@ export default function Cast() {
     // generation flow which lands in a follow-up patch). For now this
     // opens a TODO dialog showing the planned two-tab interface.
     const [addModalOpen, setAddModalOpen] = useState<null | "character" | "scene" | "prop">(null);
+    // PR-3* · Cast redesign — tab filter + workbench launcher.
+    const [activeTab, setActiveTab] = useState<"all" | "character" | "scene" | "prop">("all");
+    const [workbench, setWorkbench] = useState<{ kind: "character" | "scene" | "prop"; entityId: string } | null>(null);
 
     /**
      * Aggregate per-asset appearance counts from frame references, then
@@ -167,7 +171,7 @@ export default function Cast() {
                 )}
             />
 
-            {/* Empty state — no frames yet (script not extracted) */}
+            {/* Empty state — no entities extracted yet */}
             {totalCast === 0 ? (
                 <div className="flex flex-1 items-center justify-center bg-surface">
                     <div className="max-w-md text-center">
@@ -183,34 +187,90 @@ export default function Cast() {
                     </div>
                 </div>
             ) : (
-                <div className="flex-1 overflow-y-auto bg-surface px-8 py-6 space-y-8 custom-scrollbar">
-                    <CastSection
-                        icon={<Users size={14} />}
-                        title={t("sectionCharacters")}
-                        items={characters}
-                        emptyLabel={t("sectionEmptyCharacters")}
-                        onAddNew={() => setAddModalOpen("character")}
-                        addLabel={t("addCharacter")}
-                        groupByPersona
-                    />
-                    <CastSection
-                        icon={<MapPin size={14} />}
-                        title={t("sectionScenes")}
-                        items={scenes}
-                        emptyLabel={t("sectionEmptyScenes")}
-                        onAddNew={() => setAddModalOpen("scene")}
-                        addLabel={t("addScene")}
-                    />
-                    <CastSection
-                        icon={<Box size={14} />}
-                        title={t("sectionProps")}
-                        items={props}
-                        emptyLabel={t("sectionEmptyProps")}
-                        onAddNew={() => setAddModalOpen("prop")}
-                        addLabel={t("addProp")}
-                    />
-                </div>
+                <>
+                    {/* Tab bar — '全部' is the default so users coming in fresh see
+                        the full inventory before filtering down. Counts are
+                        always visible so empty kinds telegraph themselves. */}
+                    <div className="shrink-0 flex items-center gap-1 px-6 pt-3 border-b border-glass-border bg-surface">
+                        {([
+                            { id: "all" as const, label: t("tabAll"), icon: <Layers size={11} />, count: totalCast },
+                            { id: "character" as const, label: t("tabCharacters"), icon: <Users size={11} />, count: characters.length },
+                            { id: "scene" as const, label: t("tabScenes"), icon: <MapPin size={11} />, count: scenes.length },
+                            { id: "prop" as const, label: t("tabProps"), icon: <Box size={11} />, count: props.length },
+                        ]).map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`relative inline-flex items-center gap-1.5 px-3 pb-2 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors ${
+                                    activeTab === tab.id
+                                        ? "text-foreground"
+                                        : "text-text-muted hover:text-text-secondary"
+                                }`}
+                            >
+                                {tab.icon}
+                                {tab.label}
+                                <span className={`ml-0.5 ${activeTab === tab.id ? "text-foreground" : "text-text-muted/60"}`}>
+                                    ({tab.count})
+                                </span>
+                                {activeTab === tab.id && (
+                                    <span className="absolute bottom-0 left-2 right-2 h-px bg-primary" aria-hidden="true" />
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto bg-surface px-8 py-6 space-y-10 custom-scrollbar">
+                        {(activeTab === "all" || activeTab === "character") && (
+                            <CastSection
+                                kind="character"
+                                icon={<Users size={14} />}
+                                title={t("sectionCharacters")}
+                                items={characters}
+                                emptyLabel={t("sectionEmptyCharacters")}
+                                onAddNew={() => setAddModalOpen("character")}
+                                addLabel={t("addCharacter")}
+                                groupByPersona
+                                onOpenWorkbench={(id) => setWorkbench({ kind: "character", entityId: id })}
+                                hideHeader={activeTab === "character"}
+                            />
+                        )}
+                        {(activeTab === "all" || activeTab === "scene") && (
+                            <CastSection
+                                kind="scene"
+                                icon={<MapPin size={14} />}
+                                title={t("sectionScenes")}
+                                items={scenes}
+                                emptyLabel={t("sectionEmptyScenes")}
+                                onAddNew={() => setAddModalOpen("scene")}
+                                addLabel={t("addScene")}
+                                onOpenWorkbench={(id) => setWorkbench({ kind: "scene", entityId: id })}
+                                hideHeader={activeTab === "scene"}
+                            />
+                        )}
+                        {(activeTab === "all" || activeTab === "prop") && (
+                            <CastSection
+                                kind="prop"
+                                icon={<Box size={14} />}
+                                title={t("sectionProps")}
+                                items={props}
+                                emptyLabel={t("sectionEmptyProps")}
+                                onAddNew={() => setAddModalOpen("prop")}
+                                addLabel={t("addProp")}
+                                onOpenWorkbench={(id) => setWorkbench({ kind: "prop", entityId: id })}
+                                hideHeader={activeTab === "prop"}
+                            />
+                        )}
+                    </div>
+                </>
             )}
+
+            {/* Workbench — per-entity generate / pick reference image */}
+            <CastWorkbenchModal
+                isOpen={workbench !== null}
+                kind={workbench?.kind ?? null}
+                entityId={workbench?.entityId ?? null}
+                onClose={() => setWorkbench(null)}
+            />
 
             {/* R2V v2 Phase 5 — real Add new cast modal (AI / upload tabs). */}
             <AddCastPlaceholderModal
@@ -489,6 +549,7 @@ function AddCastPlaceholderModal({
 }
 
 interface CastSectionProps {
+    kind: AssetKind;
     icon: React.ReactNode;
     title: string;
     items: CastItem[];
@@ -499,9 +560,15 @@ interface CastSectionProps {
      *  a sub-header showing the persona label (only applies when at
      *  least one item has a non-empty persona). */
     groupByPersona?: boolean;
+    /** Cast redesign — clicking a card (or its empty CTA) launches the
+     *  per-entity generation workbench in the parent. */
+    onOpenWorkbench?: (entityId: string) => void;
+    /** When the parent's tab filter is already focused on this kind,
+     *  the section's own header becomes redundant — hide it. */
+    hideHeader?: boolean;
 }
 
-function CastSection({ icon, title, items, emptyLabel, onAddNew, addLabel, groupByPersona }: CastSectionProps) {
+function CastSection({ kind, icon, title, items, emptyLabel, onAddNew, addLabel, groupByPersona, onOpenWorkbench, hideHeader }: CastSectionProps) {
     const t = useTranslations("cast");
     // R2V v2 P1-a — persona grouping (characters only)
     const groups = useMemo(() => {
@@ -532,26 +599,44 @@ function CastSection({ icon, title, items, emptyLabel, onAddNew, addLabel, group
         return out;
     }, [items, groupByPersona]);
 
+    // Per-kind layout: characters portrait 3:4 + denser, scenes landscape
+    // 16:9 + roomier, props 1:1 + densest. Matches each kind's natural
+    // composition habit (portrait for people, landscape for environments,
+    // square for objects) so thumbs don't letterbox.
+    const gridCols = kind === "scene"
+        ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        : kind === "character"
+            ? "grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+            : "grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6";
     return (
         <section>
-            <header className="mb-3 flex items-center gap-2">
-                <span className="grid h-6 w-6 place-items-center rounded text-text-muted">{icon}</span>
-                <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-secondary">
-                    {title}
-                </h3>
-                <span className="font-mono text-[10px] text-text-muted">({items.length})</span>
-                <div aria-hidden="true" className="ml-3 h-px flex-1 bg-glass-border" />
-                {onAddNew && (
-                    <WorkflowActionButton
-                        variant="ghost"
-                        size="sm"
-                        leftIcon={<Plus />}
-                        onClick={onAddNew}
-                    >
+            {!hideHeader && (
+                <header className="mb-3 flex items-center gap-2">
+                    <span className="grid h-6 w-6 place-items-center rounded text-text-muted">{icon}</span>
+                    <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-secondary">
+                        {title}
+                    </h3>
+                    <span className="font-mono text-[10px] text-text-muted">({items.length})</span>
+                    <div aria-hidden="true" className="ml-3 h-px flex-1 bg-glass-border" />
+                    {onAddNew && (
+                        <WorkflowActionButton
+                            variant="ghost"
+                            size="sm"
+                            leftIcon={<Plus />}
+                            onClick={onAddNew}
+                        >
+                            {addLabel}
+                        </WorkflowActionButton>
+                    )}
+                </header>
+            )}
+            {hideHeader && onAddNew && (
+                <div className="mb-3 flex items-center justify-end">
+                    <WorkflowActionButton variant="ghost" size="sm" leftIcon={<Plus />} onClick={onAddNew}>
                         {addLabel}
                     </WorkflowActionButton>
-                )}
-            </header>
+                </div>
+            )}
             {items.length === 0 ? (
                 <p className="font-sans text-[12.5px] text-text-muted italic px-1">{emptyLabel}</p>
             ) : groups && groups.some(g => g.persona) ? (
@@ -568,22 +653,22 @@ function CastSection({ icon, title, items, emptyLabel, onAddNew, addLabel, group
                                     </span>
                                 </div>
                             )}
-                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                                {group.items.map(item => <CastCard key={item.id} item={item} />)}
+                            <div className={`grid gap-3 ${gridCols}`}>
+                                {group.items.map(item => <CastCard key={item.id} item={item} onOpenWorkbench={() => onOpenWorkbench?.(item.id)} />)}
                             </div>
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                    {items.map(item => <CastCard key={item.id} item={item} />)}
+                <div className={`grid gap-3 ${gridCols}`}>
+                    {items.map(item => <CastCard key={item.id} item={item} onOpenWorkbench={() => onOpenWorkbench?.(item.id)} />)}
                 </div>
             )}
         </section>
     );
 }
 
-function CastCard({ item }: { item: CastItem }) {
+function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?: () => void }) {
     const t = useTranslations("cast");
     const updateProject = useProjectStore((state) => state.updateProject);
     const currentProject = useProjectStore((state) => state.currentProject);
@@ -652,16 +737,60 @@ function CastCard({ item }: { item: CastItem }) {
         }
     }, []);
 
+    // Per-kind visual treatment: aspect ratio, hover accent.
+    // (Static class strings — Tailwind JIT can't resolve dynamic
+    // `bg-${kind}-500/15` strings, so we ship the whole literal.)
+    const kindStyles: Record<AssetKind, { aspect: string; accentBorderHover: string; ctaText: string; ctaBg: string }> = {
+        character: {
+            aspect: "aspect-[3/4]",
+            accentBorderHover: "hover:border-purple-400/40",
+            ctaText: "text-purple-200",
+            ctaBg: "bg-purple-500/10 border-purple-500/30 hover:bg-purple-500/15",
+        },
+        scene: {
+            aspect: "aspect-[16/9]",
+            accentBorderHover: "hover:border-emerald-400/40",
+            ctaText: "text-emerald-200",
+            ctaBg: "bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/15",
+        },
+        prop: {
+            aspect: "aspect-square",
+            accentBorderHover: "hover:border-amber-400/40",
+            ctaText: "text-amber-200",
+            ctaBg: "bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/15",
+        },
+    };
+    const k = kindStyles[item.kind];
+
     return (
         <>
-            <div className="group/cast-card relative flex flex-col gap-2 rounded-lg border border-glass-border bg-glass p-2 transition-colors duration-fast ease-out-quart hover:border-white/15">
-                <div className="aspect-square overflow-hidden rounded-md bg-black/40">
+            <div className={`group/cast-card relative flex flex-col gap-2 rounded-lg border border-glass-border bg-glass p-2 transition-colors duration-fast ease-out-quart ${k.accentBorderHover}`}>
+                <div className={`${k.aspect} overflow-hidden rounded-md bg-black/40 relative`}>
                     {item.referenceImageUrl ? (
-                        <PreviewImage src={item.referenceImageUrl} alt={item.name} className="h-full w-full" clickToLightbox />
+                        <>
+                            <PreviewImage src={item.referenceImageUrl} alt={item.name} className="h-full w-full" clickToLightbox />
+                            {/* Re-generate / iterate affordance — hover-revealed
+                                so the thumbnail stays the focus when at rest. */}
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onOpenWorkbench?.(); }}
+                                title={t("editReference")}
+                                className="absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-md border border-white/20 bg-black/60 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover/cast-card:opacity-100 transition-opacity backdrop-blur-sm"
+                            >
+                                <Wand2 size={10} />
+                                {t("editReferenceShort")}
+                            </button>
+                        </>
                     ) : (
-                        <div className="grid h-full w-full place-items-center text-text-muted">
-                            <ImageIcon size={20} aria-hidden="true" />
-                        </div>
+                        // Empty thumbnail IS the generate CTA.
+                        <button
+                            onClick={() => onOpenWorkbench?.()}
+                            className={`grid h-full w-full place-items-center border border-dashed ${k.ctaBg} ${k.ctaText} transition-colors`}
+                        >
+                            <span className="flex flex-col items-center gap-1.5">
+                                <Wand2 size={item.kind === "scene" ? 18 : 16} />
+                                <span className="text-[11px] font-medium">{t("generateReference")}</span>
+                            </span>
+                        </button>
                     )}
                 </div>
                 <div className="space-y-1 px-0.5">
