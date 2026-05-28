@@ -216,8 +216,8 @@ export default function ProjectClient({ id, breadcrumbSegments }: { id: string; 
                 isRequired={false}
             />
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex overflow-hidden relative z-10">
+            {/* Main Content Area — no z-index to avoid trapping fixed modals in a stacking context */}
+            <div className="flex-1 flex overflow-hidden relative">
                 <div className="flex-1 overflow-hidden relative">
                     {activeStep === "script" && <ScriptProcessor />}
                     {activeStep === "art_direction" && <ArtDirection />}
