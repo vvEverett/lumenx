@@ -680,8 +680,8 @@ export default function CastWorkbenchModal({ isOpen, kind, entityId, onClose }: 
                                         <span className="text-[10px] text-text-muted">{finalPreviewExpanded ? t("collapse") : t("expand")}</span>
                                     </button>
                                     {finalPreviewExpanded && (
-                                        <div className="px-3.5 pb-3 max-h-[160px] overflow-y-auto custom-scrollbar">
-                                            <p className="text-[12px] leading-relaxed">
+                                        <div className="px-3.5 max-h-[200px] overflow-y-auto custom-scrollbar">
+                                            <p className="text-[12px] leading-relaxed pb-4">
                                                 <span className="text-foreground/90">{prompt.trim()}</span>
                                                 {prompt.trim() && <span className="text-text-muted">{", "}</span>}
                                                 <span className="text-primary/60">{stylePositive}</span>
