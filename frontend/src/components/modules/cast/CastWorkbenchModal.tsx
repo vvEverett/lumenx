@@ -670,18 +670,18 @@ export default function CastWorkbenchModal({ isOpen, kind, entityId, onClose }: 
 
                             {/* Final prompt preview — collapsible, scrollable */}
                             {applyStyle && stylePositive && (
-                                <div className="mt-3 rounded-md bg-black/20 border border-glass-border overflow-hidden">
+                                <div className="mt-3 rounded-md bg-black/20 border border-glass-border">
                                     <button
                                         type="button"
                                         onClick={() => setFinalPreviewExpanded(!finalPreviewExpanded)}
-                                        className="w-full flex items-center justify-between px-3.5 py-2 hover:bg-white/[0.02] transition-colors"
+                                        className="w-full flex items-center justify-between px-3.5 py-2 hover:bg-white/[0.02] transition-colors rounded-t-md"
                                     >
                                         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">{t("finalPromptPreview")}</p>
                                         <span className="text-[10px] text-text-muted">{finalPreviewExpanded ? t("collapse") : t("expand")}</span>
                                     </button>
                                     {finalPreviewExpanded && (
-                                        <div className="px-3.5 max-h-[200px] overflow-y-auto custom-scrollbar">
-                                            <p className="text-[12px] leading-relaxed pb-4">
+                                        <div className="px-3.5 pb-3 max-h-[200px] overflow-y-auto overscroll-contain">
+                                            <p className="text-[12px] leading-relaxed">
                                                 <span className="text-foreground/90">{prompt.trim()}</span>
                                                 {prompt.trim() && <span className="text-text-muted">{", "}</span>}
                                                 <span className="text-primary/60">{stylePositive}</span>
