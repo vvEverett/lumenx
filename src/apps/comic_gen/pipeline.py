@@ -2253,9 +2253,12 @@ class ComicGenPipeline:
         if frame.is_video_pinned:
             return script  # user has manually pinned — don't overwrite
 
-        # Latest completed task wins. Tasks have updated_at via VideoTask
-        # model (created_at fallback); sort newest-first and take the
-        # first one that has a video_url.
+        # Latest completed task wins. VideoTask carries created_at
+        # (default_factory=time.time); we use it as the "completion order"
+        # proxy. Backend doesn't track per-task completion time, but tasks
+        # in the same batch are queued at roughly the same created_at and
+        # complete in arrival order — close enough for "show me what just
+        # came out" UX.
         frame_tasks = [
             t for t in script.video_tasks
             if t.frame_id == frame_id
@@ -2265,7 +2268,7 @@ class ComicGenPipeline:
         if not frame_tasks:
             return script  # nothing to select yet
 
-        latest = max(frame_tasks, key=lambda t: getattr(t, "updated_at", 0) or 0)
+        latest = max(frame_tasks, key=lambda t: getattr(t, "created_at", 0) or 0)
         if frame.selected_video_id == latest.id and frame.video_url == latest.video_url:
             return script  # already selected — no-op
 

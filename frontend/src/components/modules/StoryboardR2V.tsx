@@ -1276,10 +1276,23 @@ export default function StoryboardR2V() {
                             // cross-device opens see the same hero video. Backend skips
                             // the update when the user has pinned a take. Fire-and-forget
                             // — UI already updated above, so failure here is non-fatal.
+                            // Sync shot.videoUrl from backend response too: if a sibling
+                            // task in the same batch completed first (so backend picked
+                            // that one as active) the hero stays in sync.
                             const projectId = currentProject?.id;
                             if (projectId) {
                                 api.autoSelectLatestVideo(projectId, shot.id)
-                                    .then(updated => updateProject(projectId, { frames: updated.frames }))
+                                    .then(updated => {
+                                        updateProject(projectId, { frames: updated.frames });
+                                        const refreshed = updated.frames?.find((f: any) => f.id === shot.id);
+                                        if (refreshed?.video_url) {
+                                            setShots(prev => prev.map(s =>
+                                                s.id === shot.id
+                                                    ? { ...s, videoUrl: refreshed.video_url, isVideoPinned: Boolean(refreshed.is_video_pinned) }
+                                                    : s
+                                            ));
+                                        }
+                                    })
                                     .catch(err => debugLog.warn("Studio", "autoSelectLatestVideo failed:", err));
                             }
                         } else if (status.status === "failed") {
@@ -1424,7 +1437,18 @@ export default function StoryboardR2V() {
                 // Use the last successful response's frames (all calls
                 // converge on the same script state — last write wins).
                 const last = results.filter(Boolean).pop() as any;
-                if (last?.frames) updateProject(projectId, { frames: last.frames });
+                if (last?.frames) {
+                    updateProject(projectId, { frames: last.frames });
+                    // Sync the hero on every auto-selected frame: backend may
+                    // have picked a sibling take in the same batch, so the
+                    // optimistic videoUrl set above could be stale by a hop.
+                    setShots(prev => prev.map(s => {
+                        if (!autoSelectFrameIds.includes(s.id)) return s;
+                        const refreshed = last.frames.find((f: any) => f.id === s.id);
+                        if (!refreshed?.video_url) return s;
+                        return { ...s, videoUrl: refreshed.video_url, isVideoPinned: Boolean(refreshed.is_video_pinned) };
+                    }));
+                }
             });
         }
     }, [allVideoTasks, currentProject?.id, updateProject]);

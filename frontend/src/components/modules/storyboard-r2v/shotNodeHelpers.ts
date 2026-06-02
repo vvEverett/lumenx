@@ -194,9 +194,6 @@ export function frameToShotNode(
     } else if (videoUrl || latestCompleted) {
         videoStatus = "completed";
         videoUrl = videoUrl || latestCompleted?.video_url;
-        // Mirror the task id so poll routines that key off videoTaskId
-        // can still react to follow-up status changes (e.g. preview dub).
-        if (!videoUrl) videoTaskId = latestCompleted?.id;
     } else if (frameTasks.some((t: any) => t.status === "failed")) {
         videoStatus = "failed";
     }
