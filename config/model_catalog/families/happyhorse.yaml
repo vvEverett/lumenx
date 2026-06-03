@@ -86,6 +86,9 @@ models:
             default: 1080p
           seed: true
           watermark: true
+        inputs:
+          reference_images:
+            max: 9
   # Standalone: T2V (hidden)
   - id: happyhorse-1.0-t2v
     display_name: HappyHorse T2V

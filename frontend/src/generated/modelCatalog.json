@@ -2305,7 +2305,11 @@
       },
       "family": "happyhorse",
       "id": "happyhorse-1.0-r2v",
-      "inputs": {},
+      "inputs": {
+        "reference_images": {
+          "max": 9
+        }
+      },
       "params": {
         "resolution": {
           "default": "1080p",
@@ -4629,8 +4633,7 @@
     "wan2.7-i2v": {
       "backend_env_key": null,
       "capabilities": [
-        "i2v",
-        "r2v"
+        "i2v"
       ],
       "credential_sources": {
         "dashscope": [
@@ -5316,7 +5319,11 @@
       },
       "family": "happyhorse",
       "id": "happyhorse/happyhorse-1.0-video#r2v",
-      "inputs": {},
+      "inputs": {
+        "reference_images": {
+          "max": 9
+        }
+      },
       "legacy_model_id": "happyhorse-1.0-r2v",
       "mode": "r2v",
       "model_line_id": "happyhorse/happyhorse-1.0-video",
@@ -7951,8 +7958,7 @@
     "wan/wan2.7-video#i2v": {
       "backend_env_key": null,
       "capabilities": [
-        "i2v",
-        "r2v"
+        "i2v"
       ],
       "credential_sources": {
         "dashscope": [

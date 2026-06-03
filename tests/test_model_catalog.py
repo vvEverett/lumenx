@@ -35,6 +35,7 @@ class TestModelCatalog:
             "i2i_model": "wan2.7-image-pro",
             "image_model": "wan2.7-image-pro",
             "i2v_model": "happyhorse-1.0-i2v",
+            "r2v_model": "wan2.7-r2v",
         }
 
         models = catalog["models"]
@@ -141,6 +142,7 @@ class TestModelCatalog:
         assert defaults.t2i_model == "wan2.7-image-pro"
         assert defaults.i2i_model == "wan2.7-image-pro"
         assert defaults.i2v_model == "happyhorse-1.0-i2v"
+        assert defaults.r2v_model == "wan2.7-r2v"
 
     def test_validation_report_passes_for_repo_catalog(self):
         catalog = build_catalog_dict(MODEL_CATALOG_ROOT)

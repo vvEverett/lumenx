@@ -94,8 +94,30 @@ def _submit_task(base_url: str, api_path: str, body: Dict[str, Any]) -> str:
     return task_id
 
 
+def _request_with_retry(method: str, url: str, max_retries: int = 3, **kwargs) -> requests.Response:
+    """HTTP request with exponential backoff retry on transient errors."""
+    for attempt in range(max_retries):
+        try:
+            resp = requests.request(method, url, **kwargs)
+            if resp.status_code in (429, 502, 503, 504) and attempt < max_retries - 1:
+                wait = min(2 ** attempt * 5, 60)
+                logger.warning(f"[MuleRouter] HTTP {resp.status_code}, retry in {wait}s (attempt {attempt + 1})")
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
+            return resp
+        except requests.exceptions.ConnectionError:
+            if attempt < max_retries - 1:
+                wait = min(2 ** attempt * 5, 60)
+                logger.warning(f"[MuleRouter] Connection error, retry in {wait}s (attempt {attempt + 1})")
+                time.sleep(wait)
+            else:
+                raise
+    raise RuntimeError("MuleRouter: max retries exceeded")
+
+
 def _poll_task(base_url: str, api_path: str, task_id: str) -> Dict[str, Any]:
-    """Poll a task until completion."""
+    """Poll a task until completion with retry on transient errors."""
     poll_url = f"{base_url}{api_path}/{task_id}"
     elapsed = 0
 
@@ -103,8 +125,7 @@ def _poll_task(base_url: str, api_path: str, task_id: str) -> Dict[str, Any]:
         time.sleep(POLL_INTERVAL)
         elapsed += POLL_INTERVAL
 
-        resp = requests.get(poll_url, headers=_auth_headers(), timeout=30)
-        resp.raise_for_status()
+        resp = _request_with_retry("GET", poll_url, headers=_auth_headers(), timeout=30)
         data = resp.json()
 
         task_info = data.get("task_info") or data
@@ -113,18 +134,17 @@ def _poll_task(base_url: str, api_path: str, task_id: str) -> Dict[str, Any]:
 
         if status in ("completed", "succeeded", "success"):
             return data
-        elif status in ("failed", "error"):
+        elif status in ("failed", "error", "cancelled", "canceled"):
             msg = task_info.get("error") or task_info.get("message") or "unknown error"
-            raise RuntimeError(f"MuleRouter task failed: {msg}")
+            raise RuntimeError(f"MuleRouter task {status}: {msg}")
 
     raise RuntimeError(f"MuleRouter task timed out after {MAX_WAIT}s")
 
 
 def _download_file(url: str, output_path: str) -> str:
-    """Download a file from URL to local path."""
+    """Download a file from URL to local path with retry."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    resp = requests.get(url, timeout=120, stream=True)
-    resp.raise_for_status()
+    resp = _request_with_retry("GET", url, timeout=120, stream=True)
     with open(output_path, "wb") as f:
         for chunk in resp.iter_content(chunk_size=65536):
             f.write(chunk)

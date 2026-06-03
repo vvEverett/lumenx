@@ -3032,6 +3032,7 @@ class ComicGenPipeline:
             status="pending",
             duration=duration,
             model=script.model_settings.r2v_model if hasattr(script.model_settings, 'r2v_model') and script.model_settings.r2v_model else "wan2.7-r2v",
+            generation_mode="r2v",
             created_at=time.time()
         )
         

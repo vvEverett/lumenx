@@ -282,6 +282,10 @@ function getConfiguredDefaultId(group: SelectionGroup): string {
     if (group === 'image') {
         return MODEL_CATALOG.defaults.model_settings.image_model;
     }
+    if (group === 'r2v') {
+        return (MODEL_CATALOG.defaults.model_settings as Record<string, string>).r2v_model
+            ?? MODEL_CATALOG.defaults.model_settings.i2v_model;
+    }
     return MODEL_CATALOG.defaults.model_settings.i2v_model;
 }
 
@@ -441,8 +445,7 @@ export function getR2vRouteModelId(selectedI2vModelId: string): string {
 export function isR2vImageBased(modelId: string): boolean {
     const model = MODEL_CATALOG.models[modelId];
     const family = model?.family;
-    // All current R2V models use image references except wan2.6-r2v (legacy video refs)
     if (family === 'wan' && modelId === 'wan2.6-r2v') return false;
     return family === 'happyhorse' || family === 'wan' || family === 'kling'
-        || family === 'pixverse' || family === 'vidu';
+        || family === 'pixverse' || family === 'vidu' || family === 'seedance';
 }
