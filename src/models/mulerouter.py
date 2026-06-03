@@ -1,15 +1,19 @@
-"""MuleRouter provider adapter for Seedance 2.0 (video) and GPT-Image-2 (image).
+"""MuleRouter/MuleRun provider adapter for Seedance 2.0 (video) and GPT-Image-2 (image).
 
-MuleRouter is a hosted multi-provider proxy service (api.mulerouter.ai).
-All generation is async: submit task -> poll status -> download result.
+Supports two backends:
+- MuleRun CLI mode: uses `mulerun studio run` subprocess (auth via MULERUN_TOKEN or browser login)
+- MuleRouter HTTP mode: direct API calls to api.mulerouter.ai (auth via MULEROUTER_API_KEY)
 
-Auth: Bearer token via MULEROUTER_API_KEY env var.
+Priority: MULERUN_TOKEN / CLI available → CLI mode; else → HTTP API mode.
 """
 
 import base64
+import json
 import logging
 import mimetypes
 import os
+import shutil
+import subprocess
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -38,6 +42,98 @@ GPT_IMAGE_API_PATHS = {
 POLL_INTERVAL = 20
 MAX_WAIT = 900
 
+# ---------------------------------------------------------------------------
+# Backend detection: MuleRun CLI vs MuleRouter HTTP API
+# ---------------------------------------------------------------------------
+
+def _is_mulerun_cli_available() -> bool:
+    """Check if MuleRun CLI is usable (installed + authenticated)."""
+    if os.getenv("MULERUN_TOKEN"):
+        return shutil.which("mulerun") is not None
+    if shutil.which("mulerun") is not None:
+        try:
+            result = subprocess.run(
+                ["mulerun", "login", "status"],
+                capture_output=True, text=True, timeout=10
+            )
+            return result.returncode == 0
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
+    return False
+
+
+def _use_cli_backend() -> bool:
+    """Determine whether to use CLI or HTTP API backend."""
+    if os.getenv("MULERUN_TOKEN") or (not os.getenv("MULEROUTER_API_KEY") and _is_mulerun_cli_available()):
+        return True
+    return False
+
+
+# ---------------------------------------------------------------------------
+# MuleRun CLI execution layer
+# ---------------------------------------------------------------------------
+
+def _run_mulerun_studio(endpoint: str, args: List[str], timeout: int = MAX_WAIT) -> Dict[str, Any]:
+    """Execute `mulerun studio run <endpoint> --json` and parse result."""
+    cmd = ["mulerun", "studio", "run", endpoint, "--json"] + args
+
+    env = os.environ.copy()
+    token = os.getenv("MULERUN_TOKEN")
+    if token:
+        env["MULERUN_TOKEN"] = token
+
+    logger.info(f"[MuleRun CLI] {' '.join(cmd[:6])}...")
+
+    try:
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=timeout + 60, env=env
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"MuleRun CLI timed out after {timeout + 60}s")
+
+    if result.returncode != 0:
+        stderr = result.stderr.strip()
+        raise RuntimeError(f"MuleRun CLI failed (exit {result.returncode}): {stderr[:500]}")
+
+    stdout = result.stdout.strip()
+    if not stdout:
+        raise RuntimeError("MuleRun CLI returned empty output")
+
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:
+        for line in stdout.splitlines():
+            line = line.strip()
+            if line.startswith("{"):
+                try:
+                    data = json.loads(line)
+                    break
+                except json.JSONDecodeError:
+                    continue
+        else:
+            raise RuntimeError(f"MuleRun CLI returned non-JSON output: {stdout[:300]}")
+
+    return data
+
+
+def _resolve_local_image_path(img_url: Optional[str] = None, img_path: Optional[str] = None) -> Optional[str]:
+    """Resolve image to a local file path for CLI --image flag."""
+    if img_path and os.path.exists(img_path):
+        return os.path.abspath(img_path)
+    if img_url:
+        if img_url.startswith(("http://", "https://")):
+            return img_url
+        potential = os.path.join("output", img_url)
+        if os.path.exists(potential):
+            return os.path.abspath(potential)
+        if os.path.exists(img_url):
+            return os.path.abspath(img_url)
+    return None
+
+
+# ---------------------------------------------------------------------------
+# MuleRouter HTTP API layer (original)
+# ---------------------------------------------------------------------------
 
 def _get_api_key() -> str:
     key = os.getenv("MULEROUTER_API_KEY", "")
@@ -152,7 +248,7 @@ def _download_file(url: str, output_path: str) -> str:
 
 
 class MuleRouterVideoModel(VideoGenModel):
-    """Seedance 2.0 video generation via MuleRouter."""
+    """Seedance 2.0 video generation via MuleRun CLI or MuleRouter HTTP API."""
 
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
@@ -160,6 +256,68 @@ class MuleRouterVideoModel(VideoGenModel):
 
     def generate(self, prompt: str, output_path: str, img_url: Optional[str] = None,
                  img_path: Optional[str] = None, **kwargs) -> Tuple[str, float]:
+        if _use_cli_backend():
+            return self._generate_via_cli(prompt, output_path, img_url, img_path, **kwargs)
+        return self._generate_via_http(prompt, output_path, img_url, img_path, **kwargs)
+
+    def _generate_via_cli(self, prompt: str, output_path: str, img_url: Optional[str] = None,
+                          img_path: Optional[str] = None, **kwargs) -> Tuple[str, float]:
+        """Generate video via mulerun studio run CLI."""
+        start_time = time.time()
+        duration = kwargs.get("duration", 5)
+        seed = kwargs.get("seed")
+        resolution = kwargs.get("resolution", "1080p")
+        watermark = kwargs.get("watermark", False)
+
+        generation_mode = kwargs.get("generation_mode", "")
+        ref_image_urls: List[str] = kwargs.get("ref_image_urls") or []
+
+        is_r2v = generation_mode == "r2v" or bool(ref_image_urls)
+        is_i2v = bool(img_url or img_path) and not is_r2v
+
+        speed = "-fast" if self.use_fast else ""
+        model_base = f"bytedance/seedance-2.0{speed}"
+
+        if is_r2v:
+            endpoint = f"{model_base}/reference-to-video"
+        elif is_i2v:
+            endpoint = f"{model_base}/image-to-video"
+        else:
+            endpoint = f"{model_base}/text-to-video"
+
+        args = ["--prompt", prompt, "--duration", str(duration)]
+        if resolution:
+            size = "1920*1080" if resolution == "1080p" else "1280*720"
+            args += ["--size", size]
+        if seed is not None:
+            args += ["--seed", str(seed)]
+        if not watermark:
+            args += ["--extra", "watermark=false"]
+
+        if is_i2v:
+            image_path = _resolve_local_image_path(img_url, img_path)
+            if image_path:
+                args += ["--image", image_path]
+        elif is_r2v:
+            primary = _resolve_local_image_path(img_url, img_path)
+            if primary:
+                args += ["--image", primary]
+            for ref_url in ref_image_urls:
+                ref_path = _resolve_local_image_path(ref_url)
+                if ref_path:
+                    args += ["--extra", f"reference_image={ref_path}"]
+
+        result = _run_mulerun_studio(endpoint, args)
+        video_url = self._extract_video_url(result)
+        _download_file(video_url, output_path)
+
+        generation_time = time.time() - start_time
+        logger.info(f"[MuleRun/Seedance] CLI done in {generation_time:.1f}s -> {output_path}")
+        return output_path, generation_time
+
+    def _generate_via_http(self, prompt: str, output_path: str, img_url: Optional[str] = None,
+                           img_path: Optional[str] = None, **kwargs) -> Tuple[str, float]:
+        """Generate video via MuleRouter HTTP API (original path)."""
         start_time = time.time()
         base_url = get_provider_base_url("MULEROUTER")
 
@@ -196,7 +354,7 @@ class MuleRouterVideoModel(VideoGenModel):
         _download_file(video_url, output_path)
 
         generation_time = time.time() - start_time
-        logger.info(f"[MuleRouter/Seedance] Done in {generation_time:.1f}s -> {output_path}")
+        logger.info(f"[MuleRouter/Seedance] HTTP done in {generation_time:.1f}s -> {output_path}")
         return output_path, generation_time
 
     def _build_t2v_body(self, prompt: str, duration: int, resolution: str,
@@ -274,12 +432,49 @@ class MuleRouterVideoModel(VideoGenModel):
 
 
 class MuleRouterImageModel(ImageGenModel):
-    """GPT-Image-2 image generation and editing via MuleRouter."""
+    """GPT-Image-2 image generation and editing via MuleRun CLI or MuleRouter HTTP API."""
 
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
 
     def generate(self, prompt: str, output_path: str, **kwargs) -> Tuple[str, float]:
+        if _use_cli_backend():
+            return self._generate_via_cli(prompt, output_path, **kwargs)
+        return self._generate_via_http(prompt, output_path, **kwargs)
+
+    def _generate_via_cli(self, prompt: str, output_path: str, **kwargs) -> Tuple[str, float]:
+        """Generate image via mulerun studio run CLI."""
+        start_time = time.time()
+        size = kwargs.get("size", "1024x1024")
+
+        ref_image_path = kwargs.get("ref_image_path")
+        ref_image_paths = kwargs.get("ref_image_paths") or []
+        if ref_image_path:
+            ref_image_paths = [ref_image_path] + ref_image_paths
+
+        if ref_image_paths:
+            endpoint = "openai/gpt-image-2/edit"
+        else:
+            endpoint = "openai/gpt-image-2"
+
+        args = ["--prompt", prompt, "--size", size]
+
+        for path in ref_image_paths:
+            resolved = _resolve_local_image_path(path)
+            if resolved:
+                args += ["--image", resolved]
+                break
+
+        result = _run_mulerun_studio(endpoint, args, timeout=300)
+        image_url = self._extract_image_url(result)
+        _download_file(image_url, output_path)
+
+        generation_time = time.time() - start_time
+        logger.info(f"[MuleRun/GPT-Image-2] CLI done in {generation_time:.1f}s -> {output_path}")
+        return output_path, generation_time
+
+    def _generate_via_http(self, prompt: str, output_path: str, **kwargs) -> Tuple[str, float]:
+        """Generate image via MuleRouter HTTP API (original path)."""
         start_time = time.time()
         base_url = get_provider_base_url("MULEROUTER")
 
@@ -294,7 +489,6 @@ class MuleRouterImageModel(ImageGenModel):
             "n": n,
         }
 
-        # Determine T2I vs I2I (edit) based on reference images
         ref_image_path = kwargs.get("ref_image_path")
         ref_image_paths = kwargs.get("ref_image_paths") or []
         if ref_image_path:
@@ -321,7 +515,7 @@ class MuleRouterImageModel(ImageGenModel):
         _download_file(image_url, output_path)
 
         generation_time = time.time() - start_time
-        logger.info(f"[MuleRouter/GPT-Image-2] Done in {generation_time:.1f}s -> {output_path}")
+        logger.info(f"[MuleRouter/GPT-Image-2] HTTP done in {generation_time:.1f}s -> {output_path}")
         return output_path, generation_time
 
     def _extract_image_url(self, result: Dict[str, Any]) -> str:
