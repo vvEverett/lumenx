@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 import yaml
 
 
-SUPPORTED_PROVIDER_BACKENDS = ("dashscope", "vendor")
+SUPPORTED_PROVIDER_BACKENDS = ("dashscope", "vendor", "mulerouter")
 SUPPORTED_MODEL_STATUSES = ("active", "planned", "deprecated", "hidden")
 SUPPORTED_SELECTION_GROUPS = ("t2i", "i2i", "image", "i2v")
 VISIBLE_MODEL_SURFACES = ("project_settings", "series_settings", "video_sidebar", "global_settings")

@@ -73,9 +73,10 @@ class ComicGenPipeline:
         self.video_generation_tasks: Dict[str, Dict[str, Any]] = {}
         # Temporary cache for file import previews (import_id -> text)
         self._import_cache: Dict[str, str] = {}
-        # Cached model instances for Kling/Vidu (lazily initialized)
+        # Cached model instances (lazily initialized)
         self._kling_model = None
         self._vidu_model = None
+        self._mulerouter_video_model = None
 
         # Pre-download Demucs model in background so first dub request is fast
         self._demucs_ready = threading.Event()
@@ -1949,6 +1950,8 @@ class ComicGenPipeline:
                 model = "pixverse-c1-r2v"
             elif model and model.startswith("vidu"):
                 model = "viduq3-pro-r2v"
+            elif model and model.startswith("seedance"):
+                model = "seedance-2.0-r2v"
             else:
                 model = "wan2.7-r2v"
 
@@ -3108,8 +3111,28 @@ class ComicGenPipeline:
                 or model_name_lower.startswith("viduq3")
                 or model_name_lower.startswith("vidu/vidu")
             )
+            use_mulerouter = backend == "mulerouter" and (
+                model_name_lower.startswith("seedance")
+            )
 
-            if use_vendor_kling:
+            if use_mulerouter:
+                if self._mulerouter_video_model is None:
+                    from ...models.mulerouter import MuleRouterVideoModel
+                    self._mulerouter_video_model = MuleRouterVideoModel({})
+                video_path, _ = self._mulerouter_video_model.generate(
+                    prompt=task.prompt,
+                    output_path=output_path,
+                    img_url=img_url,
+                    img_path=img_path,
+                    duration=task.duration,
+                    resolution=task.resolution,
+                    aspect_ratio=task.ratio or "16:9",
+                    seed=task.seed,
+                    watermark=bool(task.watermark) if task.watermark is not None else False,
+                    generation_mode=task.generation_mode,
+                    ref_image_urls=task.reference_image_urls if task.generation_mode == "r2v" else None,
+                )
+            elif use_vendor_kling:
                 # Use Kling model (cached)
                 if self._kling_model is None:
                     from ...models.kling import KlingModel
