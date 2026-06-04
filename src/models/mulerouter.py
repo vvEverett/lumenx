@@ -307,7 +307,8 @@ class MuleRouterVideoModel(VideoGenModel):
                 if ref_path:
                     args += ["--extra", f"reference_image={ref_path}"]
 
-        result = _run_mulerun_studio(endpoint, args)
+        args += ["--max-wait", "1800"]
+        result = _run_mulerun_studio(endpoint, args, timeout=1800)
         video_url = self._extract_video_url(result)
         _download_file(video_url, output_path)
 
