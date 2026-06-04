@@ -67,7 +67,7 @@ function startAssetPoll(
                 if (progressToastId) toast.dismiss(progressToastId);
                 const { removeGeneratingTask } = getStore();
                 removeGeneratingTask(entityId, generationType);
-                toast.error("生成失败", { body: status?.error?.slice(0, 200) || "未知错误" });
+                toast.error("生成失败", { body: status?.error || "未知错误" });
             }
         } catch (err) {
             clearInterval(interval);
@@ -341,7 +341,7 @@ export default function CastWorkbenchModal({ isOpen, kind, entityId, onClose }: 
             toast.dismiss(progressId);
             removeGeneratingTask(entity.id, "all");
             const detail = err?.response?.data?.detail || err?.message || t("toastGenErrUnknown");
-            toast.error(t("toastGenErr"), { body: String(detail).slice(0, 240) });
+            toast.error(t("toastGenErr"), { body: String(detail) });
         }
     };
 
@@ -364,7 +364,7 @@ export default function CastWorkbenchModal({ isOpen, kind, entityId, onClose }: 
             toast.error(t("toastSelectErr"), {
                 projectId: currentProject.id,
                 projectTitle: currentProject.title,
-                body: String(detail).slice(0, 200),
+                body: String(detail),
             });
         }
     };

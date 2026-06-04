@@ -512,7 +512,10 @@ class MuleRouterImageModel(ImageGenModel):
         start_time = time.time()
         size = _normalize_gpt_image_size(kwargs.get("size", "1024x1024"))
 
-        ref_image_path = kwargs.get("ref_image_path")
+        # GPT-Image-2 generation is powerful enough to follow character
+        # descriptions without needing edit mode. Only use edit when
+        # explicit ref_image_paths (plural) are provided by the user.
+        ref_image_path = None  # skip single ref for GPT-Image-2
         ref_image_paths = kwargs.get("ref_image_paths") or []
         if ref_image_path:
             ref_image_paths = [ref_image_path] + ref_image_paths
@@ -553,7 +556,10 @@ class MuleRouterImageModel(ImageGenModel):
             "n": n,
         }
 
-        ref_image_path = kwargs.get("ref_image_path")
+        # GPT-Image-2 generation is powerful enough to follow character
+        # descriptions without needing edit mode. Only use edit when
+        # explicit ref_image_paths (plural) are provided by the user.
+        ref_image_path = None  # skip single ref for GPT-Image-2
         ref_image_paths = kwargs.get("ref_image_paths") or []
         if ref_image_path:
             ref_image_paths = [ref_image_path] + ref_image_paths

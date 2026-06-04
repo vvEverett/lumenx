@@ -62,7 +62,19 @@ function ToastCard({ toast }: { toast: Toast }) {
                 )}
                 <p className="text-[13px] font-medium text-foreground leading-snug">{toast.title}</p>
                 {toast.body && (
-                    <p className="text-[11.5px] text-text-secondary mt-0.5 leading-snug">{toast.body}</p>
+                    <div className="mt-0.5">
+                        <p className={`text-[11.5px] text-text-secondary leading-snug ${toast.body.length > 120 ? "line-clamp-3" : ""}`}>
+                            {toast.body}
+                        </p>
+                        {(toast.kind === "error" && toast.body.length > 40) && (
+                            <button
+                                onClick={() => { navigator.clipboard.writeText(toast.body!); }}
+                                className="mt-1 text-[10px] text-text-muted hover:text-foreground transition-colors"
+                            >
+                                复制错误详情
+                            </button>
+                        )}
+                    </div>
                 )}
                 {toast.action && (
                     <button
