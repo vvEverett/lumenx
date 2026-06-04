@@ -11,6 +11,7 @@ import {
 } from '@/lib/modelCatalog';
 import { api } from '@/lib/api';
 import { useTranslations } from "next-intl";
+import GroupedModelGrid from '@/components/common/GroupedModelGrid';
 
 interface SeriesModelSettingsModalProps {
     isOpen: boolean;
@@ -135,26 +136,11 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
 
                                     <div className="space-y-2">
                                         <label className="text-xs text-text-secondary">{t("model")}</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {SERIES_IMAGE_MODELS.map((model) => (
-                                                <button
-                                                    key={model.id}
-                                                    onClick={() => setT2iModel(model.id)}
-                                                    className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${t2iModel === model.id
-                                                        ? 'border-green-500/50 bg-green-500/10'
-                                                        : 'border-glass-border hover:border-glass-border bg-glass'
-                                                    }`}
-                                                >
-                                                    {t2iModel === model.id && (
-                                                        <div className="absolute top-2 right-2">
-                                                            <Check size={14} className="text-green-400" />
-                                                        </div>
-                                                    )}
-                                                    <span className="text-sm font-medium text-foreground">{model.name}</span>
-                                                    <span className="text-xs text-text-secondary">{model.description}</span>
-                                                </button>
-                                            ))}
-                                        </div>
+                                        <GroupedModelGrid
+                                            models={SERIES_IMAGE_MODELS}
+                                            selectedId={t2iModel}
+                                            onSelect={(id) => setT2iModel(id)}
+                                        />
                                     </div>
 
                                     <div className="grid grid-cols-3 gap-4">
@@ -198,26 +184,11 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
 
                                     <div className="space-y-2">
                                         <label className="text-xs text-text-secondary">{t("model")}</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {SERIES_IMAGE_MODELS.map((model) => (
-                                                <button
-                                                    key={model.id}
-                                                    onClick={() => setI2iModel(model.id)}
-                                                    className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${i2iModel === model.id
-                                                        ? 'border-blue-500/50 bg-blue-500/10'
-                                                        : 'border-glass-border hover:border-glass-border bg-glass'
-                                                    }`}
-                                                >
-                                                    {i2iModel === model.id && (
-                                                        <div className="absolute top-2 right-2">
-                                                            <Check size={14} className="text-blue-400" />
-                                                        </div>
-                                                    )}
-                                                    <span className="text-sm font-medium text-foreground">{model.name}</span>
-                                                    <span className="text-xs text-text-secondary">{model.description}</span>
-                                                </button>
-                                            ))}
-                                        </div>
+                                        <GroupedModelGrid
+                                            models={SERIES_IMAGE_MODELS}
+                                            selectedId={i2iModel}
+                                            onSelect={(id) => setI2iModel(id)}
+                                        />
                                     </div>
 
                                     <div className="space-y-2">
@@ -252,26 +223,11 @@ export default function SeriesModelSettingsModal({ isOpen, onClose, seriesId, on
 
                                     <div className="space-y-2">
                                         <label className="text-xs text-text-secondary">{t("model")}</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {SERIES_I2V_MODELS.map((model) => (
-                                                <button
-                                                    key={model.id}
-                                                    onClick={() => setI2vModel(model.id)}
-                                                    className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${i2vModel === model.id
-                                                        ? 'border-purple-500/50 bg-purple-500/10'
-                                                        : 'border-glass-border hover:border-glass-border bg-glass'
-                                                    }`}
-                                                >
-                                                    {i2vModel === model.id && (
-                                                        <div className="absolute top-2 right-2">
-                                                            <Check size={14} className="text-purple-400" />
-                                                        </div>
-                                                    )}
-                                                    <span className="text-sm font-medium text-foreground">{model.name}</span>
-                                                    <span className="text-xs text-text-secondary">{model.description}</span>
-                                                </button>
-                                            ))}
-                                        </div>
+                                        <GroupedModelGrid
+                                            models={SERIES_I2V_MODELS}
+                                            selectedId={i2vModel}
+                                            onSelect={(id) => setI2vModel(id)}
+                                        />
                                     </div>
                                 </div>
                             </>

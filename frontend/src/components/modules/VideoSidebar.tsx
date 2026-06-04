@@ -14,6 +14,7 @@ import {
     R2V_SELECTION_MODEL_ID,
     VIDEO_I2V_MODELS,
 } from "@/lib/modelCatalog";
+import GroupedModelGrid from "@/components/common/GroupedModelGrid";
 
 interface VideoSidebarProps {
     tasks: VideoTask[];
@@ -175,34 +176,11 @@ export default function VideoSidebar({ tasks, onRemix, params, setParams }: Vide
                                             <span className="text-primary ml-2">{tm("r2vOnly", { name: r2vSelectionModelName })}</span>
                                         )}
                                     </label>
-                                    <div className="space-y-2">
-                                        {VIDEO_I2V_MODELS.map((model) => {
-                                            const isR2VMode = params.generationMode === "r2v";
-                                            const isR2VModel = model.id === R2V_SELECTION_MODEL_ID;
-                                            const isDisabled = isR2VMode && !isR2VModel;
-                                            const isSelected = isR2VMode ? isR2VModel : params.model === model.id;
-
-                                            return (
-                                                <button
-                                                    key={model.id}
-                                                    onClick={() => !isDisabled && updateParam("model", model.id)}
-                                                    disabled={isDisabled}
-                                                    className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all text-left ${isSelected
-                                                        ? 'border-primary/50 bg-primary/10'
-                                                        : 'border-glass-border hover:border-glass-border bg-glass'
-                                                        } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                                                >
-                                                    <div>
-                                                        <span className="text-xs font-medium text-foreground">{model.name}</span>
-                                                        <p className="text-[10px] text-text-muted">{model.description}</p>
-                                                    </div>
-                                                    {isSelected && (
-                                                        <div className="w-2 h-2 bg-primary rounded-full" />
-                                                    )}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                    <GroupedModelGrid
+                                        models={VIDEO_I2V_MODELS}
+                                        selectedId={params.generationMode === "r2v" ? R2V_SELECTION_MODEL_ID : params.model}
+                                        onSelect={(id) => updateParam("model", id)}
+                                    />
                                 </div>
 
                                 {/* Duration - Dynamic per model */}

@@ -1,4 +1,5 @@
 family: seedance
+display_name: "Seedance (即梦)"
 provider: mulerouter
 routing_prefixes:
   - seedance-2.0-
@@ -42,7 +43,7 @@ models:
         description: Text-to-video generation
         capabilities: [t2v]
         ui:
-          selection_group: i2v
+          selection_group: t2v
           visible_in: [project_settings, series_settings, video_sidebar, global_settings]
           order: 85
           badges: [new]

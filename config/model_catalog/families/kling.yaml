@@ -1,4 +1,5 @@
 family: kling
+display_name: "Kling (可灵)"
 provider: kling
 routing_prefixes:
   - kling/kling-

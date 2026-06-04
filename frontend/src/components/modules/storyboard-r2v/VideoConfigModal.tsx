@@ -12,6 +12,7 @@ import {
     VIDEO_I2V_MODELS,
     VIDEO_R2V_MODELS,
 } from "@/lib/modelCatalog";
+import GroupedModelGrid from "@/components/common/GroupedModelGrid";
 
 export interface VideoConfig {
     /** Active I2V model id (used by t2i_i2v shots). */
@@ -234,75 +235,11 @@ export default function VideoConfigModal({ isOpen, onClose, config, onConfigChan
                                         {t("modelSelection")}
                                     </h3>
                                 </div>
-                                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
-                                    {modelList.map((model, idx) => {
-                                        const isSelected = activeModelId === model.id;
-                                        const accent = getProviderAccent(model.id);
-                                        return (
-                                            <motion.button
-                                                key={model.id}
-                                                initial={{ opacity: 0, x: -8 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: idx * 0.03, stiffness: 200, damping: 20 }}
-                                                whileHover={{ x: 4 }}
-                                                whileTap={{ scale: 0.99 }}
-                                                onClick={() => updateDraft(modelKey, model.id)}
-                                                className={`relative w-full flex items-center gap-3.5 pl-3 pr-4 py-3.5 rounded-xl text-left transition-all duration-300 overflow-hidden group ${
-                                                    isSelected
-                                                        ? "bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-                                                        : "hover:bg-white/[0.02]"
-                                                }`}
-                                            >
-                                                {/* Provider accent left border */}
-                                                <div className={`w-[3px] self-stretch rounded-full transition-all duration-300 ${
-                                                    isSelected
-                                                        ? `bg-gradient-to-b ${accent}`
-                                                        : "bg-white/[0.06] group-hover:bg-white/[0.12]"
-                                                }`} />
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <span className={`text-[13px] font-semibold transition-colors duration-300 ${
-                                                            isSelected ? "text-foreground" : "text-white/50 group-hover:text-white/70"
-                                                        }`}>
-                                                            {model.name}
-                                                        </span>
-                                                        {isSelected && (
-                                                            <motion.span
-                                                                initial={{ opacity: 0, scale: 0.6, y: -2 }}
-                                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                                transition={springFast}
-                                                                className={`text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r ${accent} text-white tracking-wider`}
-                                                            >
-                                                                ACTIVE
-                                                            </motion.span>
-                                                        )}
-                                                    </div>
-                                                    <p className={`text-[11px] mt-0.5 leading-relaxed transition-colors duration-300 ${
-                                                        isSelected ? "text-white/40" : "text-white/20 group-hover:text-white/30"
-                                                    }`}>
-                                                        {model.description}
-                                                    </p>
-                                                </div>
-                                                {/* Radio indicator */}
-                                                <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-300 ${
-                                                    isSelected
-                                                        ? `border-transparent bg-gradient-to-br ${accent}`
-                                                        : "border-white/[0.10]"
-                                                }`}>
-                                                    {isSelected && (
-                                                        <motion.div
-                                                            initial={{ scale: 0 }}
-                                                            animate={{ scale: 1 }}
-                                                            transition={springFast}
-                                                        >
-                                                            <Check size={10} className="text-white" strokeWidth={3} />
-                                                        </motion.div>
-                                                    )}
-                                                </div>
-                                            </motion.button>
-                                        );
-                                    })}
-                                </div>
+                                <GroupedModelGrid
+                                    models={modelList}
+                                    selectedId={activeModelId}
+                                    onSelect={(id) => updateDraft(modelKey, id)}
+                                />
                             </motion.section>
 
                             {/* Duration */}

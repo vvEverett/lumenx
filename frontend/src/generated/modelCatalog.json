@@ -67,6 +67,7 @@
         ]
       },
       "default_backend": "mulerouter",
+      "display_name": "GPT Image (OpenAI)",
       "docs": {
         "official_snapshot_ids": [
           "mulerouter/gpt-image-2/2026-06-03"
@@ -107,6 +108,7 @@
         ]
       },
       "default_backend": "dashscope",
+      "display_name": "HappyHorse (快马)",
       "docs": {
         "official_snapshot_ids": [
           "aliyun/happyhorse/2026-04-28"
@@ -156,6 +158,7 @@
         ]
       },
       "default_backend": "dashscope",
+      "display_name": "Kling (可灵)",
       "docs": {
         "official_snapshot_ids": [
           "kling/2026-04-25"
@@ -203,6 +206,7 @@
         ]
       },
       "default_backend": "dashscope",
+      "display_name": "PixVerse",
       "docs": {
         "official_snapshot_ids": [
           "pixverse/2026-04-25"
@@ -249,6 +253,7 @@
         ]
       },
       "default_backend": "dashscope",
+      "display_name": "Qwen Image (通义千问)",
       "docs": {
         "official_snapshot_ids": [
           "aliyun/qwen-image/2026-04-22"
@@ -290,6 +295,7 @@
         ]
       },
       "default_backend": "mulerouter",
+      "display_name": "Seedance (即梦)",
       "docs": {
         "official_snapshot_ids": [
           "mulerouter/seedance-2.0/2026-06-03"
@@ -337,6 +343,7 @@
         ]
       },
       "default_backend": "dashscope",
+      "display_name": "Vidu",
       "docs": {
         "official_snapshot_ids": [
           "vidu/2026-04-25"
@@ -386,6 +393,7 @@
         ]
       },
       "default_backend": "dashscope",
+      "display_name": "Wan (通义万相)",
       "docs": {
         "official_snapshot_ids": [
           "aliyun/wan/2026-04-25"
@@ -3444,7 +3452,7 @@
         ],
         "order": 85,
         "recommended": false,
-        "selection_group": "i2v",
+        "selection_group": "t2v",
         "visible_in": [
           "project_settings",
           "series_settings",
@@ -6513,7 +6521,7 @@
         ],
         "order": 85,
         "recommended": false,
-        "selection_group": "i2v",
+        "selection_group": "t2v",
         "visible_in": [
           "project_settings",
           "series_settings",

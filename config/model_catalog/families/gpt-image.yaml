@@ -1,4 +1,5 @@
 family: gpt-image
+display_name: "GPT Image (OpenAI)"
 provider: mulerouter
 routing_prefixes:
   - gpt-image-

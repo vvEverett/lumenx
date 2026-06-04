@@ -1,4 +1,5 @@
 family: wan
+display_name: "Wan (通义万相)"
 provider: aliyun
 routing_prefixes:
   - wan2.7-

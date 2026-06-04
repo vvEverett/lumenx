@@ -7,6 +7,7 @@ import { useProjectStore, IMAGE_MODELS, I2V_MODELS, ASPECT_RATIOS } from '@/stor
 import { resolveModelSettings, VIDEO_R2V_MODELS, DEFAULT_R2V_MODEL_ID } from '@/lib/modelCatalog';
 import { api } from '@/lib/api';
 import { useTranslations } from "next-intl";
+import GroupedModelGrid from '@/components/common/GroupedModelGrid';
 
 interface ModelSettingsModalProps {
     isOpen: boolean;
@@ -122,26 +123,11 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                             {/* T2I Model */}
                             <div className="space-y-2">
                                 <label className="text-xs text-text-secondary">{t("model")}</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {IMAGE_MODELS.map((model) => (
-                                        <button
-                                            key={model.id}
-                                            onClick={() => setT2iModel(model.id)}
-                                            className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${t2iModel === model.id
-                                                    ? 'border-green-500/50 bg-green-500/10'
-                                                    : 'border-glass-border hover:border-glass-border bg-glass'
-                                                }`}
-                                        >
-                                            {t2iModel === model.id && (
-                                                <div className="absolute top-2 right-2">
-                                                    <Check size={14} className="text-green-400" />
-                                                </div>
-                                            )}
-                                            <span className="text-sm font-medium text-foreground">{model.name}</span>
-                                            <span className="text-xs text-text-muted">{model.description}</span>
-                                        </button>
-                                    ))}
-                                </div>
+                                <GroupedModelGrid
+                                    models={IMAGE_MODELS}
+                                    selectedId={t2iModel}
+                                    onSelect={(id) => setT2iModel(id)}
+                                />
                             </div>
 
                             {/* Asset Aspect Ratios */}
@@ -226,26 +212,11 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                             {/* I2I Model */}
                             <div className="space-y-2">
                                 <label className="text-xs text-text-secondary">{t("model")}</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {IMAGE_MODELS.map((model) => (
-                                        <button
-                                            key={model.id}
-                                            onClick={() => setI2iModel(model.id)}
-                                            className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${i2iModel === model.id
-                                                    ? 'border-blue-500/50 bg-blue-500/10'
-                                                    : 'border-glass-border hover:border-glass-border bg-glass'
-                                                }`}
-                                        >
-                                            {i2iModel === model.id && (
-                                                <div className="absolute top-2 right-2">
-                                                    <Check size={14} className="text-blue-400" />
-                                                </div>
-                                            )}
-                                            <span className="text-sm font-medium text-foreground">{model.name}</span>
-                                            <span className="text-xs text-text-muted">{model.description}</span>
-                                        </button>
-                                    ))}
-                                </div>
+                                <GroupedModelGrid
+                                    models={IMAGE_MODELS}
+                                    selectedId={i2iModel}
+                                    onSelect={(id) => setI2iModel(id)}
+                                />
                             </div>
 
                             {/* Storyboard Aspect Ratio */}
@@ -282,26 +253,11 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
                             {/* I2V Model */}
                             <div className="space-y-2">
                                 <label className="text-xs text-text-secondary">{t("model")}</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {I2V_MODELS.map((model) => (
-                                        <button
-                                            key={model.id}
-                                            onClick={() => setI2vModel(model.id)}
-                                            className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${i2vModel === model.id
-                                                    ? 'border-purple-500/50 bg-purple-500/10'
-                                                    : 'border-glass-border hover:border-glass-border bg-glass'
-                                                }`}
-                                        >
-                                            {i2vModel === model.id && (
-                                                <div className="absolute top-2 right-2">
-                                                    <Check size={14} className="text-purple-400" />
-                                                </div>
-                                            )}
-                                            <span className="text-sm font-medium text-foreground">{model.name}</span>
-                                            <span className="text-xs text-text-muted">{model.description}</span>
-                                        </button>
-                                    ))}
-                                </div>
+                                <GroupedModelGrid
+                                    models={I2V_MODELS}
+                                    selectedId={i2vModel}
+                                    onSelect={(id) => setI2vModel(id)}
+                                />
                             </div>
                         </div>
 
@@ -321,26 +277,11 @@ export default function ModelSettingsModal({ isOpen, onClose }: ModelSettingsMod
 
                             <div className="space-y-2">
                                 <label className="text-xs text-text-secondary">{t("model")}</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {VIDEO_R2V_MODELS.map((model) => (
-                                        <button
-                                            key={model.id}
-                                            onClick={() => setR2vModel(model.id)}
-                                            className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${r2vModel === model.id
-                                                    ? 'border-pink-500/50 bg-pink-500/10'
-                                                    : 'border-glass-border hover:border-glass-border bg-glass'
-                                                }`}
-                                        >
-                                            {r2vModel === model.id && (
-                                                <div className="absolute top-2 right-2">
-                                                    <Check size={14} className="text-pink-400" />
-                                                </div>
-                                            )}
-                                            <span className="text-sm font-medium text-foreground">{model.name}</span>
-                                            <span className="text-xs text-text-muted">{model.description}</span>
-                                        </button>
-                                    ))}
-                                </div>
+                                <GroupedModelGrid
+                                    models={VIDEO_R2V_MODELS}
+                                    selectedId={r2vModel}
+                                    onSelect={(id) => setR2vModel(id)}
+                                />
                             </div>
                         </div>
                     </div>

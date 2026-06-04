@@ -1,4 +1,5 @@
 family: vidu
+display_name: Vidu
 provider: vidu
 routing_prefixes:
   - vidu/vidu

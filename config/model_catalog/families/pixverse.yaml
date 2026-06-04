@@ -1,4 +1,5 @@
 family: pixverse
+display_name: PixVerse
 provider: pixverse
 routing_prefixes:
   - pixverse/pixverse-

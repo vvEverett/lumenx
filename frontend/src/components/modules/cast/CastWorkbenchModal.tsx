@@ -26,6 +26,7 @@ import { useProjectStore, IMAGE_MODELS } from "@/store/projectStore";
 import { toast } from "@/store/toastStore";
 import { getAssetUrl } from "@/lib/utils";
 import PreviewImage from "@/components/shared/preview/PreviewImage";
+import GroupedModelGrid from "@/components/common/GroupedModelGrid";
 
 export type CastKind = "character" | "scene" | "prop";
 
@@ -748,25 +749,11 @@ export default function CastWorkbenchModal({ isOpen, kind, entityId, onClose }: 
                                     <label className="block font-mono text-[10px] uppercase tracking-[0.16em] text-text-muted mb-2">
                                         {t("modelLabel")}
                                     </label>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        {IMAGE_MODELS.map((m) => {
-                                            const isActive = (modelOverride || currentProject.model_settings?.t2i_model || "wan2.1-t2i") === m.id;
-                                            return (
-                                                <button
-                                                    key={m.id}
-                                                    onClick={() => setModelOverride(m.id === (currentProject.model_settings?.t2i_model || "wan2.1-t2i") ? null : m.id)}
-                                                    disabled={generating}
-                                                    className={`px-3 py-1.5 rounded-md text-[12px] transition-colors disabled:opacity-40 ${
-                                                        isActive
-                                                            ? "bg-white/10 text-foreground font-medium border border-white/20"
-                                                            : "text-text-muted hover:text-text-secondary hover:bg-white/5 border border-transparent"
-                                                    }`}
-                                                >
-                                                    {m.name}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                    <GroupedModelGrid
+                                        models={IMAGE_MODELS}
+                                        selectedId={modelOverride || currentProject.model_settings?.t2i_model || "wan2.1-t2i"}
+                                        onSelect={(id) => setModelOverride(id === (currentProject.model_settings?.t2i_model || "wan2.1-t2i") ? null : id)}
+                                    />
                                 </div>
                             </div>
 
