@@ -26,6 +26,7 @@ type EnvConfig = EnvConfigPayload & {
   KLING_SECRET_KEY: string;
   VIDU_API_KEY: string;
   MULEROUTER_API_KEY: string;
+  MULERUN_CLI_LOGGED_IN?: boolean;
   endpoint_overrides: Record<string, string>;
 };
 
@@ -441,6 +442,9 @@ export default function EnvConfigDialog({ isOpen, onClose, isRequired = false }:
                       placeholder="muk-..."
                       className={inputClass}
                     />
+                    {!config.MULEROUTER_API_KEY && config.MULERUN_CLI_LOGGED_IN && (
+                      <p className="text-[11px] text-green-400 mt-1">✓ MuleRun CLI 已登录，无需手动填写</p>
+                    )}
                   </div>
                   <details className="group">
                     <summary className="text-xs text-primary cursor-pointer hover:underline flex items-center gap-1">

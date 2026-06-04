@@ -3515,6 +3515,21 @@ def polish_r2v_prompt(request: PolishR2VPromptRequest):
 
 # ===== Environment Configuration Endpoints =====
 
+def _check_mulerun_cli_status() -> bool:
+    """Check if MuleRun CLI is installed and logged in."""
+    try:
+        import shutil, subprocess
+        if shutil.which("mulerun") is None:
+            return False
+        result = subprocess.run(
+            ["mulerun", "login", "status"],
+            capture_output=True, text=True, timeout=5
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
 @app.get("/config/env")
 def get_env_config():
     """Get current environment configuration."""
@@ -3538,6 +3553,7 @@ def get_env_config():
             "KLING_SECRET_KEY": os.getenv("KLING_SECRET_KEY", ""),
             "VIDU_API_KEY": os.getenv("VIDU_API_KEY", ""),
             "MULEROUTER_API_KEY": os.getenv("MULEROUTER_API_KEY", ""),
+            "MULERUN_CLI_LOGGED_IN": _check_mulerun_cli_status(),
             "KLING_PROVIDER_MODE": _normalize_provider_mode(os.getenv("KLING_PROVIDER_MODE")),
             "VIDU_PROVIDER_MODE": _normalize_provider_mode(os.getenv("VIDU_PROVIDER_MODE")),
             "PIXVERSE_PROVIDER_MODE": _normalize_provider_mode(os.getenv("PIXVERSE_PROVIDER_MODE")),
