@@ -2204,8 +2204,7 @@
     "happyhorse-1.0-i2v": {
       "backend_env_key": null,
       "capabilities": [
-        "i2v",
-        "r2v"
+        "i2v"
       ],
       "credential_sources": {
         "dashscope": [
@@ -5210,8 +5209,7 @@
     "happyhorse/happyhorse-1.0-video#i2v": {
       "backend_env_key": null,
       "capabilities": [
-        "i2v",
-        "r2v"
+        "i2v"
       ],
       "credential_sources": {
         "dashscope": [

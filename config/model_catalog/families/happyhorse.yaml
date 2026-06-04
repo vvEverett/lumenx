@@ -42,7 +42,7 @@ models:
         legacy_id: happyhorse-1.0-i2v
         display_name: HappyHorse I2V
         description: Image-to-video with reference character support
-        capabilities: [i2v, r2v]
+        capabilities: [i2v]
         ui:
           selection_group: i2v
           visible_in: [project_settings, series_settings, video_sidebar, global_settings]

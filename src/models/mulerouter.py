@@ -88,15 +88,21 @@ def _is_mulerun_cli_available() -> bool:
     return False
 
 
+_cli_available_cache: Optional[bool] = None
+
+
 def _use_cli_backend() -> bool:
     """Determine whether to use CLI or HTTP API backend.
 
-    Priority: CLI (if available) > HTTP API (MULEROUTER_API_KEY).
-    The muk-... key from MuleRun login works for both modes.
+    Priority: MULEROUTER_API_KEY (HTTP) > CLI fallback.
+    CLI is used only when no API key is configured and mulerun is logged in.
     """
-    if not os.getenv("MULEROUTER_API_KEY") and _is_mulerun_cli_available():
-        return True
-    return False
+    global _cli_available_cache
+    if os.getenv("MULEROUTER_API_KEY"):
+        return False
+    if _cli_available_cache is None:
+        _cli_available_cache = _is_mulerun_cli_available()
+    return _cli_available_cache
 
 
 # ---------------------------------------------------------------------------
@@ -207,8 +213,7 @@ def _submit_task(base_url: str, api_path: str, body: Dict[str, Any]) -> str:
     """Submit a generation task and return the task ID."""
     url = f"{base_url}{api_path}"
     logger.info(f"[MuleRouter] POST {api_path}")
-    resp = requests.post(url, headers=_auth_headers(), json=body, timeout=60)
-    resp.raise_for_status()
+    resp = _request_with_retry("POST", url, headers=_auth_headers(), json=body, timeout=60)
     data = resp.json()
 
     task_info = data.get("task_info") or data
@@ -502,7 +507,6 @@ class MuleRouterImageModel(ImageGenModel):
             resolved = _resolve_local_image_path(path)
             if resolved:
                 args += ["--image", resolved]
-                break
 
         result = _run_mulerun_studio(endpoint, args, timeout=300)
         image_url = self._extract_image_url(result)
