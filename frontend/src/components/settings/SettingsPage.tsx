@@ -8,6 +8,7 @@ import { ASPECT_RATIOS } from "@/store/projectStore";
 import {
   DEFAULT_MODEL_SETTINGS,
   GLOBAL_I2V_MODELS,
+  GLOBAL_R2V_MODELS,
   GLOBAL_IMAGE_MODELS,
   normalizeModelSettings,
 } from "@/lib/modelCatalog";
@@ -95,6 +96,7 @@ interface DefaultModelSettings {
   t2i_model: string;
   i2i_model: string;
   i2v_model: string;
+  r2v_model: string;
   character_aspect_ratio: string;
   scene_aspect_ratio: string;
   prop_aspect_ratio: string;
@@ -544,6 +546,19 @@ export default function SettingsPage() {
               models={GLOBAL_I2V_MODELS}
               selectedId={modelSettings.i2v_model}
               onSelect={(id) => setModelSettings((s) => ({ ...s, i2v_model: id }))}
+              className="mt-3"
+            />
+          </div>
+
+          <div className="border-t border-glass-border pt-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+              <Video size={16} className="text-purple-400" />
+              <span>R2V · 参考生视频</span>
+            </div>
+            <GroupedModelGrid
+              models={GLOBAL_R2V_MODELS}
+              selectedId={modelSettings.r2v_model}
+              onSelect={(id) => setModelSettings((s) => ({ ...s, r2v_model: id }))}
               className="mt-3"
             />
           </div>
