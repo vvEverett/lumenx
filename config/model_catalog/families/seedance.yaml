@@ -58,6 +58,8 @@ models:
             options: [720p, 1080p]
             default: 1080p
           seed: true
+          negativePrompt: false
+          promptExtend: false
           watermark: true
       i2v:
         legacy_id: seedance-2.0-i2v
@@ -80,6 +82,8 @@ models:
             options: [720p, 1080p]
             default: 1080p
           seed: true
+          negativePrompt: false
+          promptExtend: false
           watermark: true
         inputs:
           reference_images:
@@ -106,6 +110,8 @@ models:
             options: [720p, 1080p]
             default: 1080p
           seed: true
+          negativePrompt: false
+          promptExtend: false
           watermark: true
         docs:
           context_hub_doc_ids:

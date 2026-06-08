@@ -42,6 +42,9 @@ models:
       order: 100
       badges: [new]
     params:
+      size:
+        options: ["1024*1024", "1280*1280", "1440*1440", "2048*2048", "1280*720", "720*1280"]
+        default: "1280*1280"
       negativePrompt: true
       promptExtend: true
       watermark: true
@@ -63,6 +66,9 @@ models:
       visible_in: [project_settings, series_settings, global_settings]
       order: 90
     params:
+      size:
+        options: ["1024*1024", "1280*1280", "1440*1440", "2048*2048", "1280*720", "720*1280"]
+        default: "1280*1280"
       negativePrompt: true
       promptExtend: true
       watermark: true

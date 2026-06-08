@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Plus, FolderOpen, RefreshCw, Library, Calendar, Play, Trash2, FileUp, X, ChevronDown, FileText,
-  Zap, Film,
+  Zap, Film, Sparkles,
 } from "lucide-react";
 import { useProjectStore, Series, Project } from "@/store/projectStore";
 import ProjectCard from "@/components/project/ProjectCard";
@@ -23,6 +23,7 @@ const SeriesDetailPage = dynamic(() => import("@/components/series/SeriesDetailP
 const ImportFileDialog = dynamic(() => import("@/components/series/ImportFileDialog"), { ssr: false });
 const SettingsPage = dynamic(() => import("@/components/settings/SettingsPage"), { ssr: false });
 const AssetLibraryPage = dynamic(() => import("@/components/library/AssetLibraryPage"), { ssr: false });
+const PlaygroundPage = dynamic(() => import("@/components/modules/playground/PlaygroundPage"), { ssr: false });
 
 // ── Create Series Dialog ──
 function CreateSeriesDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -470,7 +471,7 @@ export default function Home() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'project' | 'series' | 'series-episode' | 'library' | 'settings'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'project' | 'series' | 'series-episode' | 'library' | 'settings' | 'playground'>('home');
   const [activeTab, setActiveTab] = useState<GlobalTab>("workspace");
   const [projectId, setProjectId] = useState<string | null>(null);
   const [seriesId, setSeriesId] = useState<string | null>(null);
@@ -602,6 +603,14 @@ export default function Home() {
         setEpisodeId(null);
         return;
       }
+      if (hash === '#/playground') {
+        setCurrentView('playground');
+        setActiveTab('playground');
+        setProjectId(null);
+        setSeriesId(null);
+        setEpisodeId(null);
+        return;
+      }
       // Default: workspace
       setCurrentView('home');
       setActiveTab('workspace');
@@ -654,6 +663,9 @@ export default function Home() {
     if (currentView === 'settings') {
       return <SettingsPage />;
     }
+    if (currentView === 'playground') {
+      return <PlaygroundPage />;
+    }
 
     // Workspace view
     return (
@@ -668,7 +680,7 @@ export default function Home() {
             <FolderOpen size={64} className="text-text-muted mb-4" />
             <h3 className="text-xl font-medium text-text-secondary mb-2">{t("empty")}</h3>
             <p className="text-text-muted mb-8">{t("emptyHint")}</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl w-full">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl w-full">
               <button
                 onClick={() => setIsSeriesDialogOpen(true)}
                 className="glass-panel p-6 rounded-xl border border-blue-500/30 hover:border-blue-500/60 transition-all group text-left"
@@ -684,6 +696,14 @@ export default function Home() {
                 <FileText size={32} className="text-gray-400 mb-3" />
                 <h4 className="text-lg font-display font-bold text-foreground mb-1 group-hover:text-primary transition-colors">{t("createProject")}</h4>
                 <p className="text-sm text-text-secondary">{t("createProjectHint")}</p>
+              </button>
+              <button
+                onClick={() => { window.location.hash = '#/playground'; }}
+                className="glass-panel p-6 rounded-xl border border-purple-500/30 hover:border-purple-500/60 transition-all group text-left"
+              >
+                <Sparkles size={32} className="text-purple-400 mb-3" />
+                <h4 className="text-lg font-display font-bold text-foreground mb-1 group-hover:text-purple-400 transition-colors">Playground</h4>
+                <p className="text-sm text-text-secondary">{"独立生成"}</p>
               </button>
             </div>
             <button
@@ -746,6 +766,14 @@ export default function Home() {
                       >
                         <FileText size={16} className="text-gray-400" />
                         {t("newProject")}
+                      </button>
+                      <div className="border-t border-glass-border" />
+                      <button
+                        onClick={() => { window.location.hash = '#/playground'; setShowCreateDropdown(false); }}
+                        className="w-full px-4 py-2.5 text-sm text-left text-foreground hover:bg-hover-bg transition-colors flex items-center gap-2"
+                      >
+                        <Sparkles size={16} className="text-purple-400" />
+                        Playground
                       </button>
                     </motion.div>
                   )}

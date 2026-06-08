@@ -59,9 +59,8 @@ models:
             options: [720p, 1080p]
             default: 1080p
           seed: true
-          # HappyHorse API supports watermark for all video modes.
-          # I2V does NOT support ratio (src/models/wanx.py:799 explicitly
-          # excludes happyhorse-1.0-i2v from the ratio payload).
+          negativePrompt: true
+          promptExtend: true
           watermark: true
         inputs:
           reference_images:
@@ -86,6 +85,8 @@ models:
             options: [720p, 1080p]
             default: 1080p
           seed: true
+          negativePrompt: true
+          promptExtend: true
           watermark: true
         inputs:
           reference_images:
@@ -108,6 +109,9 @@ models:
         options: [720p, 1080p]
         default: 1080p
       seed: true
+      negativePrompt: true
+      promptExtend: true
+      watermark: true
   # Standalone: V2V (hidden)
   - id: happyhorse-1.0-video-edit
     display_name: HappyHorse V2V
@@ -126,3 +130,6 @@ models:
         options: [720p, 1080p]
         default: 1080p
       seed: true
+      negativePrompt: true
+      promptExtend: true
+      watermark: true

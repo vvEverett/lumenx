@@ -397,6 +397,55 @@ export default function SettingsPage() {
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium text-text-secondary">MuleRun / MuleRouter</h4>
                   <p className="text-xs text-text-secondary/60">用于 Seedance 2.0 视频生成和 GPT-Image-2 图片生成</p>
+
+                  {/* One-click login button */}
+                  {!config.MULEROUTER_API_KEY && !config.MULERUN_CLI_LOGGED_IN && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await api.triggerMulerunLogin();
+                          const poll = setInterval(async () => {
+                            try {
+                              const env = await api.getEnvConfig();
+                              if (env.MULERUN_CLI_LOGGED_IN) {
+                                clearInterval(poll);
+                                setConfig((c) => ({ ...c, MULERUN_CLI_LOGGED_IN: true }));
+                              }
+                            } catch { /* silent */ }
+                          }, 3000);
+                          setTimeout(() => clearInterval(poll), 120000);
+                        } catch (err: any) {
+                          alert(err?.response?.data?.detail || '登录失败');
+                        }
+                      }}
+                      className="w-full py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      一键登录 MuleRun
+                    </button>
+                  )}
+                  {!config.MULEROUTER_API_KEY && config.MULERUN_CLI_LOGGED_IN && (
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 text-sm text-green-400">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        MuleRun 已登录
+                      </div>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await api.triggerMulerunLogin();
+                          } catch (err: any) {
+                            alert(err?.response?.data?.detail || '登录失败');
+                          }
+                        }}
+                        className="text-xs text-text-secondary hover:text-foreground transition-colors underline underline-offset-2"
+                      >
+                        重新登录
+                      </button>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs text-text-secondary mb-1">API Key</label>
                     <input
@@ -407,11 +456,10 @@ export default function SettingsPage() {
                       className="glass-input w-full"
                     />
                   </div>
-                  {/* Collapsible guide */}
                   <details className="group">
                     <summary className="text-xs text-primary cursor-pointer hover:underline flex items-center gap-1">
                       <svg className="w-3 h-3 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                      如何获取 MuleRun Key？
+                      手动获取 Key
                     </summary>
                     <div className="mt-2 space-y-2 pl-4 border-l border-glass-border">
                       <div className="flex items-center gap-2 text-xs text-text-secondary">

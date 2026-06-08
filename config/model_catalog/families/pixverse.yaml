@@ -59,6 +59,8 @@ models:
       audio: true
       watermark: true
       seed: true
+      negativePrompt: false
+      promptExtend: false
     inputs:
       reference_images:
         max: 1
@@ -100,6 +102,8 @@ models:
           audio: true
           watermark: true
           seed: true
+          negativePrompt: false
+          promptExtend: false
         inputs:
           reference_images:
             max: 1
@@ -127,6 +131,9 @@ models:
             options: [720p, 1080p]
             default: 720p
           seed: true
+          negativePrompt: false
+          promptExtend: false
+          watermark: false
         inputs:
           reference_images:
             max: 7
@@ -159,6 +166,9 @@ models:
         options: [720p, 1080p]
         default: 720p
       seed: true
+      negativePrompt: false
+      promptExtend: false
+      watermark: false
     inputs:
       reference_images:
         max: 7

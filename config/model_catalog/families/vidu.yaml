@@ -71,6 +71,9 @@ models:
             options: [540p, 720p, 1080p]
             default: 720p
           seed: true
+          negativePrompt: false
+          promptExtend: false
+          watermark: false
           viduAudio: true
           movementAmplitude:
             options: [auto, small, medium, large]
@@ -103,7 +106,9 @@ models:
             options: [540p, 720p, 1080p]
             default: 720p
           seed: true
-          watermark: true
+          negativePrompt: false
+          promptExtend: false
+          watermark: false
         inputs:
           reference_images:
             max: 7
@@ -147,6 +152,9 @@ models:
             options: [540p, 720p, 1080p]
             default: 720p
           seed: true
+          negativePrompt: false
+          promptExtend: false
+          watermark: false
           viduAudio: true
           movementAmplitude:
             options: [auto, small, medium, large]
@@ -179,7 +187,9 @@ models:
             options: [540p, 720p, 1080p]
             default: 720p
           seed: true
-          watermark: true
+          negativePrompt: false
+          promptExtend: false
+          watermark: false
         inputs:
           reference_images:
             max: 7
