@@ -1124,6 +1124,11 @@ export const api = {
         return res.data;
     },
 
+    triggerMulerunLogin: async () => {
+        const res = await axios.post(`${API_URL}/config/mulerun-login`);
+        return res.data;
+    },
+
     extractLastFrame: async (scriptId: string, frameId: string, videoTaskId: string) => {
         const res = await axios.post(`${API_URL}/projects/${scriptId}/frames/${frameId}/extract_last_frame`, {
             video_task_id: videoTaskId,
@@ -1462,4 +1467,91 @@ export const crudApi = {
         });
         return res.data;
     }
+};
+
+// ─── Playground API ─────────────────────────────────────────────────────────
+
+export interface PlaygroundGenerateRequest {
+  mode: string;
+  model_id: string;
+  prompt: string;
+  negative_prompt?: string;
+  input_media?: string[];
+  parameters?: Record<string, any>;
+  batch_size?: number;
+}
+
+export interface PlaygroundGenerationResponse {
+  id: string;
+  mode: string;
+  model_id: string;
+  prompt: string;
+  negative_prompt?: string;
+  input_media: string[];
+  parameters: Record<string, any>;
+  batch_size: number;
+  outputs: Array<{
+    id: string;
+    media_path: string;
+    media_type: string;
+    thumbnail_path?: string;
+    saved_to_library: boolean;
+  }>;
+  status: string;
+  error?: string;
+  created_at: string;
+}
+
+export interface PlaygroundTemplateResponse {
+  id: string;
+  name: string;
+  category: string;
+  prompt: string;
+  negative_prompt?: string;
+  default_mode?: string;
+  default_model_id?: string;
+  default_parameters: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export const playgroundApi = {
+  generate: (data: PlaygroundGenerateRequest) =>
+    axios.post<PlaygroundGenerationResponse>(API_URL + "/playground/generate", data).then(r => r.data),
+
+  getHistory: (limit = 50, offset = 0) =>
+    axios.get<PlaygroundGenerationResponse[]>(API_URL + "/playground/history", { params: { limit, offset } }).then(r => r.data),
+
+  getGeneration: (id: string) =>
+    axios.get<PlaygroundGenerationResponse>(API_URL + "/playground/history/" + id).then(r => r.data),
+
+  getGenerationStatus: (id: string) =>
+    axios.get<{ id: string; status: string; outputs: any[]; error?: string }>(API_URL + "/playground/history/" + id + "/status").then(r => r.data),
+
+  deleteGeneration: (id: string) =>
+    axios.delete(API_URL + "/playground/history/" + id).then(r => r.data),
+
+  saveToLibrary: (generationId: string, outputId: string, category?: string) =>
+    axios.post(API_URL + "/playground/history/" + generationId + "/outputs/" + outputId + "/save-to-library", { category: category || "general" }).then(r => r.data),
+
+  getTemplates: () =>
+    axios.get<PlaygroundTemplateResponse[]>(API_URL + "/playground/templates").then(r => r.data),
+
+  createTemplate: (data: { name: string; category?: string; prompt: string; negative_prompt?: string; default_mode?: string; default_model_id?: string; default_parameters?: Record<string, any> }) =>
+    axios.post<PlaygroundTemplateResponse>(API_URL + "/playground/templates", data).then(r => r.data),
+
+  updateTemplate: (id: string, data: Partial<{ name: string; category: string; prompt: string; negative_prompt: string; default_mode: string; default_model_id: string; default_parameters: Record<string, any> }>) =>
+    axios.put<PlaygroundTemplateResponse>(API_URL + "/playground/templates/" + id, data).then(r => r.data),
+
+  deleteTemplate: (id: string) =>
+    axios.delete(API_URL + "/playground/templates/" + id).then(r => r.data),
+
+  // Upload media file for playground input (returns file path)
+  uploadMedia: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axios.post<{ path: string }>(API_URL + "/playground/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then(r => r.data);
+  },
 };

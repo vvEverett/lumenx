@@ -48,6 +48,14 @@ models:
       recommended: true
       order: 120
       badges: [latest]
+    params:
+      size:
+        options: ["1024*1024", "1280*1280", "1440*1440", "2048*2048", "1280*720", "720*1280", "1024*576", "576*1024"]
+        default: "1280*1280"
+      negativePrompt: true
+      seed: true
+      promptExtend: true
+      watermark: true
     inputs:
       reference_images:
         max: 9
@@ -67,6 +75,14 @@ models:
       selection_group: image
       visible_in: [project_settings, series_settings, global_settings]
       order: 110
+    params:
+      size:
+        options: ["1024*1024", "1280*1280", "1440*1440", "2048*2048", "1280*720", "720*1280", "1024*576", "576*1024"]
+        default: "1280*1280"
+      negativePrompt: true
+      seed: true
+      promptExtend: true
+      watermark: true
     inputs:
       reference_images:
         max: 9
@@ -135,6 +151,8 @@ models:
             options: [720p, 1080p]
             default: 1080p
           seed: true
+          negativePrompt: false
+          promptExtend: false
           watermark: true
         inputs:
           reference_images:
@@ -161,10 +179,10 @@ models:
           visible_in: []
           order: 2
 
-  # ── Wan 2.6 Video (legacy, still active) ──────────────────────────
+  # ── Wan 2.6 Video (deprecated — replaced by 2.7) ──────────────────
   - id: wan/wan2.6-video
     display_name: Wan 2.6 Video
-    description: Wan 2.6 video line
+    description: Wan 2.6 video line (deprecated)
     status: deprecated
     release_stage: stable
     docs:
@@ -176,11 +194,12 @@ models:
       i2v:
         legacy_id: wan2.6-i2v
         display_name: Wan 2.6 I2V / R2V
-        description: Legacy model, supports R2V
+        description: Legacy model, supports R2V (deprecated — replaced by 2.7)
+        status: deprecated
         capabilities: [i2v, r2v]
         ui:
           selection_group: i2v
-          visible_in: [project_settings, series_settings, video_sidebar, global_settings]
+          visible_in: []
           order: 75
         duration:
           type: slider
@@ -200,8 +219,8 @@ models:
       r2v:
         legacy_id: wan2.6-r2v
         display_name: Wan 2.6 R2V
-        description: Dedicated reference-to-video route
-        status: hidden
+        description: Dedicated reference-to-video route (deprecated — replaced by 2.7)
+        status: deprecated
         capabilities: [r2v]
         ui:
           selection_group: i2v
@@ -213,7 +232,7 @@ models:
             reference_type: video
   - id: wan2.6-i2v-flash
     display_name: Wan 2.6 I2V Flash
-    description: Fast generation
+    description: Fast generation (deprecated — replaced by 2.7)
     status: deprecated
     release_stage: stable
     capabilities: [i2v]
@@ -221,7 +240,7 @@ models:
       context_hub_doc_ids: [aliyun/wan-i2v-r2v]
     ui:
       selection_group: i2v
-      visible_in: [project_settings, series_settings, video_sidebar, global_settings]
+      visible_in: []
       order: 70
     duration:
       type: slider

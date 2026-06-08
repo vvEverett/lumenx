@@ -86,6 +86,15 @@ const config: Config = {
         "base": "250ms",
         "slow": "400ms",
       },
+      keyframes: {
+        shimmer: {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
+        },
+      },
+      animation: {
+        shimmer: "shimmer 2s infinite linear",
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":

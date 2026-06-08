@@ -240,8 +240,8 @@ class WanxModel(VideoGenModel):
             logger.info(f"Using T2V model: {final_model_name}")
 
         size = self.params.get('size', '1280*720')
-        prompt_extend = self.params.get('prompt_extend', True)
-        watermark = self.params.get('watermark', False)
+        prompt_extend = kwargs.get('prompt_extend', self.params.get('prompt_extend', True))
+        watermark = kwargs.get('watermark', self.params.get('watermark', False))
 
         # New parameters - prioritize kwargs, fallback to params
         duration = kwargs.get('duration') or self.params.get('duration', 5)

@@ -8,6 +8,39 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **Playground 创作台** — 全新独立生成模块，无需创建项目即可使用所有图像/视频生成能力
+  - 6 种生成模式：图像（T2I + I2I 自动识别）、文生视频、图生视频、参考生视频、视频编辑
+  - 两级模式选择器：图像生成 / 视频生成大类切换 + 视频子模式 pill
+  - 模型按 family 分组排序（视频: HappyHorse → Seedance → Kling → PixVerse → Wan → Vidu）
+  - 每个模型动态参数（GPT-Image-2: size+quality; Kling: mode+sound+cfgScale; Vidu: movementAmplitude+audio 等）
+  - 并发任务队列：可连续提交多个生成任务，右侧画廊实时显示状态
+  - 网格/画廊视图切换 + 详情面板（左图右信息，←→ 导航）
+  - Prompt 模板管理（新建/套用/收藏/删除）+ Prompt 历史（去重/搜索/一键复制/存为模板）
+  - 失败任务：重试 + 删除 + 复制报错全文
+  - 资产库双向打通：收藏到资产库（toggle）/ 从资产库选取作为输入
+  - 批量生成（抽卡 ×1/×2/×4）
+  - Session 时间分割线（30 分钟间隔自动分组）
+- **GlobalSidebar 创作台入口** — 侧边栏第 4 个导航项（Sparkles 图标）
+- **MuleRun 一键登录** — 设置页一键触发 OAuth 登录 + 重新登录按钮
+- **GPT-Image-2 扩展尺寸** — 支持 2K (2048×2048) 和 4K (3840×2160) via MuleRun
+
+### Changed
+- **Model catalog 参数精确化** — 所有 27 个 active 模型逐一声明 seed/negativePrompt/promptExtend/watermark 的 true/false，前端按模型动态显示高级参数
+- **WanxModel prompt_extend/watermark** — 改为 kwargs 优先读取（修复 Playground 传参被忽略的问题）
+- **PixVerse 路由** — Playground service 改为走 WanxModel 通道（与 pipeline 对齐）
+- **图像参数体系** — 图像模式显示 size（如 1024×1024 (1:1)），视频模式显示 resolution/ratio，不再混用
+
+### Deprecated
+- **Wan 2.6 全系列全局隐藏** — wan2.6-i2v、wan2.6-i2v-flash visible_in 清空 + wan2.6-r2v 标记 deprecated，Studio 和 Playground 统一不再展示
+- **Wan 2.5 / 2.2 系列** — 确认全部 deprecated + visible_in=[]
+
+### Fixed
+- **Vidu watermark 误标** — catalog 从 true 改为 false（代码中无此参数）
+- **收藏状态不同步** — 改为从 store generation 数据驱动（单一数据源），卡片/详情面板自动一致
+- **下载打开新标签** — 改为 fetch→blob→createObjectURL 强制浏览器下载
+- **筛选不显示失败任务** — 改为按 mode 判断分类，不依赖 outputs
+
 ---
 
 ## [1.1.0] - 2026-06-05

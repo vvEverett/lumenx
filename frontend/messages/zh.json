@@ -360,6 +360,7 @@
   "nav": {
     "workspace": "工作区",
     "library": "主体库",
+    "playground": "创作台",
     "settings": "设置"
   },
   "workspace": {

@@ -1711,7 +1711,7 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Fast generation",
+      "description": "Fast generation (deprecated — replaced by 2.7)",
       "display_name": "Wan 2.6 I2V Flash",
       "docs": {
         "context_hub_doc_ids": [
@@ -1885,7 +1885,7 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Wan 2.6 video line",
+      "description": "Wan 2.6 video line (deprecated)",
       "display_name": "Wan 2.6 Video",
       "docs": {
         "context_hub_doc_ids": [
@@ -2165,7 +2165,29 @@
       "inputs": {},
       "params": {
         "negativePrompt": false,
-        "seed": false
+        "promptExtend": false,
+        "quality": {
+          "default": "high",
+          "options": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "seed": false,
+        "size": {
+          "default": "1024x1024",
+          "options": [
+            "1024x1024",
+            "1536x1024",
+            "1024x1536",
+            "2048x2048",
+            "2048x1152",
+            "3840x2160",
+            "2160x3840"
+          ]
+        },
+        "watermark": false
       },
       "provider": "mulerouter",
       "release_stage": "stable",
@@ -2237,6 +2259,8 @@
         }
       },
       "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -2318,6 +2342,8 @@
         }
       },
       "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -2387,6 +2413,8 @@
       "id": "happyhorse-1.0-t2v",
       "inputs": {},
       "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -2394,7 +2422,8 @@
             "1080p"
           ]
         },
-        "seed": true
+        "seed": true,
+        "watermark": true
       },
       "provider": "aliyun",
       "release_stage": "stable",
@@ -2450,6 +2479,8 @@
       "id": "happyhorse-1.0-video-edit",
       "inputs": {},
       "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -2457,7 +2488,8 @@
             "1080p"
           ]
         },
-        "seed": true
+        "seed": true,
+        "watermark": true
       },
       "provider": "aliyun",
       "release_stage": "stable",
@@ -2537,7 +2569,6 @@
             "1:1"
           ]
         },
-        "audio": true,
         "cfgScale": {
           "default": 0.5,
           "max": 1,
@@ -2552,8 +2583,10 @@
           ]
         },
         "negativePrompt": true,
+        "promptExtend": false,
+        "seed": false,
         "sound": true,
-        "watermark": true
+        "watermark": false
       },
       "provider": "kling",
       "release_stage": "stable",
@@ -2654,7 +2687,9 @@
           ]
         },
         "negativePrompt": true,
-        "watermark": true
+        "promptExtend": false,
+        "seed": false,
+        "watermark": false
       },
       "provider": "kling",
       "release_stage": "stable",
@@ -2732,6 +2767,8 @@
       },
       "params": {
         "audio": true,
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -2815,6 +2852,8 @@
         }
       },
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -2822,7 +2861,8 @@
             "1080p"
           ]
         },
-        "seed": true
+        "seed": true,
+        "watermark": false
       },
       "provider": "pixverse",
       "release_stage": "stable",
@@ -2950,6 +2990,8 @@
         }
       },
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -2957,7 +2999,8 @@
             "1080p"
           ]
         },
-        "seed": true
+        "seed": true,
+        "watermark": false
       },
       "provider": "pixverse",
       "release_stage": "stable",
@@ -3031,6 +3074,8 @@
       },
       "params": {
         "audio": true,
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -3116,6 +3161,17 @@
         "negativePrompt": true,
         "promptExtend": true,
         "seed": true,
+        "size": {
+          "default": "1280*1280",
+          "options": [
+            "1024*1024",
+            "1280*1280",
+            "1440*1440",
+            "2048*2048",
+            "1280*720",
+            "720*1280"
+          ]
+        },
         "watermark": true
       },
       "provider": "aliyun",
@@ -3180,6 +3236,17 @@
         "negativePrompt": true,
         "promptExtend": true,
         "seed": true,
+        "size": {
+          "default": "1280*1280",
+          "options": [
+            "1024*1024",
+            "1280*1280",
+            "1440*1440",
+            "2048*2048",
+            "1280*720",
+            "720*1280"
+          ]
+        },
         "watermark": true
       },
       "provider": "aliyun",
@@ -3253,6 +3320,8 @@
         }
       },
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -3336,6 +3405,8 @@
         }
       },
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -3414,6 +3485,8 @@
       "id": "seedance-2.0-t2v",
       "inputs": {},
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -3510,6 +3583,8 @@
             "large"
           ]
         },
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -3603,6 +3678,8 @@
         }
       },
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -3612,7 +3689,7 @@
           ]
         },
         "seed": true,
-        "watermark": true
+        "watermark": false
       },
       "provider": "vidu",
       "release_stage": "stable",
@@ -3702,6 +3779,8 @@
             "large"
           ]
         },
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -3793,6 +3872,8 @@
         }
       },
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -3802,7 +3883,7 @@
           ]
         },
         "seed": true,
-        "watermark": true
+        "watermark": false
       },
       "provider": "vidu",
       "release_stage": "stable",
@@ -4304,7 +4385,7 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Legacy model, supports R2V",
+      "description": "Legacy model, supports R2V (deprecated — replaced by 2.7)",
       "display_name": "Wan 2.6 I2V / R2V",
       "docs": {
         "context_hub_doc_ids": [
@@ -4367,12 +4448,7 @@
         "order": 75,
         "recommended": false,
         "selection_group": "i2v",
-        "visible_in": [
-          "project_settings",
-          "series_settings",
-          "video_sidebar",
-          "global_settings"
-        ]
+        "visible_in": []
       }
     },
     "wan2.6-i2v-flash": {
@@ -4386,7 +4462,7 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Fast generation",
+      "description": "Fast generation (deprecated — replaced by 2.7)",
       "display_name": "Wan 2.6 I2V Flash",
       "docs": {
         "context_hub_doc_ids": [
@@ -4449,12 +4525,7 @@
         "order": 70,
         "recommended": false,
         "selection_group": "i2v",
-        "visible_in": [
-          "project_settings",
-          "series_settings",
-          "video_sidebar",
-          "global_settings"
-        ]
+        "visible_in": []
       }
     },
     "wan2.6-image": {
@@ -4529,7 +4600,7 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Dedicated reference-to-video route",
+      "description": "Dedicated reference-to-video route (deprecated — replaced by 2.7)",
       "display_name": "Wan 2.6 R2V",
       "docs": {
         "context_hub_doc_ids": [
@@ -4557,7 +4628,7 @@
         "wan2.6-",
         "wan2.7-"
       ],
-      "status": "hidden",
+      "status": "deprecated",
       "supported_backends": [
         "dashscope"
       ],
@@ -4764,7 +4835,25 @@
           "max": 9
         }
       },
-      "params": {},
+      "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
+        "seed": true,
+        "size": {
+          "default": "1280*1280",
+          "options": [
+            "1024*1024",
+            "1280*1280",
+            "1440*1440",
+            "2048*2048",
+            "1280*720",
+            "720*1280",
+            "1024*576",
+            "576*1024"
+          ]
+        },
+        "watermark": true
+      },
       "provider": "aliyun",
       "release_stage": "stable",
       "routing_prefixes": [
@@ -4830,7 +4919,25 @@
           "max": 9
         }
       },
-      "params": {},
+      "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
+        "seed": true,
+        "size": {
+          "default": "1280*1280",
+          "options": [
+            "1024*1024",
+            "1280*1280",
+            "1440*1440",
+            "2048*2048",
+            "1280*720",
+            "720*1280",
+            "1024*576",
+            "576*1024"
+          ]
+        },
+        "watermark": true
+      },
       "provider": "aliyun",
       "release_stage": "stable",
       "routing_prefixes": [
@@ -4905,6 +5012,8 @@
         }
       },
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -5098,7 +5207,29 @@
       "model_line_id": "gpt-image/gpt-image-2",
       "params": {
         "negativePrompt": false,
-        "seed": false
+        "promptExtend": false,
+        "quality": {
+          "default": "high",
+          "options": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "seed": false,
+        "size": {
+          "default": "1024x1024",
+          "options": [
+            "1024x1024",
+            "1536x1024",
+            "1024x1536",
+            "2048x2048",
+            "2048x1152",
+            "3840x2160",
+            "2160x3840"
+          ]
+        },
+        "watermark": false
       },
       "provider": "mulerouter",
       "release_stage": "stable",
@@ -5168,6 +5299,8 @@
       "mode": "i2v",
       "model_line_id": "happyhorse/happyhorse-1.0-t2v",
       "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -5175,7 +5308,8 @@
             "1080p"
           ]
         },
-        "seed": true
+        "seed": true,
+        "watermark": true
       },
       "provider": "aliyun",
       "release_stage": "stable",
@@ -5245,6 +5379,8 @@
       "mode": "i2v",
       "model_line_id": "happyhorse/happyhorse-1.0-video",
       "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -5334,6 +5470,8 @@
       "mode": "r2v",
       "model_line_id": "happyhorse/happyhorse-1.0-video",
       "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -5411,6 +5549,8 @@
       "mode": "i2v",
       "model_line_id": "happyhorse/happyhorse-1.0-video-edit",
       "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -5418,7 +5558,8 @@
             "1080p"
           ]
         },
-        "seed": true
+        "seed": true,
+        "watermark": true
       },
       "provider": "aliyun",
       "release_stage": "stable",
@@ -5502,7 +5643,6 @@
             "1:1"
           ]
         },
-        "audio": true,
         "cfgScale": {
           "default": 0.5,
           "max": 1,
@@ -5517,8 +5657,10 @@
           ]
         },
         "negativePrompt": true,
+        "promptExtend": false,
+        "seed": false,
         "sound": true,
-        "watermark": true
+        "watermark": false
       },
       "provider": "kling",
       "release_stage": "stable",
@@ -5631,7 +5773,9 @@
           ]
         },
         "negativePrompt": true,
-        "watermark": true
+        "promptExtend": false,
+        "seed": false,
+        "watermark": false
       },
       "provider": "kling",
       "release_stage": "stable",
@@ -5721,6 +5865,8 @@
       "model_line_id": "pixverse/pixverse-c1-video",
       "params": {
         "audio": true,
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -5813,6 +5959,8 @@
       "mode": "r2v",
       "model_line_id": "pixverse/pixverse-c1-video",
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -5820,7 +5968,8 @@
             "1080p"
           ]
         },
-        "seed": true
+        "seed": true,
+        "watermark": false
       },
       "provider": "pixverse",
       "release_stage": "stable",
@@ -5961,6 +6110,8 @@
       "mode": "r2v",
       "model_line_id": "pixverse/pixverse-v5.6-r2v",
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -5968,7 +6119,8 @@
             "1080p"
           ]
         },
-        "seed": true
+        "seed": true,
+        "watermark": false
       },
       "provider": "pixverse",
       "release_stage": "stable",
@@ -6051,6 +6203,8 @@
       "model_line_id": "pixverse/pixverse/pixverse-v6-video",
       "params": {
         "audio": true,
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -6145,6 +6299,17 @@
         "negativePrompt": true,
         "promptExtend": true,
         "seed": true,
+        "size": {
+          "default": "1280*1280",
+          "options": [
+            "1024*1024",
+            "1280*1280",
+            "1440*1440",
+            "2048*2048",
+            "1280*720",
+            "720*1280"
+          ]
+        },
         "watermark": true
       },
       "provider": "aliyun",
@@ -6218,6 +6383,17 @@
         "negativePrompt": true,
         "promptExtend": true,
         "seed": true,
+        "size": {
+          "default": "1280*1280",
+          "options": [
+            "1024*1024",
+            "1280*1280",
+            "1440*1440",
+            "2048*2048",
+            "1280*720",
+            "720*1280"
+          ]
+        },
         "watermark": true
       },
       "provider": "aliyun",
@@ -6300,6 +6476,8 @@
       "mode": "i2v",
       "model_line_id": "seedance/seedance-2.0-video",
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -6391,6 +6569,8 @@
       "mode": "r2v",
       "model_line_id": "seedance/seedance-2.0-video",
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -6477,6 +6657,8 @@
       "mode": "t2v",
       "model_line_id": "seedance/seedance-2.0-video",
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "1080p",
           "options": [
@@ -6581,6 +6763,8 @@
             "large"
           ]
         },
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -6686,6 +6870,8 @@
       "mode": "r2v",
       "model_line_id": "vidu/viduq3-pro-video",
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -6695,7 +6881,7 @@
           ]
         },
         "seed": true,
-        "watermark": true
+        "watermark": false
       },
       "provider": "vidu",
       "release_stage": "stable",
@@ -6797,6 +6983,8 @@
             "large"
           ]
         },
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -6900,6 +7088,8 @@
       "mode": "r2v",
       "model_line_id": "vidu/viduq3-turbo-video",
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "720p",
           "options": [
@@ -6909,7 +7099,7 @@
           ]
         },
         "seed": true,
-        "watermark": true
+        "watermark": false
       },
       "provider": "vidu",
       "release_stage": "stable",
@@ -7447,7 +7637,7 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Fast generation",
+      "description": "Fast generation (deprecated — replaced by 2.7)",
       "display_name": "Wan 2.6 I2V Flash",
       "docs": {
         "context_hub_doc_ids": [
@@ -7514,12 +7704,7 @@
         "order": 70,
         "recommended": false,
         "selection_group": "i2v",
-        "visible_in": [
-          "project_settings",
-          "series_settings",
-          "video_sidebar",
-          "global_settings"
-        ]
+        "visible_in": []
       }
     },
     "wan/wan2.6-image#i2i": {
@@ -7660,7 +7845,7 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Legacy model, supports R2V",
+      "description": "Legacy model, supports R2V (deprecated — replaced by 2.7)",
       "display_name": "Wan 2.6 I2V / R2V",
       "docs": {
         "context_hub_doc_ids": [
@@ -7731,12 +7916,7 @@
         "order": 75,
         "recommended": false,
         "selection_group": "i2v",
-        "visible_in": [
-          "project_settings",
-          "series_settings",
-          "video_sidebar",
-          "global_settings"
-        ]
+        "visible_in": []
       }
     },
     "wan/wan2.6-video#r2v": {
@@ -7750,7 +7930,7 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Dedicated reference-to-video route",
+      "description": "Dedicated reference-to-video route (deprecated — replaced by 2.7)",
       "display_name": "Wan 2.6 R2V",
       "docs": {
         "context_hub_doc_ids": [
@@ -7786,7 +7966,7 @@
           "gateway": "dashscope"
         }
       },
-      "status": "hidden",
+      "status": "deprecated",
       "supported_backends": [
         "dashscope"
       ],
@@ -7842,7 +8022,25 @@
       "legacy_model_id": "wan2.7-image",
       "mode": "image",
       "model_line_id": "wan/wan2.7-image",
-      "params": {},
+      "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
+        "seed": true,
+        "size": {
+          "default": "1280*1280",
+          "options": [
+            "1024*1024",
+            "1280*1280",
+            "1440*1440",
+            "2048*2048",
+            "1280*720",
+            "720*1280",
+            "1024*576",
+            "576*1024"
+          ]
+        },
+        "watermark": true
+      },
       "provider": "aliyun",
       "release_stage": "stable",
       "routing_prefixes": [
@@ -7917,7 +8115,25 @@
       "legacy_model_id": "wan2.7-image-pro",
       "mode": "image",
       "model_line_id": "wan/wan2.7-image-pro",
-      "params": {},
+      "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
+        "seed": true,
+        "size": {
+          "default": "1280*1280",
+          "options": [
+            "1024*1024",
+            "1280*1280",
+            "1440*1440",
+            "2048*2048",
+            "1280*720",
+            "720*1280",
+            "1024*576",
+            "576*1024"
+          ]
+        },
+        "watermark": true
+      },
       "provider": "aliyun",
       "release_stage": "stable",
       "routing_prefixes": [
@@ -8106,6 +8322,8 @@
       "mode": "r2v",
       "model_line_id": "wan/wan2.7-video",
       "params": {
+        "negativePrompt": false,
+        "promptExtend": false,
         "resolution": {
           "default": "1080p",
           "options": [
