@@ -524,10 +524,14 @@ class MuleRouterImageModel(ImageGenModel):
 
         args = ["--prompt", prompt, "--size", size]
 
+        resolved_images = []
         for path in ref_image_paths:
-            resolved = _resolve_local_image_path(path)
+            resolved = _resolve_local_image_path(img_path=path, img_url=path)
             if resolved:
-                args += ["--images", resolved]
+                resolved_images.append(resolved)
+        if resolved_images:
+            import json as _json
+            args += ["--images", _json.dumps(resolved_images)]
 
         result = _run_mulerun_studio(endpoint, args, timeout=300)
         image_url = self._extract_image_url(result)
