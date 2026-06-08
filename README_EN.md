@@ -1,309 +1,222 @@
-<!-- Banner Placeholder -->
+<!-- Banner -->
 <div align="center">
-  <img src="docs/images/LumenX Studio Banner.jpeg" alt="LumenX Studio Banner" width="100%" />
+  <img src="docs/images/LumenX Studio Banner.jpeg" alt="LumenX Studio" width="100%" />
 </div>
 
 <div align="center">
 
-# LumenX Studio
+# LumenX
 
-### AI-Native Motion Comic Creation Platform
+### AI-Native Motion Comic & Video Creation Platform
 **Render Noise into Narrative**
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![Node](https://img.shields.io/badge/node-18%2B-green)](https://nodejs.org/)
 [![GitHub Stars](https://img.shields.io/github/stars/alibaba/lumenx?style=social)](https://github.com/alibaba/lumenx)
 
-[English](README_EN.md) | [中文](README.md) | [User Manual](USER_MANUAL.md) | [Contributing](CONTRIBUTING.md)
+[English](README_EN.md) · [中文](README.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
 ---
 
-LumenX Studio is an **all-in-one AI motion comic production platform**. It automatically transforms novel text into dynamic videos, streamlining the entire workflow from script analysis and character customization to storyboard composition and video synthesis.
+LumenX is an **AI-native motion comic & video creation platform**. It transforms creative text into publishable dynamic videos, providing a complete workflow from script analysis to final export, while also supporting standalone image/video generation.
 
-LumenX Studio naturally integrates the full-link SOP of **Asset Extraction -> Style Definition -> Asset Generation -> Storyboard Construction -> Storyboard Generation -> Video Generation**. It incorporates industry know-how on top of comprehensive features, allowing creators to quickly produce high-quality AI short films with greatly improved efficiency.
+LumenX currently includes two core modules:
 
-The platform natively integrates Alibaba's Qwen & Wanx series model capabilities, dedicated to providing an intelligent, convenient, and flexible flexible creation experience, enabling creators to complete motion comic production in one stop without frequent switching between web pages or apps.
-
----
-
-## ✨ Key Features
-
-| Feature | Description |
-|---------|-------------|
-| 📝 **Deep Script Analysis** | LLM-based extraction of characters, scenes, and props to generate professional shooting scripts |
-| 🎨 **Art Direction Control** | Custom visual style support (LoRA/Style Transfer) ensuring consistent art direction |
-| 🎬 **Visual Storyboard** | Drag-and-drop storyboard editor for WYSIWYG composition of characters and backgrounds |
-| 🎥 **Multimodal Generation** | Integration with Wanx and other models for Text-to-Image and Image-to-Video generation |
-| 🎵 **Smart AV Synthesis** | Automated character dubbing (TTS), sound effects (SFX), and final video synthesis |
+| Module | Purpose | Status |
+|--------|---------|--------|
+| **LumenX Studio** | Pipeline-first comic/video production (Script → Storyboard → Assets → Video → Export) | ✅ Available |
+| **LumenX Playground** | Standalone image/video generation workbench (no project context required) | ✅ Available |
 
 ---
 
-## 📸 Demo
+## ✨ Core Capabilities
+
+<table>
+<tr>
+<td width="50%">
+
+### 🎬 Studio — Full Pipeline Production
+
+- **Deep Script Analysis** — LLM auto-extracts characters/scenes/props, generates structured storyboards
+- **Art Direction Control** — Custom visual styles with global consistency
+- **Multi-model Asset Generation** — Character turnarounds, scene establishing shots, prop references
+- **AI Video Generation** — I2V / R2V multi-mode video generation + batch candidates
+- **Smart Dubbing** — CosyVoice / Qwen3-TTS multi-voice dialogue synthesis
+- **One-click Export** — Timeline editing + FFmpeg merging
+
+</td>
+<td width="50%">
+
+### 🎨 Playground — Standalone Generation Workbench
+
+- **6 Generation Modes** — Image, Text-to-Video, Image-to-Video, Reference-to-Video, Video Editing
+- **10+ AI Models** — GPT-Image-2, Wan 2.7, Seedance 2.0, Kling V3, Vidu Q3, HappyHorse, etc.
+- **Dynamic Parameters** — Per-model parameter configuration (size/resolution/duration/quality)
+- **Concurrent Tasks** — Multiple tasks execute simultaneously with real-time status tracking
+- **Prompt Templates** — Save/reuse/favorite/history
+- **Gallery View** — Grid/gallery toggle + detail panel
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📸 Screenshots
 
 <div align="center">
-  Step 1: Script - Script Editing and Entity Extraction
-  
-  The script editor is located on the left side of the screen. After editing the script, click the "Extract Entities" button above to automatically extract characters, scenes, and props mentioned in the script using Qwen-Plus. You can edit and adjust these entities on the right side.
-  <img src="docs/images/Script_example.jpg" alt="LumenX Studio Script" width="100%" />
 
-  Step 2: Art Direction - Style Definition
+| Studio Storyboard | Playground |
+|:---:|:---:|
+| <img src="docs/images/studio-storyboard.jpg" alt="Studio" width="100%" /> | <img src="docs/images/playground-overview.jpg" alt="Playground" width="100%" /> |
 
-  You can use Qwen-Plus to analyze the appropriate style for the current script, or use preset styles. Each style consists of a set of positive/negative prompts used to visually constrain all subsequent generation stages, establishing a unified global visual standard.
-  <img src="docs/images/ArtDirection_example.jpg" alt="LumenX Studio ArtDirection" width="100%" />
-
-  Step 3: Assets - Asset Generation
-
-  In this stage, you can edit the text descriptions for characters, scenes, props, and other assets extracted in Step 1, then generate corresponding images based on these descriptions. For characters, to maintain consistency across different scenes, the system first generates a full-body image without background, then uses it as a reference to generate turnarounds and portrait close-ups as core character assets. Subsequent costume or form changes can be derived through secondary image editing based on these full-body photos or turnarounds.
-  Additionally, Wanx 2.6 series supports reference-to-video, so you can also generate reference videos for each character, scene, and prop here.
-
-  <img src="docs/images/Assets_example.jpg" alt="LumenX Studio Assets" width="100%" />
-
-  Step 4: StoryBoard - Storyboard Creation
-
-  In this stage, you can extract storyboard scripts based on the screenplay, forming a structured storyboard that supports secondary editing, adding, and deleting shots. For each scene, you can select participating characters, scenes, and props as reference images for generating storyboard images.
-  This stage incorporates AI prompt polishing capabilities, allowing you to directly use Qwen-Plus to polish existing prompts, with embedded image editing prompt guidelines as best practices.
-
-  <img src="docs/images/StoryBoard_example.jpg" alt="LumenX Studio StoryBoard" width="100%" />
-
-  Step 5: Motion - Storyboard Video Generation
-
-  This stage can be divided into two generation models: one is the i2v mode driven by the first frame, and the other is the r2v mode driven by character actions. In i2v mode, you can select the storyboard images generated in Step 4 and generate storyboard videos for them one by one. This generation process also incorporates AI prompt polishing capabilities, allowing you to directly use Qwen-Plus to polish existing prompts, with embedded image-to-video prompt guidelines as best practices. In r2v mode, you can select reference videos of characters, scenes, and props for reference-to-video generation.
-  This stage also supports a multi-batch size generation lottery mechanism, allowing you to select the final storyboard video for each shot in Step 6.
-
-  <img src="docs/images/Motion_example.jpg" alt="LumenX Studio Motion" width="100%" />
-
-  Step 6: Assembly - Storyboard Video Stitching
-
-  In this stage, you can review the storyboard videos for each shot, select the one you think is best as the final shot, and after all shots are selected, click the "Merge&Proceed" button to stitch them into a complete video with one click.
-
-  <img src="docs/images/Assembly_example.jpg" alt="LumenX Studio Assembly" width="100%" />
 </div>
 
 ---
 
-## 🏗️ Architecture
+## 🎯 Supported AI Models
 
-LumenX Studio utilizes a modern separated frontend/backend architecture for scalability and performance.
-
-<div align="center">
-  <!-- Architecture Diagram -->
-  <img src="docs/images/architecture.svg" alt="System Architecture" width="80%" />
-</div>
-
-**Tech Stack:**
-- **Frontend**: Next.js 14 + React 18 + TypeScript + Tailwind CSS
-- **Backend**: FastAPI + Python 3.11+
-- **AI Core**: Alibaba Cloud Qwen (Logic) + Wanx (Visuals)
-- **Render**: Three.js (Canvas) + FFmpeg (Video Processing)
+| Provider | Models | Capabilities |
+|----------|--------|--------------|
+| **DashScope** | Wan 2.7 Image/Video, Qwen Image 2.0, HappyHorse 1.0 | T2I, I2I, I2V, R2V, T2V, V2V |
+| **DashScope** | Kling V3 | I2V, R2V |
+| **DashScope** | Vidu Q3 Pro / Turbo | I2V, R2V |
+| **DashScope** | PixVerse V6 / C1 | I2V, R2V |
+| **MuleRun** | Seedance 2.0 | T2V, I2V, R2V |
+| **MuleRun** | GPT-Image-2 | T2I, I2I (up to 4K) |
+| **Kling Direct** | Kling V3 | I2V, R2V |
+| **Vidu Direct** | Vidu Q3 Pro / Turbo | I2V, R2V |
+| **DashScope** | CosyVoice, Qwen3-TTS | TTS Dubbing |
+| **DashScope** | Qwen 3.6 Plus | Script Analysis, Prompt Polish |
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Prerequisites
+### Prerequisites
 
-- **Python**: 3.11+
-- **Node.js**: 18+
-- **FFmpeg**: Required (for video processing)
+- Python 3.11+
+- Node.js 18+
+- FFmpeg (for video processing)
 
-### 2. Clone Repository
+### One-command Launch
 
 ```bash
+# Clone
 git clone https://github.com/alibaba/lumenx.git
 cd lumenx
-```
 
-### 3. Configure API Keys
-
-Copy the configuration template and fill in your API Key (Alibaba Cloud Model Studio / Bailian service required):
-
-```bash
+# Configure API Key
 cp .env.example .env
-# Edit .env and fill in DASHSCOPE_API_KEY
+# Edit .env, fill in DASHSCOPE_API_KEY (required)
+
+# Start (backend on 17177 + frontend on 3008, auto-opens browser)
+npm run dev
 ```
 
-### 4. Start Backend
+Or start separately:
 
 ```bash
-# Install dependencies
+# Backend
 pip install -r requirements.txt
+./start_backend.sh  # http://localhost:17177
 
-# Create output directories
-mkdir -p output/uploads
-
-# Start service (http://localhost:8000)
-./start_backend.sh
+# Frontend
+cd frontend && npm install && npm run dev  # http://localhost:3008
 ```
 
-### 5. Start Frontend
+### Access
 
-```bash
-cd frontend
-
-# Install dependencies & start service (http://localhost:3008)
-npm install && npm run dev
-```
-
-Notes:
-
-- `npm run dev` now goes through a repo-controlled stable launcher.
-- On macOS, it enables Watchpack polling by default to avoid `EMFILE: too many open files, watch` in large workspaces, so dev-mode debugging remains usable.
-- The frontend dev server now defaults to port `3008`, which avoids clashing with other local projects that commonly use `3000`.
+- **Studio**: http://localhost:3008
+- **Playground**: http://localhost:3008/#/playground
+- **API Docs**: http://localhost:17177/docs
 
 ---
 
-## 📖 Documentation
+## ⚙️ Configuration Modes
 
-- **[User Manual](USER_MANUAL.md)**: **Must-read** for first-time users.
-- **[API Documentation](http://localhost:8000/docs)**: Backend Swagger UI.
-- **[Model Onboarding Implementation](docs/model-onboarding-implementation.md)**: explains what the model onboarding system does today and what each related file is responsible for.
-- **[Model Docs And Catalog Architecture](docs/plans/2026-04-03-model-docs-and-catalog-architecture.md)**: explains why the system is structured this way.
+LumenX uses a **local-first** architecture. The minimal setup requires only one API key.
 
----
-
-## 🧠 Model Onboarding Workflow
-
-LumenX now ships with a repo-native model onboarding workflow entry:
-
-- text alias: `/lumenx-model-onboarding`
-- use it for:
-  - onboarding a new model
-  - updating model versions
-  - switching defaults
-  - changing model params, capability flags, or UI exposure
-  - refreshing model-document evidence
-
-Recommended verification sequence:
-
-```bash
-python scripts/build_model_catalog.py
-python scripts/validate_model_catalog.py
-pytest -q
-cd frontend && npm run typecheck
-cd frontend && npm run test:all
-cd frontend && npm run build
-```
-
-`npm run typecheck` is a stable wrapper. On a clean checkout, if Next.js has not generated `.next/types` yet, it will bootstrap them first and then run `tsc --noEmit`.
-
-The goal is not only to change files, but to leave behind:
-
-- document evidence
-- catalog changes
-- regenerated backend/frontend artifacts
-- repeatable verification results
-
----
-
-## 🧩 Operating Modes & Required Variables
-
-LumenX uses a **local-first** media storage strategy:
-
-- Uploaded/generated media is always written to `output/` first as the durable project source.
-- OSS is optional (mirror + signed URL service), not a required prerequisite.
-- Provider routing defaults to DashScope and can be overridden per model family.
-
-### Mode 1: DashScope-only (No OSS)
-
-- Use case: local-only creation without OSS and without vendor-direct Kling/Vidu keys.
-- Required: `DASHSCOPE_API_KEY`
-- Optional: `KLING_PROVIDER_MODE`, `VIDU_PROVIDER_MODE` (default is `dashscope`)
-
-### Mode 2: DashScope + OSS (Local + Cloud Mirror)
-
-- Use case: local persistence with OSS backup/signing capability.
-- Required:
-  - `DASHSCOPE_API_KEY`
-  - `ALIBABA_CLOUD_ACCESS_KEY_ID`
-  - `ALIBABA_CLOUD_ACCESS_KEY_SECRET`
-  - `OSS_BUCKET_NAME`
-  - `OSS_ENDPOINT`
-- Optional: `OSS_BASE_PATH`
-
-### Mode 3: DashScope-first + Kling Vendor-direct
-
-- Use case: most models run through DashScope, while Kling runs against vendor API.
-- Required:
-  - `DASHSCOPE_API_KEY`
-  - `KLING_PROVIDER_MODE=vendor`
-  - `KLING_ACCESS_KEY`
-  - `KLING_SECRET_KEY`
-- Note: OSS remains optional and independent from this routing mode.
-
-### Mode 4: DashScope-first + Vidu Vendor-direct
-
-- Use case: most models run through DashScope, while Vidu runs against vendor API.
-- Required:
-  - `DASHSCOPE_API_KEY`
-  - `VIDU_PROVIDER_MODE=vendor`
-  - `VIDU_API_KEY`
-- Note: OSS remains optional and independent from this routing mode.
-
----
-
-## ⚙️ Advanced Configuration
+| Mode | Required | Available Capabilities |
+|------|----------|----------------------|
+| **Basic** | `DASHSCOPE_API_KEY` | Wan/Qwen/HappyHorse/PixVerse/Kling(proxy)/Vidu(proxy) + TTS |
+| **+ MuleRun** | + `mulerun login` or `MULEROUTER_API_KEY` | + Seedance 2.0 + GPT-Image-2 |
+| **+ Kling Direct** | + `KLING_ACCESS_KEY` + `KLING_SECRET_KEY` | Kling direct connection |
+| **+ Vidu Direct** | + `VIDU_API_KEY` | Vidu direct connection |
+| **+ OSS** | + Alibaba Cloud OSS credentials | Cloud media mirror + signed URLs |
 
 <details>
-<summary>Click to expand configuration details</summary>
+<summary>Detailed Configuration</summary>
 
-### OSS Object Storage (Recommended)
-For security and performance, it is recommended to configure Alibaba Cloud OSS for storing generated media:
+All settings can be configured via:
+- **Development**: `.env` file in project root
+- **In-app Settings**: Settings page (saves to `~/.lumen-x/config.json`)
 
-1. Create a **Private** Bucket
-2. Configure in `.env` or App Settings:
-   ```env
-   ALIBABA_CLOUD_ACCESS_KEY_ID=...
-   ALIBABA_CLOUD_ACCESS_KEY_SECRET=...
-   # Configure Bucket Name and Endpoint within the app
-   ```
-
-### Config File Locations
-- **Development**: `.env` in project root
-- **Packaged App**: `~/.lumen-x/config.json` in user home directory
+MuleRun supports two authentication methods:
+1. **CLI mode** (recommended): `npm i -g @mulerunai/cli && mulerun login`
+2. **API Key mode**: Enter `muk-...` format key in Settings page
 
 </details>
 
 ---
 
-## 📁 Directory Structure
+## 🏗️ Architecture
+
+<div align="center">
+  <img src="docs/images/architecture-cybr.png" alt="LumenX System Architecture" width="90%" />
+</div>
+
+### Directory Structure
 
 ```
 lumenx/
-├── frontend/          # Next.js Frontend
-├── src/               # Python Backend Core
-│   ├── apps/         # Business Logic
-│   ├── models/       # AI Model Interfaces
-│   └── utils/        # Utilities
-├── output/            # (Auto-generated) Output Directory
+├── frontend/                  # Next.js Frontend
+│   └── src/components/
+│       ├── modules/playground/   # Playground module
+│       ├── modules/              # Studio business modules
+│       └── layout/               # Global layout
+├── src/
+│   ├── apps/comic_gen/        # Studio backend (API + Pipeline)
+│   ├── apps/playground/       # Playground backend (API + Service)
+│   ├── models/                # AI model adapters (Wanx/Kling/Vidu/MuleRouter)
+│   └── audio/                 # TTS voice synthesis
+├── config/model_catalog/      # Model catalog (YAML → JSON)
+└── output/                    # Generated outputs (local storage)
 ```
+
+---
+
+## 📖 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [User Manual](USER_MANUAL.md) | Feature usage guide |
+| [API Docs](http://localhost:17177/docs) | Swagger UI |
+| [Model Onboarding](docs/model-onboarding-implementation.md) | New model integration guide |
+| [Catalog Architecture](docs/plans/2026-04-03-model-docs-and-catalog-architecture.md) | Model catalog design |
+| [Playground PRD](docs/plans/2026-06-06-playground-standalone-generation-prd.md) | Playground design document |
 
 ---
 
 ## 🤝 Contributing
 
-We welcome community contributions! Please read our [Contributing Guide](CONTRIBUTING.md) for code standards and submission process.
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
 
-- **Bug Reports**: Submit via [GitHub Issues](https://github.com/alibaba/lumenx/issues)
-- **Feature Requests**: Discuss in [Discussions](https://github.com/alibaba/lumenx/discussions)
-
-## 👤 Author
-
-**StarLotus (星莲)** - *Lead Developer & Maintainer*
-
-For any feedback or questions, please reach out via [GitHub Issues](https://github.com/alibaba/lumenx/issues) or [Discussions](https://github.com/alibaba/lumenx/discussions).
+- **Bug Reports**: [GitHub Issues](https://github.com/alibaba/lumenx/issues)
+- **Feature Requests**: [GitHub Discussions](https://github.com/alibaba/lumenx/discussions)
 - **Email**: [zhangjunhe.zjh@alibaba-inc.com](mailto:zhangjunhe.zjh@alibaba-inc.com)
 
 ---
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT License](LICENSE)
 
 ---
 
 <div align="center">
-  Made with ❤️ by Alibaba Group
+  Made with ❤️ by StarLotus · Alibaba Group
 </div>
