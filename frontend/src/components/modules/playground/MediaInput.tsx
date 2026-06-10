@@ -224,7 +224,7 @@ export default function MediaInput() {
   if (!hasMedia) {
     return (
       <div className="space-y-2">
-        <label className="block text-xs font-medium text-white/70">
+        <label className="block text-xs font-medium text-foreground/70">
           {config.label}
         </label>
 
@@ -239,23 +239,23 @@ export default function MediaInput() {
             transition-colors
             ${
               dragOver
-                ? 'border-[#646cff]/50 bg-[#646cff]/5'
-                : 'border-white/[0.08] hover:border-white/15 hover:bg-white/[0.02]'
+                ? 'border-primary/50 bg-primary/5'
+                : 'border-foreground/[0.08] hover:border-foreground/15 hover:bg-foreground/[0.02]'
             }
             ${uploading ? 'pointer-events-none opacity-60' : ''}
           `}
         >
           {config.icon === 'video' ? (
-            <Film className="w-8 h-8 text-white/40" />
+            <Film className="w-8 h-8 text-foreground/40" />
           ) : (
-            <ImagePlus className="w-8 h-8 text-white/40" />
+            <ImagePlus className="w-8 h-8 text-foreground/40" />
           )}
 
-          <span className="text-xs text-white/60">
+          <span className="text-xs text-foreground/60">
             {uploading ? '上传中...' : '拖拽或点击上传'}
           </span>
 
-          <span className="text-[11px] text-white/40">{config.hint}</span>
+          <span className="text-[11px] text-foreground/40">{config.hint}</span>
         </div>
 
         {/* Action buttons */}
@@ -266,8 +266,8 @@ export default function MediaInput() {
             disabled={uploading}
             className="
               flex-1 px-3 py-1.5 rounded-lg text-xs
-              border border-white/[0.08] text-white/70
-              hover:bg-white/[0.04] hover:text-white/90
+              border border-foreground/[0.08] text-foreground/70
+              hover:bg-foreground/[0.04] hover:text-foreground/90
               transition-colors disabled:opacity-40
             "
           >
@@ -278,8 +278,8 @@ export default function MediaInput() {
             onClick={() => setShowAssetPicker(true)}
             className="
               flex-1 px-3 py-1.5 rounded-lg text-xs
-              border border-[#646cff]/30 text-[#646cff]
-              hover:bg-[#646cff]/10
+              border border-primary/30 text-primary
+              hover:bg-primary/10
               transition-colors
             "
           >
@@ -305,17 +305,17 @@ export default function MediaInput() {
 
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-medium text-white/70">
+      <label className="block text-xs font-medium text-foreground/70">
         {config.label}
       </label>
 
-      <div className="border border-solid border-white/[0.08] rounded-xl p-3 space-y-3">
+      <div className="border border-solid border-foreground/[0.08] rounded-xl p-3 space-y-3">
         {/* Thumbnail row */}
         <div className="flex flex-wrap gap-2">
           {inputMedia.map((path, index) => (
             <div
               key={path + index}
-              className="group relative w-20 h-[60px] rounded-lg overflow-hidden bg-white/[0.04] border border-white/[0.06]"
+              className="group relative w-20 h-[60px] rounded-lg overflow-hidden bg-foreground/[0.04] border border-foreground/[0.06]"
             >
               {isVideoPath(path) ? (
                 <video
@@ -338,7 +338,7 @@ export default function MediaInput() {
                 className="
                   absolute top-0.5 right-0.5
                   w-4 h-4 rounded-full
-                  bg-black/70 text-white/80
+                  bg-black/70 text-foreground/80
                   flex items-center justify-center
                   opacity-0 group-hover:opacity-100
                   transition-opacity
@@ -348,7 +348,7 @@ export default function MediaInput() {
               </button>
 
               {/* File name tooltip */}
-              <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5 bg-black/60 text-[9px] text-white/70 truncate">
+              <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5 bg-black/60 text-[9px] text-foreground/70 truncate">
                 {getFileName(path)}
               </div>
             </div>
@@ -362,9 +362,9 @@ export default function MediaInput() {
               disabled={uploading}
               className="
                 w-20 h-[60px] rounded-lg
-                border border-dashed border-white/[0.08]
+                border border-dashed border-foreground/[0.08]
                 flex items-center justify-center
-                text-white/30 hover:text-white/50 hover:border-white/15
+                text-foreground/30 hover:text-foreground/50 hover:border-foreground/15
                 transition-colors disabled:opacity-40
               "
             >
@@ -375,7 +375,7 @@ export default function MediaInput() {
 
         {/* File count for r2v */}
         {config.multiple && (
-          <div className="text-[11px] text-white/40">
+          <div className="text-[11px] text-foreground/40">
             {inputMedia.length} / {config.maxFiles} 张
           </div>
         )}
@@ -389,8 +389,8 @@ export default function MediaInput() {
           disabled={uploading}
           className="
             flex-1 px-3 py-1.5 rounded-lg text-xs
-            border border-white/[0.08] text-white/70
-            hover:bg-white/[0.04] hover:text-white/90
+            border border-foreground/[0.08] text-foreground/70
+            hover:bg-foreground/[0.04] hover:text-foreground/90
             transition-colors disabled:opacity-40
           "
         >
@@ -401,8 +401,8 @@ export default function MediaInput() {
           onClick={() => setShowAssetPicker(true)}
           className="
             flex-1 px-3 py-1.5 rounded-lg text-xs
-            border border-[#646cff]/30 text-[#646cff]
-            hover:bg-[#646cff]/10
+            border border-primary/30 text-primary
+            hover:bg-primary/10
             transition-colors
           "
         >

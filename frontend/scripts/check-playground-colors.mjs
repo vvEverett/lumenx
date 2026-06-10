@@ -1,0 +1,58 @@
+#!/usr/bin/env node
+/**
+ * 守卫：禁止 Playground 模块出现硬编码主题色，防止 token 化成果回潮。
+ *
+ * 禁止（应改语义 token，否则浅色主题无法正确翻转）：
+ *   - arbitrary hex 颜色：bg-[#646cff] / text-[#141416] / border-t-[#646cff] …
+ *   - white + 透明度：text-white/40 / bg-white/[0.04] / border-white/15 …  → 用 foreground/alpha
+ *
+ * 允许（语义合理，不报）：
+ *   - 纯 text-white（无透明度）：彩色按钮（bg-primary/accent）上的白字
+ *   - black + 透明度：功能性遮罩（图片角标、modal backdrop、图片底部渐变）
+ *   - shadow-[...rgba(...)]：发光阴影（不含 #，本就不匹配 hex 规则）
+ *
+ * 用法：node scripts/check-playground-colors.mjs   （从 frontend/ 运行）
+ * 退出码非 0 表示有违规，可接入 CI / pre-commit。
+ */
+import { readFileSync, readdirSync, existsSync } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// 优先用脚本相对路径定位，兼容任意 cwd
+const candidates = [
+  path.resolve(__dirname, '../src/components/modules/playground'),
+  path.resolve(process.cwd(), 'src/components/modules/playground'),
+];
+const DIR = candidates.find(existsSync);
+if (!DIR) {
+  console.error('✘ 找不到 playground 目录');
+  process.exit(2);
+}
+
+const BANNED = [
+  { re: /\[#[0-9a-fA-F]{3,8}\]/, msg: 'arbitrary hex（改用语义 token：bg-primary / bg-surface / text-foreground …）' },
+  { re: /\b(?:bg|text|border|from|to|via|ring|divide|placeholder|outline|caret|decoration|accent|ring-offset)-white\/(?:\[[0-9.]+\]|\d+)/, msg: 'white/alpha（改用 foreground/alpha，浅色主题才能正确翻转）' },
+];
+
+let violations = 0;
+for (const f of readdirSync(DIR).filter((x) => x.endsWith('.tsx')).sort()) {
+  const lines = readFileSync(path.join(DIR, f), 'utf8').split('\n');
+  lines.forEach((line, i) => {
+    for (const { re, msg } of BANNED) {
+      // 全局扫该行所有匹配
+      const g = new RegExp(re.source, 'g');
+      const found = line.match(g);
+      if (found) {
+        violations += found.length;
+        console.error(`  ${f}:${i + 1}  ${found.join('  ')}  — ${msg}`);
+      }
+    }
+  });
+}
+
+if (violations > 0) {
+  console.error(`\n✘ Playground 存在 ${violations} 处硬编码颜色，请改用语义 token。`);
+  process.exit(1);
+}
+console.log('✓ Playground：无违规硬编码颜色（hex / white-alpha）。');

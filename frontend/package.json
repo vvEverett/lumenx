@@ -10,7 +10,8 @@
     "typecheck": "node ./scripts/typecheck.mjs",
     "test": "node ./scripts/run-vitest.mjs",
     "test:ui": "node ./scripts/run-vitest.mjs --config vitest.ui.config.mts",
-    "test:all": "npm run test && npm run test:ui"
+    "test:all": "npm run test && npm run test:ui",
+    "check:colors": "node ./scripts/check-playground-colors.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.108.0",
