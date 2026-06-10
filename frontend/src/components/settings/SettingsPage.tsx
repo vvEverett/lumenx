@@ -12,7 +12,7 @@ import {
   GLOBAL_IMAGE_MODELS,
   normalizeModelSettings,
 } from "@/lib/modelCatalog";
-import { useSettingsStore, type Locale, type Theme } from "@/store/settingsStore";
+import { useSettingsStore, type Locale, type ThemePreset } from "@/store/settingsStore";
 import { Image, Video, Layout, Check, User, Building, Box } from "lucide-react";
 import GroupedModelGrid from "@/components/common/GroupedModelGrid";
 
@@ -254,18 +254,38 @@ export default function SettingsPage() {
             <label className="text-sm font-medium text-foreground">{t("theme")}</label>
           </div>
           <p className="text-xs text-text-secondary">{t("themeDesc")}</p>
-          <div className="flex gap-2 mt-2">
-            {([["dark", t("themeDark")], ["light", t("themeLight")]] as [Theme, string][]).map(([th, label]) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+            {([
+              { id: "atelier-dark",  name: t("themeAtelierDark"),  desc: t("themeAtelierDarkDesc"),  base: "#0c0b0e", primary: "#34d8c4", accent: "#ffa94d" },
+              { id: "bridge-dark",   name: t("themeBridgeDark"),   desc: t("themeBridgeDarkDesc"),   base: "#0a0a0d", primary: "#646cff", accent: "#ffa94d" },
+              { id: "brand-dark",    name: t("themeBrandDark"),    desc: t("themeBrandDarkDesc"),    base: "#050508", primary: "#646cff", accent: "#ff0080" },
+              { id: "atelier-light", name: t("themeAtelierLight"), desc: t("themeAtelierLightDesc"), base: "#f6f1e9", primary: "#1d9c8d", accent: "#e8852b" },
+              { id: "brand-light",   name: t("themeBrandLight"),   desc: t("themeBrandLightDesc"),   base: "#f8f9fa", primary: "#646cff", accent: "#ff0080" },
+            ] as { id: ThemePreset; name: string; desc: string; base: string; primary: string; accent: string }[]).map((preset) => (
               <button
-                key={th}
-                onClick={() => setTheme(th)}
-                className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
-                  theme === th
-                    ? "border-primary/60 bg-primary/15 text-foreground"
-                    : "border-glass-border bg-hover-bg text-text-secondary hover:text-foreground"
+                key={preset.id}
+                onClick={() => setTheme(preset.id)}
+                className={`group relative flex flex-col gap-2 p-3 rounded-xl border text-left transition-all ${
+                  theme === preset.id
+                    ? "border-primary/60 bg-primary/10 ring-1 ring-primary/30"
+                    : "border-glass-border bg-hover-bg hover:border-text-muted"
                 }`}
               >
-                {label}
+                {/* color preview swatch */}
+                <div
+                  className="h-10 w-full rounded-lg border border-glass-border overflow-hidden flex items-end p-1.5 gap-1"
+                  style={{ background: preset.base }}
+                >
+                  <span className="h-3 w-3 rounded-full" style={{ background: preset.primary }} />
+                  <span className="h-3 w-3 rounded-full" style={{ background: preset.accent }} />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-foreground truncate">{preset.name}</div>
+                  <div className="text-[10px] text-text-muted truncate">{preset.desc}</div>
+                </div>
+                {theme === preset.id && (
+                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
+                )}
               </button>
             ))}
           </div>

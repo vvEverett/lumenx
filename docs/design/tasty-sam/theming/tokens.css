@@ -1,28 +1,47 @@
+/* ============================================================================
+   LumenX Studio · Theme Tokens (可落地)
+   Tasty Sam · 五预设主题系统
+   ----------------------------------------------------------------------------
+   架构：seed (品牌 DNA) → semantic (语义角色) → component (组件级)
+   改 seed 一处 → 整主题随之变化。
+
+   命名 100% 对齐现有 frontend/src/app/globals.css，便于直接并入：
+     --color-bg-base / -surface / -elevated / -inset / -input / -hover
+     --color-border-default / -subtle
+     --color-text-primary / -secondary / -muted
+     --color-glass / --color-overlay
+     --color-status-{pending,processing,completed,failed,starred}-{fg,border,bg}
+     --color-status-starred-solid / --color-on-warm
+
+   新增（现有 globals.css 暂无、Line B 氛围所需，落地时以增量并入）：
+     --color-primary / -primary-hover / -accent / -accent-hover / -on-accent
+     --halation / --bloom / --grain-op / --glow-primary / --glow-accent
+     --font-display (Fraunces)
+
+   演示稿用 :root[data-theme="<id>"] 选择器；落地时映射到现有
+   html.<class> 机制（README 注明等价关系）。
+   ============================================================================ */
+
+/* ---- 字体（落地时并入 globals.css 的 @import） ---- */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* ─── Theme: 5-preset token system (Tasty Sam) ───
-   架构：seed (品牌 DNA) → semantic (语义角色) → component (组件级)。
-   命名 100% 对齐组件用的 Tailwind 语义类（bg-surface/text-foreground/...）。
-   默认 :root === atelier-dark。落地选择器用 html.<id>（与 Providers/layout 一致）。
-   每个 block 额外保留 --foreground-rgb / --background-*-rgb（body 渐变在用，
-   tokens.css 未含，故在此补齐）。 */
-
-/* ===== 主题 1 · atelier-dark · Full Atelier（★ 默认）===== */
+/* ============================================================================
+   主题 1 · atelier-dark · Full Atelier （★ 默认）
+   暖石墨底 + teal 主色 + amber 选中/halation。Line B 原生皮肤。
+   ============================================================================ */
 :root,
-html.atelier-dark {
+:root[data-theme="atelier-dark"] {
   color-scheme: dark;
 
-  --seed-primary:   #34d8c4;
+  /* —— seed：品牌 DNA —— */
+  --seed-primary:   #34d8c4;   /* teal */
   --seed-primary-2: #5ee9d6;
-  --seed-accent:    #ffa94d;
+  --seed-accent:    #ffa94d;   /* amber，仅选中/星标/halation */
   --seed-accent-2:  #ffbf73;
-  --seed-ink:       #f2ede4;
-  --seed-base:      #0c0b0e;
+  --seed-ink:       #f2ede4;   /* 暖白文字 */
+  --seed-base:      #0c0b0e;   /* 暖石墨底 */
 
+  /* —— semantic：背景层级 —— */
   --color-bg-base:     #0c0b0e;
   --color-bg-surface:  #131116;
   --color-bg-elevated: #181620;
@@ -32,42 +51,42 @@ html.atelier-dark {
   --color-glass:       rgba(255, 255, 255, 0.045);
   --color-overlay:     rgba(8, 7, 10, 0.8);
 
+  /* —— semantic：边框 —— */
   --color-border-default: rgba(255, 255, 255, 0.06);
   --color-border-subtle:  rgba(255, 255, 255, 0.03);
 
+  /* —— semantic：文字 —— */
   --color-text-primary:   #f2ede4;
   --color-text-secondary: #a8a2b0;
   --color-text-muted:     #8b8597;
 
-  --color-primary:       var(--seed-primary);
-  --color-primary-hover: var(--seed-primary-2);
-  --color-accent:        var(--seed-accent);
-  --color-accent-hover:  var(--seed-accent-2);
-  --color-on-accent:     #0c0b0e;
-  --color-on-warm:       oklch(0.18 0.01 280);
+  /* —— semantic：品牌主/强调 —— */
+  --color-primary:        var(--seed-primary);
+  --color-primary-hover:  var(--seed-primary-2);
+  --color-accent:         var(--seed-accent);
+  --color-accent-hover:   var(--seed-accent-2);
+  --color-on-accent:      #0c0b0e;   /* 暖底文字叠在 amber chip 上 */
+  --color-on-warm:        oklch(0.18 0.01 280);
 
-  /* body 渐变（保留现有机制，tokens.css 未含）*/
-  --foreground-rgb:      242, 237, 228;
-  --background-start-rgb: 12, 11, 14;
-  --background-end-rgb:   12, 11, 14;
-
+  /* —— semantic：状态色（oklch，沿用 globals.css 写法） —— */
   --color-status-pending-fg:     oklch(0.85 0.13 230);
   --color-status-pending-border: oklch(0.75 0.16 230 / 0.45);
   --color-status-pending-bg:     oklch(0.75 0.16 230 / 0.10);
   --color-status-processing-fg:     oklch(0.88 0.16 80);
   --color-status-processing-border: oklch(0.78 0.18 80 / 0.45);
   --color-status-processing-bg:     oklch(0.78 0.18 80 / 0.10);
-  --color-status-completed-fg:     oklch(0.85 0.15 175);
+  --color-status-completed-fg:     oklch(0.85 0.15 175);  /* teal-leaning done */
   --color-status-completed-border: oklch(0.78 0.16 175 / 0.45);
   --color-status-completed-bg:     oklch(0.78 0.16 175 / 0.10);
   --color-status-failed-fg:     oklch(0.78 0.20 25);
   --color-status-failed-border: oklch(0.68 0.21 25 / 0.45);
   --color-status-failed-bg:     oklch(0.68 0.21 25 / 0.10);
-  --color-status-starred-fg:     oklch(0.90 0.15 70);
+  --color-status-starred-fg:     oklch(0.90 0.15 70);   /* amber star */
   --color-status-starred-border: oklch(0.82 0.16 70 / 0.55);
   --color-status-starred-bg:     oklch(0.82 0.16 70 / 0.18);
   --color-status-starred-solid:  oklch(0.82 0.16 70);
 
+  /* —— 氛围 / 光晕（Line B signature） —— */
   --glow-primary: 0 0 0 1px rgba(52, 216, 196, 0.30), 0 0 24px -6px rgba(52, 216, 196, 0.45);
   --glow-accent:  0 0 0 1px rgba(255, 169, 77, 0.35), 0 0 28px -6px rgba(255, 169, 77, 0.50);
   --halation:     inset 0 0 42px -8px rgba(255, 169, 77, 0.27);
@@ -75,30 +94,35 @@ html.atelier-dark {
                   radial-gradient(55% 45% at 88% 100%, rgba(255, 169, 77, 0.08), transparent 70%);
   --grain-op: 0.05;
 
+  /* —— 字体 —— */
   --font-inter:          'Inter', sans-serif;
   --font-jetbrains-mono: 'JetBrains Mono', monospace;
   --font-space-grotesk:  'Space Grotesk', sans-serif;
-  --font-display:        'Fraunces', Georgia, serif;
+  --font-display:        'Fraunces', Georgia, serif;   /* Line B 衬线 display */
 
-  --card-bg:      var(--color-bg-surface);
-  --card-border:  var(--color-border-default);
-  --card-radius:  14px;
-  --btn-pri-bg:   var(--color-primary);
-  --btn-pri-fg:   var(--color-on-accent);
-  --btn-pri-glow: var(--glow-primary);
-  --input-bg:     var(--color-bg-input);
-  --input-border: var(--color-border-default);
-  --sidebar-bg:   var(--color-bg-inset);
-  --logo-filter:  hue-rotate(-64deg) saturate(1.35) brightness(1.08);
+  /* —— component：派生自上方 semantic —— */
+  --card-bg:        var(--color-bg-surface);
+  --card-border:    var(--color-border-default);
+  --card-radius:    14px;
+  --btn-pri-bg:     var(--color-primary);
+  --btn-pri-fg:     var(--color-on-accent);
+  --btn-pri-glow:   var(--glow-primary);
+  --input-bg:       var(--color-bg-input);
+  --input-border:   var(--color-border-default);
+  --sidebar-bg:     var(--color-bg-inset);
+  --logo-filter:    hue-rotate(-64deg) saturate(1.35) brightness(1.08); /* 蓝 PNG → teal */
 }
 
-/* ===== 主题 2 · bridge-dark · Warm Bridge ===== */
-html.bridge-dark {
+/* ============================================================================
+   主题 2 · bridge-dark · Warm Bridge
+   暖中性底 + brand 蓝主色 + amber 仅用于选中/星标。原蓝 Logo。
+   ============================================================================ */
+:root[data-theme="bridge-dark"] {
   color-scheme: dark;
 
-  --seed-primary:   #646cff;
+  --seed-primary:   #646cff;   /* brand 蓝 */
   --seed-primary-2: #7d84ff;
-  --seed-accent:    #ffa94d;
+  --seed-accent:    #ffa94d;   /* amber 仅选中 */
   --seed-accent-2:  #ffbf73;
   --seed-ink:       #ece9e6;
   --seed-base:      #0a0a0d;
@@ -126,17 +150,13 @@ html.bridge-dark {
   --color-on-accent:     #0a0a0d;
   --color-on-warm:       oklch(0.18 0.01 280);
 
-  --foreground-rgb:      236, 233, 230;
-  --background-start-rgb: 10, 10, 13;
-  --background-end-rgb:   10, 10, 13;
-
   --color-status-pending-fg:     oklch(0.85 0.13 230);
   --color-status-pending-border: oklch(0.75 0.16 230 / 0.45);
   --color-status-pending-bg:     oklch(0.75 0.16 230 / 0.10);
   --color-status-processing-fg:     oklch(0.88 0.16 80);
   --color-status-processing-border: oklch(0.78 0.18 80 / 0.45);
   --color-status-processing-bg:     oklch(0.78 0.18 80 / 0.10);
-  --color-status-completed-fg:     oklch(0.82 0.14 250);
+  --color-status-completed-fg:     oklch(0.82 0.14 250);  /* blue-leaning done */
   --color-status-completed-border: oklch(0.75 0.16 250 / 0.45);
   --color-status-completed-bg:     oklch(0.75 0.16 250 / 0.10);
   --color-status-failed-fg:     oklch(0.78 0.20 25);
@@ -157,7 +177,7 @@ html.bridge-dark {
   --font-inter:          'Inter', sans-serif;
   --font-jetbrains-mono: 'JetBrains Mono', monospace;
   --font-space-grotesk:  'Space Grotesk', sans-serif;
-  --font-display:        'Space Grotesk', sans-serif;
+  --font-display:        'Space Grotesk', sans-serif;   /* Warm Bridge 用几何 display */
 
   --card-bg:      var(--color-bg-surface);
   --card-border:  var(--color-border-default);
@@ -168,16 +188,19 @@ html.bridge-dark {
   --input-bg:     var(--color-bg-input);
   --input-border: var(--color-border-default);
   --sidebar-bg:   var(--color-bg-inset);
-  --logo-filter:  none;
+  --logo-filter:  none;   /* 原蓝 Logo */
 }
 
-/* ===== 主题 3 · brand-dark · Brand-True（原产品基线配色）===== */
-html.brand-dark {
+/* ============================================================================
+   主题 3 · brand-dark · Brand-True
+   冷黑底 + brand 蓝主色 + hot pink 强调。现有产品基线配色。原蓝 Logo。
+   ============================================================================ */
+:root[data-theme="brand-dark"] {
   color-scheme: dark;
 
   --seed-primary:   #646cff;
   --seed-primary-2: #7d84ff;
-  --seed-accent:    #ff0080;
+  --seed-accent:    #ff0080;   /* hot pink */
   --seed-accent-2:  #ff3399;
   --seed-ink:       #ededed;
   --seed-base:      #050508;
@@ -205,10 +228,6 @@ html.brand-dark {
   --color-on-accent:     #0a0a0f;
   --color-on-warm:       oklch(0.18 0.01 280);
 
-  --foreground-rgb:      237, 237, 237;
-  --background-start-rgb: 5, 5, 8;
-  --background-end-rgb:   5, 5, 8;
-
   --color-status-pending-fg:     oklch(0.85 0.13 230);
   --color-status-pending-border: oklch(0.75 0.16 230 / 0.45);
   --color-status-pending-bg:     oklch(0.75 0.16 230 / 0.10);
@@ -221,7 +240,7 @@ html.brand-dark {
   --color-status-failed-fg:     oklch(0.78 0.20 25);
   --color-status-failed-border: oklch(0.68 0.21 25 / 0.45);
   --color-status-failed-bg:     oklch(0.68 0.21 25 / 0.10);
-  --color-status-starred-fg:     oklch(0.72 0.21 350);
+  --color-status-starred-fg:     oklch(0.72 0.21 350);  /* pink star */
   --color-status-starred-border: oklch(0.65 0.22 350 / 0.55);
   --color-status-starred-bg:     oklch(0.65 0.22 350 / 0.18);
   --color-status-starred-solid:  oklch(0.65 0.22 350);
@@ -250,16 +269,20 @@ html.brand-dark {
   --logo-filter:  none;
 }
 
-/* ===== 主题 4 · atelier-light · 暖亮 Atelier ===== */
-html.atelier-light {
+/* ============================================================================
+   主题 4 · atelier-light · 暖亮 Atelier
+   暖陶白底 + teal deep 主色 + amber deep 选中。Logo 深描边 teal 变体。
+   对比度目标 ≥ 4.5:1。
+   ============================================================================ */
+:root[data-theme="atelier-light"] {
   color-scheme: light;
 
-  --seed-primary:   #1d9c8d;
+  --seed-primary:   #1d9c8d;   /* teal deep */
   --seed-primary-2: #148376;
-  --seed-accent:    #e8852b;
+  --seed-accent:    #e8852b;   /* amber deep */
   --seed-accent-2:  #cf7320;
   --seed-ink:       #241f1a;
-  --seed-base:      #f6f1e9;
+  --seed-base:      #f6f1e9;   /* 暖陶白 */
 
   --color-bg-base:     #f6f1e9;
   --color-bg-surface:  #fffdf9;
@@ -282,12 +305,9 @@ html.atelier-light {
   --color-accent:        var(--seed-accent);
   --color-accent-hover:  var(--seed-accent-2);
   --color-on-accent:     #fffdf9;
-  --color-on-warm:       oklch(0.99 0 0);
+  --color-on-warm:       oklch(0.99 0 0);   /* 白字叠在 deep amber 上 */
 
-  --foreground-rgb:      36, 31, 26;
-  --background-start-rgb: 246, 241, 233;
-  --background-end-rgb:   246, 241, 233;
-
+  /* 亮色：同色相，更低 lightness + 更高 chroma，确保白底上有足够重量 */
   --color-status-pending-fg:     oklch(0.45 0.18 230);
   --color-status-pending-border: oklch(0.62 0.17 230 / 0.50);
   --color-status-pending-bg:     oklch(0.85 0.10 230 / 0.40);
@@ -326,11 +346,15 @@ html.atelier-light {
   --input-bg:     var(--color-bg-input);
   --input-border: var(--color-border-default);
   --sidebar-bg:   var(--color-bg-inset);
+  /* 亮色用深描边 teal logo PNG（filter 在白底失真），故 filter 置 none，src 切换 */
   --logo-filter:  none;
 }
 
-/* ===== 主题 5 · brand-light · 品牌亮色 ===== */
-html.brand-light {
+/* ============================================================================
+   主题 5 · brand-light · 品牌亮色
+   复用现有 html.light 基线 + brand 蓝主色。LumenX_亮色.png。
+   ============================================================================ */
+:root[data-theme="brand-light"] {
   color-scheme: light;
 
   --seed-primary:   #646cff;
@@ -340,6 +364,7 @@ html.brand-light {
   --seed-ink:       #1a1a1a;
   --seed-base:      #f8f9fa;
 
+  /* 与现有 globals.css html.light 完全一致 */
   --color-bg-base:     #f8f9fa;
   --color-bg-surface:  #ffffff;
   --color-bg-elevated: #ffffff;
@@ -363,10 +388,7 @@ html.brand-light {
   --color-on-accent:     #ffffff;
   --color-on-warm:       oklch(0.20 0.02 280);
 
-  --foreground-rgb:      26, 26, 26;
-  --background-start-rgb: 248, 249, 250;
-  --background-end-rgb:   248, 249, 250;
-
+  /* 与现有 globals.css html.light 状态色一致 */
   --color-status-pending-fg:     oklch(0.45 0.18 230);
   --color-status-pending-border: oklch(0.65 0.17 230 / 0.50);
   --color-status-pending-bg:     oklch(0.85 0.10 230 / 0.40);
@@ -405,125 +427,12 @@ html.brand-light {
   --input-bg:     var(--color-bg-input);
   --input-border: var(--color-border-default);
   --sidebar-bg:   var(--color-bg-inset);
-  --logo-filter:  none;
+  --logo-filter:  none;   /* LumenX_亮色.png 原图 */
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
-  overflow: hidden;
-  /* Prevent scrolling on the main body, we want an app-like feel */
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .glass-panel {
-    @apply bg-glass backdrop-blur-md border border-glass-border;
-  }
-
-  .glass-input {
-    @apply bg-input-bg backdrop-blur-sm border border-glass-border rounded-md px-3 py-2 focus:outline-none transition-colors;
-  }
-  /* primary/50 alpha can't be resolved inside @apply for a var() color
-     (Tailwind 3.4 limitation); express the focus border directly. */
-  .glass-input:focus {
-    border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
-  }
-
-  .glass-button {
-    @apply bg-hover-bg hover:bg-glass backdrop-blur-sm border border-glass-border rounded-md px-4 py-2 transition-all active:scale-95;
-  }
-}
-
-/* Fast tooltip via data-tip attribute — zero extra DOM, ~200ms delay */
-.btn-tip {
-  position: relative;
-}
-.btn-tip::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-default);
-  color: var(--color-text-secondary);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  transition-delay: 0s;
-  z-index: 50;
-}
-.btn-tip:hover::after {
-  opacity: 1;
-  transition-delay: 0.25s;
-}
-
-/* ─── Storyboard R2V workbench keyframes ─── */
-/* Subtle warm pulse for the in-flight count badge in TaskQueueButton.
-   Goal: signal "something's happening over there" without dragging
-   attention away from the user's current shot. */
-@keyframes badgePulse {
-  0%   { box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 0  8px -2px var(--color-status-starred-bg); }
-  50%  { box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 0 14px  0   var(--color-status-starred-border); }
-  100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 0  8px -2px var(--color-status-starred-bg); }
-}
-
-/* CompareModal entry — fade + tiny scale-up. ease-out-quart curve
-   inlined here (Tailwind class would also work but the keyframe
-   keeps everything in one place). */
-@keyframes compareModalIn {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-
-/* TaskQueuePanel slide-in from the right edge when the user opens
-   the queue. Pushes layout (not overlay) so the main column reflows
-   alongside; the keyframe just animates the panel's own entry. */
-@keyframes queuePanelIn {
-  from { opacity: 0; transform: translateX(24px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-/* ShotPanel mount — workbench panels under each shot fade + drop
-   into place when added so users can track the spatial change. */
-@keyframes shotPanelIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* TaskQueuePanel backdrop fade — only renders below xl when the panel
-   becomes an overlay. The backdrop dimming gives the panel its modal
-   register without needing a portal. */
-@keyframes fadeInBackdrop {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* LightboxProvider entrance — backdrop fade + media scale-in.
-   Matches CompareModal's spring feel without the spring physics. */
-@keyframes lightboxFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes lightboxScaleIn {
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-/* Respect reduced-motion preference: kill all custom animations.
-   The above transitions still apply (CSS transitions on hover etc
-   are kept), but the orchestrated entrance keyframes go away for
-   users who asked for no motion. */
+/* ============================================================================
+   reduced-motion：沿用 globals.css 既定策略
+   ============================================================================ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

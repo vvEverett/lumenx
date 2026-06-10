@@ -23,9 +23,12 @@ const config: Config = {
         "text-muted": "var(--color-text-muted)",
         overlay: "var(--color-overlay)",
         "surface-inset": "var(--color-bg-inset)",
-        primary: "#646cff",
-        secondary: "#535bf2",
-        accent: "#ff0080",
+        primary: "var(--color-primary)",
+        "primary-hover": "var(--color-primary-hover)",
+        secondary: "var(--color-primary-hover)",
+        accent: "var(--color-accent)",
+        "accent-hover": "var(--color-accent-hover)",
+        "on-accent": "var(--color-on-accent)",
         // Storyboard R2V workbench status semantic tokens. Replaces
         // 30+ scattered amber/emerald/red/blue arbitrary tints. Each
         // status carries -fg / -border / -bg variants; starred also
@@ -52,7 +55,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-inter)", "sans-serif"],
         mono: ["var(--font-jetbrains-mono)", "monospace"],
-        display: ["var(--font-space-grotesk)", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-space-grotesk)", "sans-serif"],
       },
       fontSize: {
         // 3-tier type scale for the Storyboard R2V workbench (and

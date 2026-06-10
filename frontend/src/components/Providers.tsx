@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
-import { useSettingsStore } from '@/store/settingsStore';
+import { useSettingsStore, THEME_PRESETS } from '@/store/settingsStore';
 import { getMessages } from '@/lib/i18n';
 import { LightboxProvider } from '@/components/shared/preview/LightboxProvider';
 import ToastContainer from '@/components/shared/ToastContainer';
@@ -14,7 +14,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const html = document.documentElement;
-        html.classList.remove('dark', 'light');
+        // 移除全部 5 个预设 class + 旧版遗留的 dark/light，再加当前主题
+        html.classList.remove(...THEME_PRESETS, 'dark', 'light');
         html.classList.add(theme);
     }, [theme]);
 
