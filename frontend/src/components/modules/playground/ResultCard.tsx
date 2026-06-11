@@ -56,7 +56,7 @@ function FailedCard({ generation, onRetry, onDelete }: { generation: PlaygroundG
   };
 
   return (
-    <div className="rounded-xl border border-red-500/20 bg-foreground/[0.04] overflow-hidden">
+    <div className="rounded-xl border border-red-500/20 bg-glass overflow-hidden">
       <div
         className="relative overflow-hidden bg-elevated flex flex-col items-center justify-center cursor-pointer"
         style={{ aspectRatio: expanded ? undefined : '16/9', minHeight: expanded ? 120 : undefined }}
@@ -66,7 +66,7 @@ function FailedCard({ generation, onRetry, onDelete }: { generation: PlaygroundG
         <div className="relative text-center px-4 py-3 w-full">
           <p className="font-mono text-[10px] text-red-400/80 uppercase mb-2">生成失败</p>
           {error && (
-            <p className={`text-[10px] text-foreground/40 leading-relaxed break-all ${expanded ? '' : 'line-clamp-2'}`}>
+            <p className={`text-[10px] text-text-muted leading-relaxed break-all ${expanded ? '' : 'line-clamp-2'}`}>
               {error}
             </p>
           )}
@@ -93,25 +93,25 @@ function FailedCard({ generation, onRetry, onDelete }: { generation: PlaygroundG
           {error && (
             <button
               onClick={handleCopy}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.06] transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-text-muted hover:text-foreground hover:bg-hover-bg transition-colors"
             >
               {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
               {copied ? '已复制' : '复制全文'}
             </button>
           )}
-          <span className="text-[9px] text-foreground/20 ml-auto">
+          <span className="text-[9px] text-text-muted ml-auto">
             {expanded ? '收起' : '展开'}
           </span>
         </div>
       </div>
 
       <div className="px-3 py-[10px]">
-        <p className="text-[11px] text-foreground/60 line-clamp-2 mb-1.5">{prompt}</p>
+        <p className="text-[11px] text-text-secondary line-clamp-2 mb-1.5">{prompt}</p>
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[9px] bg-foreground/[0.04] text-foreground/40 rounded px-[6px] py-[2px]">
+          <span className="font-mono text-[9px] bg-glass text-text-muted rounded px-[6px] py-[2px]">
             {model_id || mode}
           </span>
-          <span className="font-mono text-[9px] text-foreground/30">
+          <span className="font-mono text-[9px] text-text-muted">
             {formatTime(created_at)}
           </span>
         </div>
@@ -171,7 +171,7 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
 
   return (
     <div
-      className="group rounded-xl border border-foreground/[0.08] bg-foreground/[0.04] overflow-hidden hover:border-foreground/15 transition cursor-pointer"
+      className="group rounded-xl border border-glass-border bg-glass overflow-hidden hover:border-foreground/30 transition cursor-pointer"
       onClick={() => onOpenDetail?.(generation)}
     >
       {/* Media area */}
@@ -179,7 +179,7 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
         {mediaUrl ? (
           isVideo ? (
             <div className="w-full h-full bg-gradient-to-br from-elevated to-surface flex items-center justify-center">
-              <Video className="w-8 h-8 text-foreground/20" />
+              <Video className="w-8 h-8 text-text-muted" />
             </div>
           ) : (
             <img src={mediaUrl} alt={prompt} className="w-full h-full object-cover" />
@@ -199,7 +199,7 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
         <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/70 to-transparent flex items-end justify-end gap-1.5 px-3 pb-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={handleDownload}
-            className="w-7 h-7 rounded-full bg-foreground/10 backdrop-blur-sm flex items-center justify-center hover:bg-foreground/25 transition"
+            className="w-7 h-7 rounded-full bg-elevated backdrop-blur-sm flex items-center justify-center hover:bg-hover-bg transition"
             title="下载"
           >
             <Download className="w-3.5 h-3.5 text-foreground" />
@@ -207,7 +207,7 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
           {output?.media_type === 'image' && onGenerateVideo && (
             <button
               onClick={(e) => { e.stopPropagation(); onGenerateVideo(output.media_path); }}
-              className="w-7 h-7 rounded-full bg-foreground/10 backdrop-blur-sm flex items-center justify-center hover:bg-foreground/25 transition"
+              className="w-7 h-7 rounded-full bg-elevated backdrop-blur-sm flex items-center justify-center hover:bg-hover-bg transition"
               title="生成视频"
             >
               <Video className="w-3.5 h-3.5 text-foreground" />
@@ -215,7 +215,7 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
           )}
           <button
             onClick={handleSaveToLibrary}
-            className={`w-7 h-7 rounded-full backdrop-blur-sm flex items-center justify-center transition ${saved ? 'bg-green-500/20' : 'bg-foreground/10 hover:bg-foreground/25'}`}
+            className={`w-7 h-7 rounded-full backdrop-blur-sm flex items-center justify-center transition ${saved ? 'bg-green-500/20' : 'bg-elevated hover:bg-hover-bg'}`}
             title={saved ? '已收藏' : '收藏'}
           >
             <Star className={`w-3.5 h-3.5 ${saved ? 'text-green-400 fill-green-400' : 'text-foreground'}`} />
@@ -225,19 +225,19 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
 
       {/* Info area */}
       <div className="px-3 py-[10px]">
-        <p className="text-[11px] text-foreground/60 line-clamp-2 mb-1.5">{prompt}</p>
+        <p className="text-[11px] text-text-secondary line-clamp-2 mb-1.5">{prompt}</p>
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="font-mono text-[9px] bg-foreground/[0.04] text-foreground/40 rounded px-[6px] py-[2px]">
+          <span className="font-mono text-[9px] bg-glass text-text-muted rounded px-[6px] py-[2px]">
             {model_id || mode}
           </span>
           {/* Size or resolution tag */}
           {generation.parameters.size && (
-            <span className="font-mono text-[9px] bg-foreground/[0.04] text-foreground/30 rounded px-[6px] py-[2px]">
+            <span className="font-mono text-[9px] bg-glass text-text-muted rounded px-[6px] py-[2px]">
               {(generation.parameters.size as string).replace('*', '×').replace('x', '×')}
             </span>
           )}
           {generation.parameters.resolution && !generation.parameters.size && (
-            <span className="font-mono text-[9px] bg-foreground/[0.04] text-foreground/30 rounded px-[6px] py-[2px]">
+            <span className="font-mono text-[9px] bg-glass text-text-muted rounded px-[6px] py-[2px]">
               {generation.parameters.resolution as string}
             </span>
           )}
@@ -245,7 +245,7 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
           <span className="font-mono text-[9px] bg-primary/10 text-primary/70 rounded px-[6px] py-[2px] uppercase">
             {MODE_LABELS[mode] || mode}
           </span>
-          <span className="font-mono text-[9px] text-foreground/30 ml-auto">{formatTime(created_at)}</span>
+          <span className="font-mono text-[9px] text-text-muted ml-auto">{formatTime(created_at)}</span>
           {saved && (
             <span className="flex items-center gap-0.5 text-[9px] text-green-400/70">
               <Star className="w-2.5 h-2.5 fill-current" />
@@ -263,7 +263,7 @@ export default function ResultCard({ generation, onGenerateVideo, onRetry, onOpe
   // ─── PROCESSING STATE ───────────────────────────────────────────────────────
   if (status === 'pending' || status === 'processing') {
     return (
-      <div className="rounded-xl border border-foreground/[0.08] bg-foreground/[0.04] overflow-hidden">
+      <div className="rounded-xl border border-glass-border bg-glass overflow-hidden">
         {/* Media area */}
         <div className="relative overflow-hidden bg-elevated" style={{ aspectRatio: '16/9' }}>
           {/* Skeleton shimmer */}
@@ -280,14 +280,14 @@ export default function ResultCard({ generation, onGenerateVideo, onRetry, onOpe
 
           {/* Centered spinner + text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-            <div className="w-6 h-6 border-2 border-foreground/10 border-t-primary rounded-full animate-spin" />
-            <span className="font-mono text-[10px] text-foreground/40 uppercase">
+            <div className="w-6 h-6 border-2 border-glass-border border-t-primary rounded-full animate-spin" />
+            <span className="font-mono text-[10px] text-text-muted uppercase">
               {status === 'pending' ? '排队中...' : '生成中...'}
             </span>
           </div>
 
           {/* Progress bar */}
-          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-foreground/[0.04]">
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-glass">
             <div
               className="h-full bg-primary transition-all duration-1000 ease-out"
               style={{ width: `${getElapsedProgress(created_at)}%` }}
@@ -297,12 +297,12 @@ export default function ResultCard({ generation, onGenerateVideo, onRetry, onOpe
 
         {/* Info area */}
         <div className="px-3 py-[10px]">
-          <p className="text-[11px] text-foreground/60 line-clamp-2 mb-1.5">{prompt}</p>
+          <p className="text-[11px] text-text-secondary line-clamp-2 mb-1.5">{prompt}</p>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[9px] bg-foreground/[0.04] text-foreground/40 rounded px-[6px] py-[2px]">
+            <span className="font-mono text-[9px] bg-glass text-text-muted rounded px-[6px] py-[2px]">
               {model_id || mode}
             </span>
-            <span className="font-mono text-[9px] text-foreground/30">
+            <span className="font-mono text-[9px] text-text-muted">
               {formatTime(created_at)}
             </span>
           </div>

@@ -224,7 +224,7 @@ export default function MediaInput() {
   if (!hasMedia) {
     return (
       <div className="space-y-2">
-        <label className="block text-xs font-medium text-foreground/70">
+        <label className="block text-xs font-medium text-foreground/80">
           {config.label}
         </label>
 
@@ -240,22 +240,22 @@ export default function MediaInput() {
             ${
               dragOver
                 ? 'border-primary/50 bg-primary/5'
-                : 'border-foreground/[0.08] hover:border-foreground/15 hover:bg-foreground/[0.02]'
+                : 'border-glass-border hover:border-foreground/30 hover:bg-hover-bg'
             }
             ${uploading ? 'pointer-events-none opacity-60' : ''}
           `}
         >
           {config.icon === 'video' ? (
-            <Film className="w-8 h-8 text-foreground/40" />
+            <Film className="w-8 h-8 text-text-muted" />
           ) : (
-            <ImagePlus className="w-8 h-8 text-foreground/40" />
+            <ImagePlus className="w-8 h-8 text-text-muted" />
           )}
 
-          <span className="text-xs text-foreground/60">
+          <span className="text-xs text-text-secondary">
             {uploading ? '上传中...' : '拖拽或点击上传'}
           </span>
 
-          <span className="text-[11px] text-foreground/40">{config.hint}</span>
+          <span className="text-[11px] text-text-muted">{config.hint}</span>
         </div>
 
         {/* Action buttons */}
@@ -266,8 +266,8 @@ export default function MediaInput() {
             disabled={uploading}
             className="
               flex-1 px-3 py-1.5 rounded-lg text-xs
-              border border-foreground/[0.08] text-foreground/70
-              hover:bg-foreground/[0.04] hover:text-foreground/90
+              border border-glass-border text-foreground/80
+              hover:bg-hover-bg hover:text-foreground
               transition-colors disabled:opacity-40
             "
           >
@@ -305,17 +305,17 @@ export default function MediaInput() {
 
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-medium text-foreground/70">
+      <label className="block text-xs font-medium text-foreground/80">
         {config.label}
       </label>
 
-      <div className="border border-solid border-foreground/[0.08] rounded-xl p-3 space-y-3">
+      <div className="border border-solid border-glass-border rounded-xl p-3 space-y-3">
         {/* Thumbnail row */}
         <div className="flex flex-wrap gap-2">
           {inputMedia.map((path, index) => (
             <div
               key={path + index}
-              className="group relative w-20 h-[60px] rounded-lg overflow-hidden bg-foreground/[0.04] border border-foreground/[0.06]"
+              className="group relative w-20 h-[60px] rounded-lg overflow-hidden bg-glass border border-glass-border"
             >
               {isVideoPath(path) ? (
                 <video
@@ -348,7 +348,7 @@ export default function MediaInput() {
               </button>
 
               {/* File name tooltip */}
-              <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5 bg-black/60 text-[9px] text-foreground/70 truncate">
+              <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5 bg-black/60 text-[9px] text-foreground/80 truncate">
                 {getFileName(path)}
               </div>
             </div>
@@ -362,9 +362,9 @@ export default function MediaInput() {
               disabled={uploading}
               className="
                 w-20 h-[60px] rounded-lg
-                border border-dashed border-foreground/[0.08]
+                border border-dashed border-glass-border
                 flex items-center justify-center
-                text-foreground/30 hover:text-foreground/50 hover:border-foreground/15
+                text-text-muted hover:text-foreground hover:border-foreground/30
                 transition-colors disabled:opacity-40
               "
             >
@@ -375,7 +375,7 @@ export default function MediaInput() {
 
         {/* File count for r2v */}
         {config.multiple && (
-          <div className="text-[11px] text-foreground/40">
+          <div className="text-[11px] text-text-muted">
             {inputMedia.length} / {config.maxFiles} 张
           </div>
         )}
@@ -389,8 +389,8 @@ export default function MediaInput() {
           disabled={uploading}
           className="
             flex-1 px-3 py-1.5 rounded-lg text-xs
-            border border-foreground/[0.08] text-foreground/70
-            hover:bg-foreground/[0.04] hover:text-foreground/90
+            border border-glass-border text-foreground/80
+            hover:bg-hover-bg hover:text-foreground
             transition-colors disabled:opacity-40
           "
         >

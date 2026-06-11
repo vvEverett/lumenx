@@ -64,24 +64,24 @@ function ParamDropdown({
 
   return (
     <div className="flex flex-col gap-[6px]">
-      <span className="text-[11px] font-medium text-foreground/40">{label}</span>
+      <span className="text-[11px] font-medium text-text-muted">{label}</span>
       <div ref={containerRef} className="relative">
         <button
           type="button"
           disabled={disabled}
           onClick={() => !disabled && setOpen((o) => !o)}
-          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-foreground/[0.04] border border-foreground/[0.08] text-foreground text-xs font-medium transition cursor-pointer ${
+          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-glass border border-glass-border text-foreground text-xs font-medium transition cursor-pointer ${
             disabled
               ? 'opacity-50 cursor-not-allowed'
-              : 'hover:border-foreground/[0.15]'
+              : 'hover:border-foreground/30'
           }`}
         >
           <span>{display(value)}</span>
-          {!disabled && <ChevronDown className={`w-3 h-3 text-foreground/40 transition-transform ${open ? 'rotate-180' : ''}`} />}
+          {!disabled && <ChevronDown className={`w-3 h-3 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} />}
         </button>
 
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-elevated border border-foreground/[0.08] rounded-lg shadow-xl z-30 max-h-48 overflow-y-auto">
+          <div className="absolute top-full mt-1 w-full bg-elevated border border-glass-border rounded-lg shadow-xl z-30 max-h-48 overflow-y-auto">
             {options.map((opt) => (
               <div
                 key={opt}
@@ -89,9 +89,9 @@ function ParamDropdown({
                   onChange(opt);
                   setOpen(false);
                 }}
-                className="px-3 py-2 text-xs flex items-center justify-between hover:bg-foreground/[0.06] cursor-pointer"
+                className="px-3 py-2 text-xs flex items-center justify-between hover:bg-hover-bg cursor-pointer"
               >
-                <span className={opt === value ? 'text-foreground' : 'text-foreground/60'}>
+                <span className={opt === value ? 'text-foreground' : 'text-text-secondary'}>
                   {display(opt)}
                 </span>
                 {opt === value && <Check className="w-3 h-3 text-primary" />}
@@ -126,15 +126,15 @@ function PillToggle({
 }) {
   return (
     <div className="flex flex-col gap-[6px]">
-      <span className="text-[11px] font-medium text-foreground/40">{label}</span>
-      <div className="flex gap-0 p-[2px] bg-foreground/[0.03] rounded-lg border border-foreground/[0.04]">
+      <span className="text-[11px] font-medium text-text-muted">{label}</span>
+      <div className="flex gap-0 p-[2px] bg-glass rounded-lg border border-border-subtle">
         <button
           type="button"
           onClick={() => onChange(true)}
           className={`flex-1 px-3 py-[6px] rounded-md text-[11px] font-medium text-center cursor-pointer transition-all ${
             value
               ? 'bg-primary text-white shadow-[0_1px_4px_rgba(100,108,255,0.3)]'
-              : 'text-foreground/40 hover:text-foreground/60'
+              : 'text-text-muted hover:text-foreground'
           }`}
         >
           ON
@@ -145,7 +145,7 @@ function PillToggle({
           className={`flex-1 px-3 py-[6px] rounded-md text-[11px] font-medium text-center cursor-pointer transition-all ${
             !value
               ? 'bg-primary text-white shadow-[0_1px_4px_rgba(100,108,255,0.3)]'
-              : 'text-foreground/40 hover:text-foreground/60'
+              : 'text-text-muted hover:text-foreground'
           }`}
         >
           OFF
@@ -185,13 +185,13 @@ function DurationStepper({
 
   return (
     <div className="flex flex-col gap-[6px]">
-      <span className="text-[11px] font-medium text-foreground/40">时长</span>
-      <div className="flex items-center gap-0 rounded-lg border border-foreground/[0.08] bg-foreground/[0.04] overflow-hidden">
+      <span className="text-[11px] font-medium text-text-muted">时长</span>
+      <div className="flex items-center gap-0 rounded-lg border border-glass-border bg-glass overflow-hidden">
         <button
           type="button"
           disabled={value <= min}
           onClick={() => onChange(Math.max(min, value - step))}
-          className="px-3 py-2.5 text-foreground/60 hover:text-foreground hover:bg-foreground/[0.06] transition disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium shrink-0"
+          className="px-3 py-2.5 text-text-secondary hover:text-foreground hover:bg-hover-bg transition disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium shrink-0"
         >
           −
         </button>
@@ -204,20 +204,20 @@ function DurationStepper({
             onBlur={handleBlur}
             className="w-8 bg-transparent text-center font-mono text-xs font-medium text-foreground outline-none"
           />
-          <span className="text-[10px] text-foreground/40 font-mono">s</span>
+          <span className="text-[10px] text-text-muted font-mono">s</span>
         </div>
         <button
           type="button"
           disabled={value >= max}
           onClick={() => onChange(Math.min(max, value + step))}
-          className="px-3 py-2.5 text-foreground/60 hover:text-foreground hover:bg-foreground/[0.06] transition disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium shrink-0"
+          className="px-3 py-2.5 text-text-secondary hover:text-foreground hover:bg-hover-bg transition disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium shrink-0"
         >
           +
         </button>
       </div>
       <div className="flex justify-between px-1">
-        <span className="text-[9px] text-foreground/20 font-mono">{min}s</span>
-        <span className="text-[9px] text-foreground/20 font-mono">{max}s</span>
+        <span className="text-[9px] text-text-muted font-mono">{min}s</span>
+        <span className="text-[9px] text-text-muted font-mono">{max}s</span>
       </div>
     </div>
   );
@@ -315,8 +315,8 @@ export default function ParameterBar() {
   // Batch pill renderer (reused for both image and video)
   const batchPills = (
     <div className="flex flex-col gap-[6px]">
-      <span className="text-[11px] font-medium text-foreground/40">批量生成</span>
-      <div className="flex gap-0 p-[2px] bg-foreground/[0.03] rounded-lg border border-foreground/[0.04]">
+      <span className="text-[11px] font-medium text-text-muted">批量生成</span>
+      <div className="flex gap-0 p-[2px] bg-glass rounded-lg border border-border-subtle">
         {BATCH_OPTIONS.map((n) => (
           <button
             key={n}
@@ -325,7 +325,7 @@ export default function ParameterBar() {
             className={`flex-1 py-[6px] rounded-md font-mono text-xs font-medium cursor-pointer transition-all text-center ${
               batchSize === n
                 ? 'text-white bg-primary shadow-[0_1px_4px_rgba(100,108,255,0.3)]'
-                : 'text-foreground/40 hover:text-foreground/60'
+                : 'text-text-muted hover:text-foreground'
             }`}
           >
             x{n}
@@ -414,15 +414,15 @@ export default function ParameterBar() {
             {/* Duration */}
             {durationFixed ? (
               <div className="flex flex-col gap-[6px]">
-                <span className="text-[11px] font-medium text-foreground/40">时长</span>
-                <div className="w-full flex items-center px-3 py-2.5 rounded-lg bg-foreground/[0.04] border border-foreground/[0.08] text-foreground/40 text-xs font-medium">
+                <span className="text-[11px] font-medium text-text-muted">时长</span>
+                <div className="w-full flex items-center px-3 py-2.5 rounded-lg bg-glass border border-glass-border text-text-muted text-xs font-medium">
                   {durationValue}s (固定)
                 </div>
               </div>
             ) : modelDuration?.type === 'buttons' ? (
               <div className="flex flex-col gap-[6px]">
-                <span className="text-[11px] font-medium text-foreground/40">时长</span>
-                <div className="flex gap-0 p-[2px] bg-foreground/[0.03] rounded-lg border border-foreground/[0.04]">
+                <span className="text-[11px] font-medium text-text-muted">时长</span>
+                <div className="flex gap-0 p-[2px] bg-glass rounded-lg border border-border-subtle">
                   {modelDuration.options.map((n) => (
                     <button
                       key={n}
@@ -431,7 +431,7 @@ export default function ParameterBar() {
                       className={`flex-1 py-[6px] rounded-md font-mono text-xs font-medium cursor-pointer transition-all text-center ${
                         durationValue === n
                           ? 'text-white bg-primary shadow-[0_1px_4px_rgba(100,108,255,0.3)]'
-                          : 'text-foreground/40 hover:text-foreground/60'
+                          : 'text-text-muted hover:text-foreground'
                       }`}
                     >
                       {n}s
@@ -461,7 +461,7 @@ export default function ParameterBar() {
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-[11px] font-medium text-foreground/40 hover:text-foreground/60 transition-colors cursor-pointer"
+            className="text-[11px] font-medium text-text-muted hover:text-foreground transition-colors cursor-pointer"
           >
             {showAdvanced ? '▾' : '▸'} 高级参数
           </button>
@@ -470,11 +470,11 @@ export default function ParameterBar() {
             <div className="grid grid-cols-2 gap-3 mt-3">
               {supportsSeed && (
                 <div className="flex flex-col gap-[6px]">
-                  <span className="text-[11px] font-medium text-foreground/40">Seed</span>
+                  <span className="text-[11px] font-medium text-text-muted">Seed</span>
                   <input
                     type="number"
                     placeholder="随机"
-                    className="bg-foreground/[0.04] border border-foreground/[0.08] rounded-lg px-3 py-2.5 text-xs text-foreground font-mono w-full outline-none focus:border-foreground/[0.15] transition placeholder:text-foreground/20"
+                    className="bg-glass border border-glass-border rounded-lg px-3 py-2.5 text-xs text-foreground font-mono w-full outline-none focus:border-foreground/[0.15] transition placeholder:text-text-muted"
                     value={parameters.seed ?? ''}
                     onChange={(e) => {
                       const val = e.target.value;

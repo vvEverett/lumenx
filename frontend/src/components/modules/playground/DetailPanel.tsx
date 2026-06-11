@@ -203,7 +203,7 @@ export default function DetailPanel({
       />
 
       {/* Container */}
-      <div className="fixed inset-4 md:inset-8 z-50 bg-surface border border-foreground/[0.06] rounded-2xl shadow-2xl flex overflow-hidden">
+      <div className="fixed inset-4 md:inset-8 z-50 bg-surface border border-glass-border rounded-2xl shadow-2xl flex overflow-hidden">
         {/* ─── LEFT SIDE (Media) ─────────────────────────────────────────── */}
         <div className="relative w-[60%] h-full bg-surface flex items-center justify-center">
           {mediaUrl ? (
@@ -221,7 +221,7 @@ export default function DetailPanel({
               />
             )
           ) : (
-            <div className="flex flex-col items-center gap-2 text-foreground/20">
+            <div className="flex flex-col items-center gap-2 text-text-muted">
               <Video className="w-12 h-12" />
               <span className="font-mono text-xs">No media</span>
             </div>
@@ -231,29 +231,29 @@ export default function DetailPanel({
           {hasPrev && (
             <button
               onClick={navigatePrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-foreground/[0.06] backdrop-blur-sm border border-foreground/[0.08] flex items-center justify-center hover:bg-foreground/[0.12] transition-colors"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-elevated backdrop-blur-sm border border-glass-border flex items-center justify-center hover:bg-hover-bg transition-colors"
             >
-              <ChevronLeft className="w-5 h-5 text-foreground/70" />
+              <ChevronLeft className="w-5 h-5 text-foreground/80" />
             </button>
           )}
           {hasNext && (
             <button
               onClick={navigateNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-foreground/[0.06] backdrop-blur-sm border border-foreground/[0.08] flex items-center justify-center hover:bg-foreground/[0.12] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-elevated backdrop-blur-sm border border-glass-border flex items-center justify-center hover:bg-hover-bg transition-colors"
             >
-              <ChevronRight className="w-5 h-5 text-foreground/70" />
+              <ChevronRight className="w-5 h-5 text-foreground/80" />
             </button>
           )}
         </div>
 
         {/* ─── RIGHT SIDE (Details) ──────────────────────────────────────── */}
-        <div className="relative w-[40%] h-full overflow-y-auto p-6 border-l border-foreground/[0.06]">
+        <div className="relative w-[40%] h-full overflow-y-auto p-6 border-l border-glass-border">
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-foreground/[0.04] border border-foreground/[0.08] flex items-center justify-center hover:bg-foreground/[0.10] transition-colors"
+            className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-glass border border-glass-border flex items-center justify-center hover:bg-hover-bg transition-colors"
           >
-            <X className="w-4 h-4 text-foreground/60" />
+            <X className="w-4 h-4 text-text-secondary" />
           </button>
 
           {/* Section 1: Title */}
@@ -262,14 +262,14 @@ export default function DetailPanel({
               {generation.model_id}
             </h2>
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-[10px] bg-foreground/[0.06] text-foreground/60 rounded px-[6px] py-[2px] uppercase">
+              <span className="font-mono text-[10px] bg-elevated text-text-secondary rounded px-[6px] py-[2px] uppercase">
                 {MODE_LABELS[generation.mode] || generation.mode}
               </span>
-              <span className="font-mono text-[10px] text-foreground/30">
+              <span className="font-mono text-[10px] text-text-muted">
                 {generation.id.slice(0, 8)}
               </span>
             </div>
-            <p className="font-mono text-[11px] text-foreground/30">
+            <p className="font-mono text-[11px] text-text-muted">
               {formatTimestamp(generation.created_at)}
             </p>
           </div>
@@ -279,7 +279,7 @@ export default function DetailPanel({
             {mediaUrl && (
               <button
                 onClick={handleDownload}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-foreground/[0.06] border border-foreground/[0.08] text-foreground/80 text-sm font-medium hover:bg-foreground/[0.10] transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-elevated border border-glass-border text-foreground/80 text-sm font-medium hover:bg-hover-bg transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Download
@@ -291,8 +291,8 @@ export default function DetailPanel({
                 disabled={saving}
                 className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait ${
                   saved
-                    ? 'bg-foreground/[0.04] border-green-500/20 text-green-400 hover:border-foreground/[0.12] hover:text-foreground/60'
-                    : 'bg-foreground/[0.06] border-foreground/[0.08] text-foreground/80 hover:bg-foreground/[0.10]'
+                    ? 'bg-glass border-green-500/20 text-green-400 hover:border-foreground/30 hover:text-foreground'
+                    : 'bg-elevated border-glass-border text-foreground/80 hover:bg-hover-bg'
                 }`}
               >
                 <Star
@@ -337,14 +337,14 @@ export default function DetailPanel({
               </h3>
               <button
                 onClick={handleCopyPrompt}
-                className="flex items-center gap-1 px-2 py-1 rounded text-[10px] text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.06] transition-colors"
+                className="flex items-center gap-1 px-2 py-1 rounded text-[10px] text-text-muted hover:text-foreground hover:bg-hover-bg transition-colors"
               >
                 <Copy className="w-3 h-3" />
                 {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
-            <div className="max-h-40 overflow-y-auto rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] p-3">
-              <p className="text-[12px] text-foreground/70 leading-relaxed whitespace-pre-wrap break-words">
+            <div className="max-h-40 overflow-y-auto rounded-lg bg-glass border border-glass-border p-3">
+              <p className="text-[12px] text-foreground/80 leading-relaxed whitespace-pre-wrap break-words">
                 {generation.prompt || '(empty)'}
               </p>
             </div>
@@ -359,7 +359,7 @@ export default function DetailPanel({
               <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {paramEntries.map(([label, value]) => (
                   <div key={label}>
-                    <p className="text-[10px] text-foreground/40 mb-0.5">{label}</p>
+                    <p className="text-[10px] text-text-muted mb-0.5">{label}</p>
                     <p className="text-[12px] text-foreground font-mono truncate">
                       {value}
                     </p>
@@ -375,8 +375,8 @@ export default function DetailPanel({
               <h3 className="font-mono text-[10px] uppercase tracking-[0.18em] text-amber-500/80 mb-2">
                 NEGATIVE PROMPT
               </h3>
-              <div className="max-h-28 overflow-y-auto rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] p-3">
-                <p className="text-[12px] text-foreground/50 leading-relaxed whitespace-pre-wrap break-words">
+              <div className="max-h-28 overflow-y-auto rounded-lg bg-glass border border-glass-border p-3">
+                <p className="text-[12px] text-text-secondary leading-relaxed whitespace-pre-wrap break-words">
                   {generation.negative_prompt}
                 </p>
               </div>

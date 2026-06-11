@@ -62,29 +62,29 @@ export default function ModelSelector() {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-[10px] px-[14px] py-[10px] border border-foreground/[0.08] rounded-lg bg-input-bg cursor-pointer w-full text-left transition-colors hover:border-foreground/[0.15]"
+        className="flex items-center gap-[10px] px-[14px] py-[10px] border border-glass-border rounded-lg bg-input-bg cursor-pointer w-full text-left transition-colors hover:border-foreground/30"
       >
         <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
         <span className="flex-1 text-[13px] font-medium text-foreground truncate">
           {selected?.displayName ?? 'Select model'}
         </span>
-        <span className="font-mono text-[10px] text-foreground/40 uppercase tracking-wider shrink-0">
+        <span className="font-mono text-[10px] text-text-muted uppercase tracking-wider shrink-0">
           {selected?.family ?? ''}
         </span>
-        <span className="text-foreground/40 text-xs shrink-0">&#9662;</span>
+        <span className="text-text-muted text-xs shrink-0">&#9662;</span>
       </button>
 
       {open && (
-        <div className="absolute top-full mt-1 w-full bg-elevated border border-foreground/[0.08] rounded-lg shadow-xl z-20 max-h-60 overflow-y-auto">
+        <div className="absolute top-full mt-1 w-full bg-elevated border border-glass-border rounded-lg shadow-xl z-20 max-h-60 overflow-y-auto">
           {availableModels.length === 0 && (
-            <div className="px-3 py-2 text-[12px] text-foreground/40">当前模式无可用模型</div>
+            <div className="px-3 py-2 text-[12px] text-text-muted">当前模式无可用模型</div>
           )}
           {groupedModels.map((group, gi) => (
             <div key={group.family}>
-              {gi > 0 && <div className="border-t border-foreground/[0.04] mx-2" />}
+              {gi > 0 && <div className="border-t border-border-subtle mx-2" />}
               {groupedModels.length > 1 && (
                 <div className="px-3 pt-2 pb-1">
-                  <span className="font-mono text-[9px] text-foreground/30 uppercase tracking-[0.15em]">
+                  <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.15em]">
                     {group.family}
                   </span>
                 </div>
@@ -94,8 +94,8 @@ export default function ModelSelector() {
                   key={m.id}
                   type="button"
                   onClick={() => handleSelect(m.id)}
-                  className={`flex items-center gap-[10px] w-full px-3 py-2 text-left transition-colors hover:bg-foreground/[0.06] ${
-                    m.id === modelId ? 'bg-foreground/[0.08] text-foreground' : 'text-foreground/80'
+                  className={`flex items-center gap-[10px] w-full px-3 py-2 text-left transition-colors hover:bg-hover-bg ${
+                    m.id === modelId ? 'bg-elevated text-foreground' : 'text-foreground/80'
                   }`}
                 >
                   <span className="flex-1 text-[13px] font-medium truncate">

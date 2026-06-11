@@ -192,17 +192,17 @@ export default function PlaygroundPage() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background text-foreground">
       {/* ═══ PAGE HEADER ═══ */}
-      <header className="flex shrink-0 items-center justify-between border-b border-foreground/[0.04] px-7 py-5">
+      <header className="flex shrink-0 items-center justify-between border-b border-border-subtle px-7 py-5">
         <div className="flex items-center">
           <h1 className="font-['Space_Grotesk',sans-serif] text-xl font-semibold tracking-tight text-foreground">
             创作台
           </h1>
-          <span className="ml-[10px] font-mono text-[11px] uppercase tracking-[0.1em] text-foreground/40">
+          <span className="ml-[10px] font-mono text-[11px] uppercase tracking-[0.1em] text-text-muted">
             {resultCount} results
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="rounded border border-foreground/[0.08] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+          <span className="rounded border border-glass-border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
             {MODE_LABELS[mode]}
           </span>
         </div>
@@ -211,18 +211,18 @@ export default function PlaygroundPage() {
       {/* ═══ SPLIT LAYOUT ═══ */}
       <div className="flex flex-1 overflow-hidden min-h-0">
         {/* ─── LEFT: INPUT PANEL ─── */}
-        <aside className="flex w-[420px] shrink-0 flex-col overflow-y-auto border-r border-foreground/[0.08] bg-foreground/[0.02] scrollbar-thin">
+        <aside className="flex w-[420px] shrink-0 flex-col overflow-y-auto border-r border-glass-border bg-glass scrollbar-thin">
           {/* Mode */}
           <section className="px-6 py-5">
-            <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/40">
+            <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted">
               生成模式
             </div>
             <ModeSelector />
           </section>
 
           {/* Model */}
-          <section className="border-t border-foreground/[0.04] px-6 py-5">
-            <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/40">
+          <section className="border-t border-border-subtle px-6 py-5">
+            <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted">
               模型
             </div>
             <ModelSelector />
@@ -230,8 +230,8 @@ export default function PlaygroundPage() {
 
           {/* Media Input (conditional) */}
           {showMediaInput && (
-            <section className="border-t border-foreground/[0.04] px-6 py-5">
-              <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/40">
+            <section className="border-t border-border-subtle px-6 py-5">
+              <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted">
                 {mode === 'v2v' ? '源视频' : mode === 'r2v' ? '参考素材' : '首帧图片'}
               </div>
               <MediaInput />
@@ -239,16 +239,16 @@ export default function PlaygroundPage() {
           )}
 
           {/* Prompt */}
-          <section className="border-t border-foreground/[0.04] px-6 py-5">
-            <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/40">
+          <section className="border-t border-border-subtle px-6 py-5">
+            <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted">
               Prompt
             </div>
             <PromptInput />
           </section>
 
           {/* Parameters */}
-          <section className="border-t border-foreground/[0.04] px-6 py-5">
-            <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/40">
+          <section className="border-t border-border-subtle px-6 py-5">
+            <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted">
               参数
             </div>
             <ParameterBar />
@@ -258,7 +258,7 @@ export default function PlaygroundPage() {
           <div className="flex-1" />
 
           {/* Generate CTA (sticky) */}
-          <div className="sticky bottom-0 border-t border-foreground/[0.08] bg-background px-6 py-5">
+          <div className="sticky bottom-0 border-t border-glass-border bg-background px-6 py-5">
             <button
               type="button"
               onClick={handleGenerate}
