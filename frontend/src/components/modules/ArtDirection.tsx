@@ -519,7 +519,7 @@ export default function ArtDirection() {
                             className={`shrink-0 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
                                 activeCategory === "all"
                                     ? "bg-primary/20 text-primary border border-primary/30"
-                                    : "bg-white/5 text-text-secondary hover:bg-white/10 border border-transparent"
+                                    : "bg-foreground/5 text-text-secondary hover:bg-foreground/10 border border-transparent"
                             }`}
                         >
                             全部
@@ -531,7 +531,7 @@ export default function ArtDirection() {
                                 className={`shrink-0 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
                                     activeCategory === cat.id
                                         ? "bg-primary/20 text-primary border border-primary/30"
-                                        : "bg-white/5 text-text-secondary hover:bg-white/10 border border-transparent"
+                                        : "bg-foreground/5 text-text-secondary hover:bg-foreground/10 border border-transparent"
                                 }`}
                             >
                                 {cat.name_zh}
@@ -718,7 +718,7 @@ function AIRecommendationCard({ style, isSelected, onClick }: {
             className={`group relative rounded-xl border overflow-hidden cursor-pointer transition-all ${
                 isSelected
                     ? "border-yellow-400/60 shadow-lg shadow-yellow-500/15 ring-1 ring-yellow-400/30"
-                    : "border-glass-border hover:border-white/20 hover:shadow-sm"
+                    : "border-glass-border hover:border-foreground/20 hover:shadow-sm"
             }`}
         >
             <div className="p-4 space-y-2">
@@ -819,7 +819,7 @@ function AIRecommendationModal({ style, isSelected, editing, positivePrompt, neg
                 {/* Body: left reason + tags | right prompts */}
                 <div className="flex-1 min-h-0 flex overflow-hidden">
                     {/* Left panel: reason + keyword tags */}
-                    <div className="w-[38%] shrink-0 bg-white/[0.02] border-r border-glass-border p-6 flex flex-col justify-center">
+                    <div className="w-[38%] shrink-0 bg-foreground/[0.02] border-r border-glass-border p-6 flex flex-col justify-center">
                         {(style as any).reason && (
                             <div className="mb-6">
                                 <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-yellow-400/70 mb-2">{ta("reasonLabel")}</p>
@@ -860,10 +860,10 @@ function AIRecommendationModal({ style, isSelected, editing, positivePrompt, neg
                                 <textarea
                                     value={positivePrompt}
                                     onChange={(e) => onPositiveChange(e.target.value)}
-                                    className="w-full h-32 rounded-lg border border-glass-border bg-white/5 px-3 py-2.5 text-[12px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 custom-scrollbar"
+                                    className="w-full h-32 rounded-lg border border-glass-border bg-foreground/5 px-3 py-2.5 text-[12px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-primary/50 custom-scrollbar"
                                 />
                             ) : (
-                                <div className="rounded-lg border border-glass-border bg-white/[0.02] px-3 py-2.5">
+                                <div className="rounded-lg border border-glass-border bg-foreground/[0.02] px-3 py-2.5">
                                     <p className="text-[12px] text-text-secondary leading-relaxed whitespace-pre-wrap">
                                         {positivePrompt}
                                     </p>
@@ -878,10 +878,10 @@ function AIRecommendationModal({ style, isSelected, editing, positivePrompt, neg
                                 <textarea
                                     value={negativePrompt}
                                     onChange={(e) => onNegativeChange(e.target.value)}
-                                    className="w-full h-24 rounded-lg border border-glass-border bg-white/5 px-3 py-2.5 text-[12px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-red-400/30 custom-scrollbar"
+                                    className="w-full h-24 rounded-lg border border-glass-border bg-foreground/5 px-3 py-2.5 text-[12px] text-foreground leading-relaxed resize-none focus:outline-none focus:border-red-400/30 custom-scrollbar"
                                 />
                             ) : (
-                                <div className="rounded-lg border border-glass-border bg-white/[0.02] px-3 py-2.5">
+                                <div className="rounded-lg border border-glass-border bg-foreground/[0.02] px-3 py-2.5">
                                     <p className="text-[12px] text-text-secondary leading-relaxed whitespace-pre-wrap">
                                         {negativePrompt || ta("noNegativePrompt") || "—"}
                                     </p>
@@ -955,11 +955,11 @@ function StylePresetCardV2({ style, isSelected, onClick }: {
             className={`group relative rounded-xl border overflow-hidden cursor-pointer transition-all ${
                 isSelected
                     ? "border-primary shadow-lg shadow-primary/20 ring-1 ring-primary/40"
-                    : "border-glass-border hover:border-white/20 hover:shadow-sm"
+                    : "border-glass-border hover:border-foreground/20 hover:shadow-sm"
             }`}
         >
             {/* Thumbnail */}
-            <div className="relative aspect-[4/3] bg-white/5 overflow-hidden">
+            <div className="relative aspect-[4/3] bg-foreground/5 overflow-hidden">
                 {style.thumbnail ? (
                     <img
                         src={style.thumbnail}
@@ -968,7 +968,7 @@ function StylePresetCardV2({ style, isSelected, onClick }: {
                         style={{ objectPosition: style.object_position || "center" }}
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/[0.02]">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-foreground/5 to-foreground/[0.02]">
                         <ImageIcon size={24} className="text-text-muted/40" />
                     </div>
                 )}
@@ -1162,7 +1162,7 @@ function PresetDetailModal({ preset, isSelected, editing, positivePrompt, negati
                                 <button
                                     key={p.id}
                                     onClick={() => onSwitchPreset(p)}
-                                    className="shrink-0 w-24 rounded-lg overflow-hidden border border-glass-border hover:border-white/20 transition-colors"
+                                    className="shrink-0 w-24 rounded-lg overflow-hidden border border-glass-border hover:border-foreground/20 transition-colors"
                                 >
                                     {p.thumbnail ? (
                                         <img
@@ -1172,7 +1172,7 @@ function PresetDetailModal({ preset, isSelected, editing, positivePrompt, negati
                                             style={{ objectPosition: p.object_position || "center" }}
                                         />
                                     ) : (
-                                        <div className="w-full aspect-[16/9] bg-white/5 flex items-center justify-center">
+                                        <div className="w-full aspect-[16/9] bg-foreground/5 flex items-center justify-center">
                                             <ImageIcon size={12} className="text-text-muted/40" />
                                         </div>
                                     )}

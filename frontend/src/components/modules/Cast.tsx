@@ -778,7 +778,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
             },
             chipLabel: t("tabCharacters"),
             hoverAccent: "rgba(167,139,250,0.55)",
-            watermarkIcon: <Users size={48} className="text-white/[0.04]" strokeWidth={1} />,
+            watermarkIcon: <Users size={48} className="text-foreground/[0.04]" strokeWidth={1} />,
             ctaIcon: <Wand2 size={14} strokeWidth={1.75} />,
             ctaLabel: t("generateReference"),
         },
@@ -792,7 +792,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
             },
             chipLabel: t("tabScenes"),
             hoverAccent: "rgba(110,231,183,0.5)",
-            watermarkIcon: <MapPin size={64} className="text-white/[0.035]" strokeWidth={0.75} />,
+            watermarkIcon: <MapPin size={64} className="text-foreground/[0.035]" strokeWidth={0.75} />,
             ctaIcon: <Sparkles size={14} strokeWidth={1.75} />,
             ctaLabel: t("generateScene"),
         },
@@ -806,7 +806,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
             },
             chipLabel: t("tabProps"),
             hoverAccent: "rgba(252,211,77,0.5)",
-            watermarkIcon: <Box size={40} className="text-white/[0.04]" strokeWidth={1} />,
+            watermarkIcon: <Box size={40} className="text-foreground/[0.04]" strokeWidth={1} />,
             ctaIcon: <Layers size={13} strokeWidth={1.75} />,
             ctaLabel: t("generateProp"),
         },
@@ -818,12 +818,12 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
     return (
         <>
             <div
-                className={`group/cast-card relative flex flex-col gap-2 ${cardRadius} border border-glass-border bg-glass p-2 transition-[border-color,background-color] duration-fast ease-out-quart hover:border-white/15`}
+                className={`group/cast-card relative flex flex-col gap-2 ${cardRadius} border border-glass-border bg-glass p-2 transition-[border-color,background-color] duration-fast ease-out-quart hover:border-foreground/15`}
             >
                 {/* Kind chip — top-right, near-mono. Sits on TOP of the thumb
                     so it works for both empty and ready states without
                     occluding the image (small + corner-tucked). */}
-                <span className="absolute top-2.5 right-2.5 z-10 pointer-events-none inline-flex items-center rounded-sm border border-white/10 bg-black/40 px-1.5 py-[1px] font-mono text-[8.5px] uppercase tracking-[0.18em] text-text-muted backdrop-blur-sm">
+                <span className="absolute top-2.5 right-2.5 z-10 pointer-events-none inline-flex items-center rounded-sm border border-foreground/10 bg-black/40 px-1.5 py-[1px] font-mono text-[8.5px] uppercase tracking-[0.18em] text-text-muted backdrop-blur-sm">
                     {k.chipLabel}
                 </span>
                 {/* Hover hairline accent — single top edge, animated on group-hover */}
@@ -846,7 +846,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
                                 }}
                                 aria-label="放大查看"
                                 title="放大查看"
-                                className="absolute left-1.5 top-1.5 z-10 grid h-6 w-6 place-items-center rounded bg-black/55 text-white/80 backdrop-blur opacity-0 group-hover/cast-card:opacity-100 transition-opacity hover:bg-black/75"
+                                className="absolute left-1.5 top-1.5 z-10 grid h-6 w-6 place-items-center rounded bg-black/55 text-foreground/80 backdrop-blur opacity-0 group-hover/cast-card:opacity-100 transition-opacity hover:bg-black/75"
                             >
                                 <Maximize2 size={11} />
                             </button>
@@ -900,7 +900,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
                     <div className="flex items-center gap-1 px-0.5 opacity-0 group-hover/cast-card:opacity-100 transition-opacity">
                         <button
                             onClick={(e) => { e.stopPropagation(); setPickerOpen(true); }}
-                            className="flex-1 inline-flex items-center gap-1.5 rounded-md border border-glass-border bg-black/30 px-2 py-1 text-[10px] text-text-secondary hover:border-white/20 hover:text-foreground transition-colors min-w-0"
+                            className="flex-1 inline-flex items-center gap-1.5 rounded-md border border-glass-border bg-black/30 px-2 py-1 text-[10px] text-text-secondary hover:border-foreground/20 hover:text-foreground transition-colors min-w-0"
                             title={voiceId ? t("voiceBindChange") : t("voiceBindAdd")}
                         >
                             <Volume2 size={10} className={voiceId ? "text-primary" : "text-text-muted"} />
@@ -916,7 +916,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
                                 className={`shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-md border transition-colors ${
                                     playing
                                         ? "border-primary bg-primary/15 text-primary"
-                                        : "border-glass-border bg-black/30 text-text-secondary hover:border-white/20 hover:text-foreground"
+                                        : "border-glass-border bg-black/30 text-text-secondary hover:border-foreground/20 hover:text-foreground"
                                 }`}
                             >
                                 {previewing ? <Loader2 size={10} className="animate-spin" /> : playing ? <Pause size={10} /> : <Play size={10} />}
@@ -1058,21 +1058,21 @@ function StatusBadge({ status }: { status: "ready" | "pending" | "new" }) {
     const t = useTranslations("cast");
     if (status === "ready") {
         return (
-            <span className="inline-flex items-center rounded-full bg-[rgba(100,108,255,0.12)] px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wider text-[#a5aaff]">
+            <span className="inline-flex items-center rounded-full bg-[rgba(100,108,255,0.12)] px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wider text-primary">
                 {t("statusReady")}
             </span>
         );
     }
     if (status === "pending") {
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(245,158,11,0.12)] px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wider text-[#fbbf24]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(245,158,11,0.12)] px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wider text-amber-400">
                 <AlertTriangle size={9} aria-hidden="true" />
                 {t("statusPending")}
             </span>
         );
     }
     return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(236,72,153,0.14)] px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wider text-[#f472b6]">
+        <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(236,72,153,0.14)] px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wider text-pink-400">
             🆕 {t("statusNew")}
         </span>
     );

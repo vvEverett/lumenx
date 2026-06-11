@@ -452,7 +452,7 @@ function MixPhase({
                         className={`rounded-lg border p-3 text-left transition-colors ${
                             !bgmUrl
                                 ? "border-primary bg-[rgba(100,108,255,0.10)]"
-                                : "border-glass-border bg-glass hover:border-white/15"
+                                : "border-glass-border bg-glass hover:border-foreground/15"
                         }`}
                     >
                         <p className="text-[13px] font-medium text-foreground">{ta("mixBgmNone")}</p>
@@ -472,7 +472,7 @@ function MixPhase({
                                     className={`rounded-lg border p-3 text-left transition-colors ${
                                         selected
                                             ? "border-primary bg-[rgba(100,108,255,0.10)]"
-                                            : "border-glass-border bg-glass hover:border-white/15"
+                                            : "border-glass-border bg-glass hover:border-foreground/15"
                                     }`}
                                 >
                                     <p className="text-[13px] font-medium text-foreground truncate">{p.label}</p>
@@ -554,7 +554,7 @@ function ExportPhase({
                     <button
                         onClick={onMerge}
                         disabled={isMerging || !allReady}
-                        className="shrink-0 inline-flex items-center gap-2 bg-primary text-white border border-[rgba(100,108,255,0.65)] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.14)] hover:bg-[#7a82ff] disabled:opacity-40 disabled:cursor-not-allowed px-5 py-2.5 rounded-md font-semibold text-[13px]"
+                        className="shrink-0 inline-flex items-center gap-2 bg-primary text-white border border-[rgba(100,108,255,0.65)] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.14)] hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed px-5 py-2.5 rounded-md font-semibold text-[13px]"
                     >
                         {isMerging ? <Loader2 size={14} className="animate-spin" /> : <Film size={14} />}
                         {ta("mergeAndProceed")}

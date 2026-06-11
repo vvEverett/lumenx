@@ -764,7 +764,7 @@ function CharacterDetailModal({ asset, type, onClose, onUpdateDescription, onGen
                     <div className="p-6 border-t border-glass-border bg-surface flex gap-4">
                         <button
                             onClick={onClose}
-                            className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-500/20"
+                            className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-foreground rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-500/20"
                         >
                             <Check size={18} />
                             Done
@@ -935,8 +935,8 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
 
             {/* Bottom Info */}
             <div className="absolute bottom-0 left-0 right-0 p-4 z-30">
-                <h3 className="text-lg font-bold text-white mb-1 truncate">{asset.name}</h3>
-                <p className="text-xs text-white/70 line-clamp-2 mb-3 h-8">
+                <h3 className="text-lg font-bold text-foreground mb-1 truncate">{asset.name}</h3>
+                <p className="text-xs text-foreground/70 line-clamp-2 mb-3 h-8">
                     {asset.description || "No description"}
                 </p>
 
@@ -960,7 +960,7 @@ function AssetCard({ asset, type, isGenerating, onGenerate, onToggleLock, onClic
                             e.stopPropagation();
                             onUpload?.();
                         }}
-                        className="px-2.5 rounded-full bg-glass hover:bg-hover-bg border border-glass-border text-white cursor-pointer transition-colors"
+                        className="px-2.5 rounded-full bg-glass hover:bg-hover-bg border border-glass-border text-foreground cursor-pointer transition-colors"
                         title={tv("uploadAsset")}
                     >
                         <Upload size={14} />

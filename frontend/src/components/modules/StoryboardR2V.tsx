@@ -1798,7 +1798,7 @@ export default function StoryboardR2V() {
             />
             {/* Top Toolbar — 简化版：只保留 shot 计数 / + shot / 全展开-全折叠
                 model name + queue button + 画风 已上移到 StepHeader trailing. */}
-            <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 border-b border-white/[0.06] bg-white/[0.015] shrink-0 sm:px-6">
+            <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 border-b border-foreground/[0.06] bg-foreground/[0.015] shrink-0 sm:px-6">
                 <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-text-muted">
                     <span className="text-foreground font-medium">{shots.length}</span>
                     <span className="ml-1.5">{shots.length === 1 ? "shot" : "shots"}</span>
@@ -1878,7 +1878,7 @@ export default function StoryboardR2V() {
                                     type="button"
                                     onClick={() => setGenDialogOpen(true)}
                                     disabled={generating}
-                                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-md bg-primary text-white border border-[rgba(100,108,255,0.65)] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.14)] hover:bg-[#7a82ff] disabled:opacity-40 transition-colors text-[13px] font-semibold"
+                                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-md bg-primary text-white border border-[rgba(100,108,255,0.65)] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.14)] hover:bg-primary-hover disabled:opacity-40 transition-colors text-[13px] font-semibold"
                                 >
                                     {generating ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
                                     {generating ? t("genInFlight") : t("emptyCTA")}
@@ -2244,7 +2244,7 @@ export default function StoryboardR2V() {
                     whileHover={{ scale: 1.005 }}
                     whileTap={{ scale: 0.995 }}
                     onClick={() => addShot(shots.length - 1)}
-                    className="w-full py-3.5 border border-dashed border-white/[0.08] hover:border-primary/40 rounded-xl text-text-secondary hover:text-primary text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 bg-white/[0.01] hover:bg-white/[0.03]"
+                    className="w-full py-3.5 border border-dashed border-foreground/[0.08] hover:border-primary/40 rounded-xl text-text-secondary hover:text-primary text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 bg-foreground/[0.01] hover:bg-foreground/[0.03]"
                 >
                     <Plus size={16} strokeWidth={1.5} />
                     {t("addShot")}

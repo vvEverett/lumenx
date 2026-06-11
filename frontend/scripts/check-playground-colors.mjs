@@ -32,9 +32,6 @@ if (!COMPONENTS) {
   process.exit(2);
 }
 
-// 已 token 化、需守卫的模块（相对 src/components）
-const SCOPED = ['modules/playground', 'shared', 'modules/cast', 'modules/storyboard-r2v'];
-
 const BANNED = [
   { re: /\[#[0-9a-fA-F]{3,8}\]/, msg: 'arbitrary hex（改用语义 token：bg-primary / bg-surface / text-foreground …）' },
   { re: /\b(?:bg|text|border|from|to|via|ring|divide|placeholder|outline|caret|decoration|accent|ring-offset)-white\/(?:\[[0-9.]+\]|\d+)/, msg: 'white/alpha（改用 foreground/alpha，浅色主题才能正确翻转）' },
@@ -52,8 +49,8 @@ function collectTsx(dir) {
 }
 
 let violations = 0;
-for (const scope of SCOPED) {
-  for (const fp of collectTsx(path.join(COMPONENTS, scope)).sort()) {
+// 整个 components 树（全前端已 token 化；守卫防任何模块回潮）
+for (const fp of collectTsx(COMPONENTS).sort()) {
     const rel = fp.replace(COMPONENTS + '/', '');
     const lines = readFileSync(fp, 'utf8').split('\n');
     lines.forEach((line, i) => {
@@ -66,11 +63,10 @@ for (const scope of SCOPED) {
         }
       }
     });
-  }
 }
 
 if (violations > 0) {
   console.error(`\n✘ 已 token 化模块存在 ${violations} 处硬编码颜色，请改用语义 token。`);
   process.exit(1);
 }
-console.log('✓ 已 token 化模块（playground / shared / cast / storyboard-r2v）：无违规硬编码颜色。');
+console.log('✓ 全 components 树：无违规硬编码颜色（前端已 100% token 化）。');

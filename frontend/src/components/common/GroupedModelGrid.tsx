@@ -164,7 +164,7 @@ export default function GroupedModelGrid({
                                             {model.badges.map((badge) => (
                                                 <span
                                                     key={badge}
-                                                    className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-text-secondary"
+                                                    className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-text-secondary"
                                                 >
                                                     {badge}
                                                 </span>

@@ -146,7 +146,7 @@ export default function SeriesArtDirectionPanel({ seriesId, onSaved }: SeriesArt
         >
             {/* Header */}
             <header className="flex shrink-0 items-center gap-3 border-b border-glass-border bg-surface px-8 py-5">
-                <div className="grid h-9 w-9 place-items-center rounded-full border border-[rgba(100,108,255,0.32)] bg-[rgba(100,108,255,0.08)] text-[#b9bdff]">
+                <div className="grid h-9 w-9 place-items-center rounded-full border border-[rgba(100,108,255,0.32)] bg-[rgba(100,108,255,0.08)] text-primary">
                     <Palette size={16} strokeWidth={1.5} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -220,7 +220,7 @@ export default function SeriesArtDirectionPanel({ seriesId, onSaved }: SeriesArt
                                     className={`shrink-0 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
                                         activeCategory === "all"
                                             ? "bg-primary/20 text-primary border border-primary/30"
-                                            : "bg-white/5 text-text-secondary hover:bg-white/10 border border-transparent"
+                                            : "bg-foreground/5 text-text-secondary hover:bg-foreground/10 border border-transparent"
                                     }`}
                                 >
                                     全部
@@ -232,7 +232,7 @@ export default function SeriesArtDirectionPanel({ seriesId, onSaved }: SeriesArt
                                         className={`shrink-0 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
                                             activeCategory === cat.id
                                                 ? "bg-primary/20 text-primary border border-primary/30"
-                                                : "bg-white/5 text-text-secondary hover:bg-white/10 border border-transparent"
+                                                : "bg-foreground/5 text-text-secondary hover:bg-foreground/10 border border-transparent"
                                         }`}
                                     >
                                         {cat.name_zh}
@@ -250,10 +250,10 @@ export default function SeriesArtDirectionPanel({ seriesId, onSaved }: SeriesArt
                                         className={`group relative rounded-xl border overflow-hidden cursor-pointer transition-all ${
                                             selectedStyle?.id === preset.id
                                                 ? "border-primary shadow-lg shadow-primary/20 ring-1 ring-primary/40"
-                                                : "border-glass-border hover:border-white/20 hover:shadow-sm"
+                                                : "border-glass-border hover:border-foreground/20 hover:shadow-sm"
                                         }`}
                                     >
-                                        <div className="relative aspect-[4/3] bg-white/5 overflow-hidden">
+                                        <div className="relative aspect-[4/3] bg-foreground/5 overflow-hidden">
                                             {preset.thumbnail ? (
                                                 <img
                                                     src={preset.thumbnail}
@@ -262,7 +262,7 @@ export default function SeriesArtDirectionPanel({ seriesId, onSaved }: SeriesArt
                                                     style={{ objectPosition: preset.object_position || "center" }}
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/[0.02]">
+                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-foreground/5 to-foreground/[0.02]">
                                                     <ImageIcon size={24} className="text-text-muted/40" />
                                                 </div>
                                             )}
@@ -439,11 +439,11 @@ function SeriesPresetModal({ preset, isSelected, editing, positivePrompt, negati
                         <p className="text-[10px] uppercase tracking-wider text-text-muted mb-2">同类风格</p>
                         <div className="flex gap-2.5 overflow-x-auto pb-1">
                             {sameCategoryPresets.slice(0, 5).map(p => (
-                                <button key={p.id} onClick={() => onSwitchPreset(p)} className="shrink-0 w-24 rounded-lg overflow-hidden border border-glass-border hover:border-white/20 transition-colors">
+                                <button key={p.id} onClick={() => onSwitchPreset(p)} className="shrink-0 w-24 rounded-lg overflow-hidden border border-glass-border hover:border-foreground/20 transition-colors">
                                     {p.thumbnail ? (
                                         <img src={p.thumbnail} alt={p.name_zh} className="w-full aspect-[16/9] object-cover" style={{ objectPosition: p.object_position || "center" }} />
                                     ) : (
-                                        <div className="w-full aspect-[16/9] bg-white/5 flex items-center justify-center"><ImageIcon size={12} className="text-text-muted/40" /></div>
+                                        <div className="w-full aspect-[16/9] bg-foreground/5 flex items-center justify-center"><ImageIcon size={12} className="text-text-muted/40" /></div>
                                     )}
                                     <p className="text-[10px] text-text-muted px-1.5 py-1 truncate">{p.name_zh}</p>
                                 </button>

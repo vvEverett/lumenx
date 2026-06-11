@@ -80,7 +80,7 @@ export default function EntityConfirmModal({
                                             {items.map((item, i) => (
                                                 <span
                                                     key={i}
-                                                    className="inline-flex items-center px-2 py-0.5 rounded-md bg-white/5 border border-glass-border text-xs text-foreground"
+                                                    className="inline-flex items-center px-2 py-0.5 rounded-md bg-foreground/5 border border-glass-border text-xs text-foreground"
                                                     title={item.description}
                                                 >
                                                     {item.name}
@@ -98,7 +98,7 @@ export default function EntityConfirmModal({
                         <footer className="flex items-center justify-end gap-3 px-6 py-4 border-t border-glass-border">
                             <button
                                 onClick={onDiscard}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm text-text-secondary hover:text-foreground hover:bg-white/5 transition-colors"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm text-text-secondary hover:text-foreground hover:bg-foreground/5 transition-colors"
                             >
                                 <X size={14} />
                                 {t("extractDiscard")}
