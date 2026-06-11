@@ -11,9 +11,10 @@ import {
   GLOBAL_R2V_MODELS,
   GLOBAL_IMAGE_MODELS,
   normalizeModelSettings,
+  type FrontendModelSettings,
 } from "@/lib/modelCatalog";
 import { useSettingsStore, type Locale, type ThemePreset } from "@/store/settingsStore";
-import { Image, Video, Layout, Check, User, Building, Box } from "lucide-react";
+import { Image, Video, Layout, User, Building, Box } from "lucide-react";
 import GroupedModelGrid from "@/components/common/GroupedModelGrid";
 
 type EnvConfig = EnvConfigPayload & {
@@ -93,17 +94,6 @@ const getValidationErrors = (env: EnvConfig): string[] => {
 const LS_KEY_MODEL = "lumenx_default_model_settings";
 const LS_KEY_PROMPT = "lumenx_default_prompt_config";
 
-interface DefaultModelSettings {
-  t2i_model: string;
-  i2i_model: string;
-  i2v_model: string;
-  r2v_model: string;
-  character_aspect_ratio: string;
-  scene_aspect_ratio: string;
-  prop_aspect_ratio: string;
-  storyboard_aspect_ratio: string;
-}
-
 interface DefaultPromptConfig {
   storyboard_polish: string;
   video_polish: string;
@@ -132,7 +122,7 @@ export default function SettingsPage() {
   const [endpointsOpen, setEndpointsOpen] = useState(false);
 
   // ── Default Model Settings ──
-  const [modelSettings, setModelSettings] = useState<DefaultModelSettings>(() =>
+  const [modelSettings, setModelSettings] = useState<FrontendModelSettings>(() =>
     normalizeModelSettings(
       loadFromLS(LS_KEY_MODEL, DEFAULT_MODEL_SETTINGS),
       "global_settings"
@@ -626,7 +616,7 @@ export default function SettingsPage() {
             </div>
             <GroupedModelGrid
               models={GLOBAL_R2V_MODELS}
-              selectedId={modelSettings.r2v_model}
+              selectedId={modelSettings.r2v_model ?? ""}
               onSelect={(id) => setModelSettings((s) => ({ ...s, r2v_model: id }))}
               className="mt-3"
             />

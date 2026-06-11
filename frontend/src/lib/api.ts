@@ -79,7 +79,7 @@ export interface EnvConfigPayload {
     KLING_SECRET_KEY?: string;
     VIDU_API_KEY?: string;
     endpoint_overrides?: Record<string, string>;
-    [key: string]: string | Record<string, string> | undefined;
+    [key: string]: string | Record<string, string> | boolean | undefined;
 }
 
 // R2V v2 Phase 4 — Cross-episode reconcile types
