@@ -329,7 +329,7 @@ export default function SettingsPage() {
   /* ── Section renderers ──────────────────────────────────────── */
 
   const renderGeneral = () => (
-    <SectionCard id="general" eyebrow="SECTION · GENERAL & THEME" index="01" title="通用与主题">
+    <SectionCard id="general" title="语言、主题与动效">
       <FormRow label={t("language")} hint={t("languageDesc")}>
         <FieldLabel>LANGUAGE</FieldLabel>
         <ModeSegment
@@ -408,9 +408,7 @@ export default function SettingsPage() {
   const renderModels = () => (
     <SectionCard
       id="models"
-      eyebrow="SECTION · MODEL SELECTION"
-      index="02"
-      title="默认模型"
+      title="模型与画幅选择"
       desc="新建项目时套用的默认模型与画幅。可在项目内单独覆盖。"
     >
       {/* Image model (T2I + I2I unified) */}
@@ -521,9 +519,7 @@ export default function SettingsPage() {
   const renderPrompts = () => (
     <SectionCard
       id="prompts"
-      eyebrow="SECTION · DEFAULT PROMPTS"
-      index="03"
-      title="默认 Prompt"
+      title="系统提示词配置"
       desc="新建项目的默认系统提示词（留空使用内置默认）。"
     >
       <div className="space-y-5">
@@ -556,9 +552,7 @@ export default function SettingsPage() {
   const renderApiKeys = () => (
     <SectionCard
       id="apikeys"
-      eyebrow="SECTION · API KEYS"
-      index="04"
-      title="API 密钥"
+      title="供应商凭证"
       desc="DashScope 优先；按需开启供应商直连。"
     >
       {loading ? (
@@ -761,9 +755,7 @@ export default function SettingsPage() {
   const renderStorage = () => (
     <SectionCard
       id="storage"
-      eyebrow="SECTION · STORAGE"
-      index="05"
-      title="存储 OSS"
+      title="云端镜像与本地路径"
       desc="生成结果默认本地优先；OSS 仅用于可选云端镜像。"
     >
       <FormRow label="阿里云 AK / SK" hint="仅在启用 OSS 镜像时需要填写。">
@@ -852,7 +844,7 @@ export default function SettingsPage() {
       { k: "日志目录", v: logDir || "—" },
     ];
     return (
-      <SectionCard id="about" eyebrow="SECTION · ABOUT" index="06" title="关于">
+      <SectionCard id="about" title="版本信息与系统状态">
         <div className="space-y-0">
           {aboutRows.map((r) => (
             <div key={r.k} className="flex justify-between items-center py-2.5 border-b border-glass-border last:border-b-0 text-[12.5px] gap-3">
@@ -914,14 +906,21 @@ export default function SettingsPage() {
     }
   };
 
-  const TOPBAR: Record<SettingsCategory, { title: string; sub: string }> = {
-    general: { title: "通用与主题", sub: "LANGUAGE · THEME · MOTION" },
-    models: { title: "默认模型", sub: "IMAGE · I2V · R2V · ASPECT" },
-    prompts: { title: "默认 Prompt", sub: "EXTRACTION · STYLE · POLISH" },
-    apikeys: { title: "API 密钥", sub: "DASHSCOPE · KLING · VIDU · MULERUN" },
-    storage: { title: "存储 OSS", sub: "OSS MIRROR · LOCAL DIRS" },
-    about: { title: "关于", sub: "VERSION · BACKEND · FFMPEG" },
+  const CATEGORY_TITLE: Record<SettingsCategory, string> = {
+    general: "通用与主题",
+    models: "默认模型",
+    prompts: "默认 Prompt",
+    apikeys: "API 密钥",
+    storage: "存储 OSS",
+    about: "关于",
   };
+
+  const footerThemeLine =
+    theme === "atelier-dark" || theme === "atelier-light"
+      ? "LINE B · LUMINOUS ATELIER"
+      : theme === "bridge-dark"
+      ? "WARM BRIDGE · LINE B/A"
+      : "LINE A · CYBER REFINED";
 
   return (
     <div className="relative h-full flex">
@@ -932,25 +931,23 @@ export default function SettingsPage() {
       <SettingsSidebar
         active={active}
         onSelect={setActive}
-        footer={`LUMENX STUDIO · ${APP_VERSION}\nLINE A · CYBER REFINED`}
+        footer={`LUMENX STUDIO · ${APP_VERSION}\n${footerThemeLine}`}
       />
 
       <div className="flex-1 flex flex-col min-w-0 relative z-10">
-        {/* Topbar */}
-        <header className="h-14 flex-shrink-0 border-b border-glass-border flex items-center px-6 bg-surface">
-          <div>
-            <div className="font-display atelier-display text-base font-semibold text-foreground">
-              {TOPBAR[active].title}
-            </div>
-            <div className="font-mono text-[9.5px] tracking-wide text-text-muted mt-0.5">
-              {TOPBAR[active].sub}
-            </div>
+        {/* Main head: current category title only — no redundant "SETTINGS ·" breadcrumb */}
+        <header className="flex-shrink-0 border-b border-glass-border px-10 pt-6 pb-5 bg-surface">
+          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">
+            偏好设置 · <span className="text-primary">PREFERENCES</span>
           </div>
+          <h1 className="font-display atelier-display text-[26px] leading-none font-semibold text-foreground mt-2 tracking-tight">
+            {CATEGORY_TITLE[active]}
+          </h1>
         </header>
 
         {/* Scroll area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-3xl mx-auto flex flex-col gap-5">
+        <div className="flex-1 overflow-y-auto px-10 py-8">
+          <div className="max-w-5xl mx-auto flex flex-col gap-6">
             {!online && (
               <div
                 role="status"

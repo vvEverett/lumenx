@@ -42,9 +42,8 @@ export default function SettingsSidebar({ active, onSelect, footer }: SettingsSi
     <aside className="w-[220px] flex-shrink-0 bg-surface border-r border-glass-border flex flex-col">
       <div className="px-4 py-4 border-b border-glass-border">
         <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-text-muted">
-          SETTINGS
+          偏好设置 · PREFERENCES
         </div>
-        <div className="font-display text-lg font-semibold text-foreground mt-1.5">设置</div>
       </div>
 
       <nav className="flex-1 p-2 flex flex-col gap-0.5" aria-label="设置分类">

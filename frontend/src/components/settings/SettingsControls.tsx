@@ -3,17 +3,17 @@
 import { useState, type ReactNode } from "react";
 import { Eye, EyeOff, Copy, Check, CircleAlert } from "lucide-react";
 
-/* ── Section card (Line A `.fsec`) ──────────────────────────────── */
+/* ── Section card (Line B clean `.panel` — serif title + desc, no eyebrow) ─ */
 export function SectionCard({
-  eyebrow,
-  index,
+  eyebrow: _eyebrow,
+  index: _index,
   title,
   desc,
   children,
   id,
 }: {
-  eyebrow: string;
-  index: string;
+  eyebrow?: string;
+  index?: string;
   title: string;
   desc?: string;
   children: ReactNode;
@@ -22,22 +22,19 @@ export function SectionCard({
   return (
     <section
       id={id}
-      className="glass-panel atelier-card rounded-xl overflow-hidden"
+      className="glass-panel atelier-card rounded-[20px] overflow-hidden"
       aria-labelledby={id ? `${id}-title` : undefined}
     >
-      <div className="atelier-card-head px-5 py-3.5 border-b border-glass-border">
-        <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-text-muted">
-          {eyebrow} <span className="text-primary font-bold atelier-eyebrow-accent">{index}</span>
-        </div>
+      <div className="atelier-card-head px-[22px] pt-[18px] pb-3.5 border-b border-glass-border">
         <h2
           id={id ? `${id}-title` : undefined}
-          className="font-display atelier-display text-base font-semibold text-foreground mt-1"
+          className="font-display atelier-display text-xl font-semibold text-foreground tracking-tight"
         >
           {title}
         </h2>
-        {desc && <p className="text-xs text-text-secondary mt-1">{desc}</p>}
+        {desc && <p className="text-[12px] text-text-secondary mt-1 leading-relaxed">{desc}</p>}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="px-[22px] pt-[18px] pb-[22px]">{children}</div>
     </section>
   );
 }
@@ -53,27 +50,27 @@ export function FormRow({
   children: ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-3 sm:gap-[18px] py-3.5 border-b border-glass-border last:border-b-0 first:pt-0 last:pb-0 items-start">
+    <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-3 sm:gap-[18px] mb-[22px] last:mb-0 items-start">
       <div>
-        <div className="text-[12.5px] font-semibold text-foreground">{label}</div>
-        {hint && <div className="text-[11px] text-text-muted mt-1 leading-relaxed">{hint}</div>}
+        <div className="text-[14px] font-semibold text-foreground leading-snug">{label}</div>
+        {hint && <div className="text-[12px] text-text-muted mt-1.5 leading-relaxed">{hint}</div>}
       </div>
       <div className="atelier-field min-w-0">{children}</div>
     </div>
   );
 }
 
-/* ── Mono uppercase field label (Line A `.fl`) ──────────────────── */
+/* ── Mono uppercase field label (Line B `.field label`) ─────────── */
 export function FieldLabel({ children }: { children: ReactNode }) {
   return (
-    <label className="block font-mono text-[9px] uppercase tracking-[0.08em] text-text-muted mb-1.5">
+    <label className="block font-mono text-[9.5px] uppercase tracking-[0.1em] text-text-muted mb-2">
       {children}
     </label>
   );
 }
 
 export const settingsInputClass =
-  "w-full bg-input-bg border border-glass-border rounded-md px-3 py-2 text-[12.5px] text-foreground placeholder-text-muted focus:outline-none focus:border-primary/50 transition-colors";
+  "w-full bg-input-bg border border-glass-border rounded-md px-3.5 py-2.5 text-[13px] text-foreground placeholder-text-muted focus:outline-none focus:border-primary/50 transition-colors";
 
 /* ── Masked key field (Line A `.key-field`) ─────────────────────── */
 export function KeyField({
@@ -109,7 +106,7 @@ export function KeyField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={settingsInputClass + " pr-[78px] font-mono text-[11.5px] tracking-wide"}
+          className={settingsInputClass + " pr-[78px] font-mono text-[12px] tracking-wide"}
         />
         <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex gap-0.5">
           <button
@@ -179,8 +176,8 @@ export function Toggle({
         />
       </button>
       <div className="flex-1">
-        <div className="text-[12.5px] font-semibold text-foreground">{label}</div>
-        {sub && <div className="text-[11px] text-text-muted mt-0.5">{sub}</div>}
+        <div className="text-[15px] font-semibold text-foreground">{label}</div>
+        {sub && <div className="text-[12px] text-text-muted mt-1 leading-relaxed">{sub}</div>}
       </div>
     </div>
   );
