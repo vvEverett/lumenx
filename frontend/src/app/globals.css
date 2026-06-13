@@ -693,3 +693,135 @@ html.atelier-dark .atelier-eyebrow-accent,
 html.atelier-light .atelier-eyebrow-accent {
   color: var(--color-accent);
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Atelier signature — workspace & library layer (additive, opt-in)
+   ────────────────────────────────────────────────────────────────────
+   Scoped to atelier themes only; zero-leak to bridge-dark / brand-*.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* .atelier-proj-card — project gallery card with frameless float + reveal. */
+html.atelier-dark .atelier-proj-card,
+html.atelier-light .atelier-proj-card {
+  background: color-mix(in oklab, var(--color-bg-surface) 82%, transparent);
+  backdrop-filter: blur(20px) saturate(1.15);
+  -webkit-backdrop-filter: blur(20px) saturate(1.15);
+  border-color: var(--color-border-subtle);
+  border-radius: 20px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease-out;
+}
+html.atelier-dark .atelier-proj-card:hover,
+html.atelier-light .atelier-proj-card:hover {
+  transform: translateY(-5px);
+  box-shadow:
+    0 12px 36px -8px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+html.atelier-light .atelier-proj-card {
+  background: color-mix(in oklab, var(--color-bg-surface) 80%, transparent);
+  box-shadow:
+    0 2px 8px rgba(60, 40, 20, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* .atelier-proj-featured — amber halation for starred/featured projects. */
+html.atelier-dark .atelier-proj-featured,
+html.atelier-light .atelier-proj-featured {
+  box-shadow:
+    var(--halation),
+    0 2px 8px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* .atelier-asset-card — library asset tile with squared subtle radius. */
+html.atelier-dark .atelier-asset-card,
+html.atelier-light .atelier-asset-card {
+  background: color-mix(in oklab, var(--color-bg-surface) 82%, transparent);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  border-color: var(--color-border-subtle);
+  border-radius: 16px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.22s ease-out;
+}
+html.atelier-dark .atelier-asset-card:hover,
+html.atelier-light .atelier-asset-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 8px 28px -6px rgba(0, 0, 0, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+html.atelier-light .atelier-asset-card {
+  background: color-mix(in oklab, var(--color-bg-surface) 78%, transparent);
+  box-shadow:
+    0 2px 8px rgba(60, 40, 20, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+/* .atelier-pill-tabs — inset pill-tab bar with soft bg. */
+html.atelier-dark .atelier-pill-tabs,
+html.atelier-light .atelier-pill-tabs {
+  background: var(--color-bg-inset);
+  border-radius: 999px;
+  padding: 3px;
+}
+html.atelier-dark .atelier-pill-tab-active,
+html.atelier-light .atelier-pill-tab-active {
+  background: var(--color-bg-surface);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+
+/* .atelier-group-line — the thin rule that trails after a group heading. */
+html.atelier-dark .atelier-group-line,
+html.atelier-light .atelier-group-line {
+  height: 1px;
+  background: var(--color-border-subtle);
+  flex: 1;
+}
+
+/* .atelier-search-input — pill-shaped search with focus teal ring. */
+html.atelier-dark .atelier-search-input,
+html.atelier-light .atelier-search-input {
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+html.atelier-dark .atelier-search-input:focus-within,
+html.atelier-light .atelier-search-input:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(52, 216, 196, 0.12);
+}
+
+/* .atelier-badge — status pills from workspace mockup. */
+html.atelier-dark .atelier-badge,
+html.atelier-light .atelier-badge {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 999px;
+  font-family: var(--font-jetbrains-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Reveal stagger animation for grid children (atelier only). */
+@keyframes atelierReveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+html.atelier-dark .atelier-reveal,
+html.atelier-light .atelier-reveal {
+  animation: atelierReveal 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}

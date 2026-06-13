@@ -393,7 +393,11 @@
     "characterLabel": "Characters",
     "sceneLabel": "Scenes",
     "episodeTitlePlaceholder": "Episode title...",
-    "episodeNum": "Episode {number}"
+    "episodeNum": "Episode {number}",
+    "gallery": "Gallery",
+    "list": "List",
+    "searchPlaceholder": "Search projects / series\u2026",
+    "emptyQuote": "\u201cEvery city hides a story yet to be told.\u201d"
   },
   "settings": {
     "title": "Settings",
@@ -851,7 +855,8 @@
     "noAssets": "No assets yet",
     "noAssetsHint": "Assets will appear here after being generated in series or projects",
     "series": "Series",
-    "project": "Project"
+    "project": "Project",
+    "gallery": "Gallery"
   },
   "voice": {
     "castingRoom": "Casting Room",

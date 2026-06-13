@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Plus, FolderOpen, RefreshCw, Library, Calendar, Play, Trash2, FileUp, X, ChevronDown, FileText,
-  Zap, Film, Sparkles,
+  Zap, Film, Sparkles, Search,
 } from "lucide-react";
 import { useProjectStore, Series, Project } from "@/store/projectStore";
 import ProjectCard from "@/components/project/ProjectCard";
@@ -311,7 +311,7 @@ function SeriesCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.01 }}
-      className="glass-panel p-6 rounded-xl cursor-pointer group relative border-l-2 border-l-blue-500"
+      className="glass-panel atelier-proj-card p-6 rounded-xl cursor-pointer group relative border-l-2 border-l-blue-500"
       onClick={handleOpen}
     >
       <div className="flex items-start justify-between mb-3">
@@ -667,128 +667,154 @@ export default function Home() {
       return <PlaygroundPage />;
     }
 
-    // Workspace view
+    // Workspace view — Line B skeleton
     return (
-      <div className="container mx-auto px-6 py-8">
-        {/* Content Section */}
-        {totalCount === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-20"
-          >
-            <FolderOpen size={64} className="text-text-muted mb-4" />
-            <h3 className="text-2xl font-display atelier-display font-semibold text-text-secondary mb-2">{t("empty")}</h3>
-            <p className="text-text-muted mb-8">{t("emptyHint")}</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl w-full">
-              <button
-                onClick={() => setIsSeriesDialogOpen(true)}
-                className="glass-panel p-6 rounded-xl border border-blue-500/30 hover:border-blue-500/60 transition-all group text-left"
-              >
-                <Library size={32} className="text-blue-400 mb-3" />
-                <h4 className="text-lg font-display font-bold text-foreground mb-1 group-hover:text-blue-400 transition-colors">{t("createSeries")}</h4>
-                <p className="text-sm text-text-secondary">{t("createSeriesHint")}</p>
-              </button>
-              <button
-                onClick={() => setIsDialogOpen(true)}
-                className="glass-panel p-6 rounded-xl border border-glass-border hover:border-text-muted transition-all group text-left"
-              >
-                <FileText size={32} className="text-gray-400 mb-3" />
-                <h4 className="text-lg font-display font-bold text-foreground mb-1 group-hover:text-primary transition-colors">{t("createProject")}</h4>
-                <p className="text-sm text-text-secondary">{t("createProjectHint")}</p>
-              </button>
-              <button
-                onClick={() => { window.location.hash = '#/playground'; }}
-                className="glass-panel p-6 rounded-xl border border-purple-500/30 hover:border-purple-500/60 transition-all group text-left"
-              >
-                <Sparkles size={32} className="text-purple-400 mb-3" />
-                <h4 className="text-lg font-display font-bold text-foreground mb-1 group-hover:text-purple-400 transition-colors">Playground</h4>
-                <p className="text-sm text-text-secondary">{"独立生成"}</p>
-              </button>
+      <div className="flex flex-col h-full overflow-hidden">
+        {/* Page header — eyebrow + Fraunces title + actions */}
+        <header className="px-7 pt-6 pb-3 flex items-end gap-5">
+          <div className="flex-1 min-w-0">
+            <div className="font-mono text-[9.5px] uppercase tracking-[0.22em] text-text-muted">
+              WORKSPACE · <span className="text-primary font-semibold atelier-eyebrow-accent">{t("gallery") || "画廊"}</span>
             </div>
+            <h1 className="text-[34px] font-display atelier-display font-semibold text-foreground leading-tight tracking-tight mt-1">
+              {t("title")}
+            </h1>
+          </div>
+          <div className="flex items-center gap-2.5 pb-1">
             <button
               onClick={syncAll}
               disabled={isSyncing}
-              className="mt-6 bg-hover-bg hover:bg-glass text-foreground px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50 text-sm"
+              className="glass-button flex items-center gap-2 text-[13px] font-semibold disabled:opacity-50"
             >
-              <RefreshCw size={16} className={isSyncing ? "animate-spin" : ""} />
-              {t("syncFromBackend")}
+              <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
+              {tc("sync")}
             </button>
-          </motion.div>
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-display font-bold text-foreground">
-                {t("title")} ({totalCount})
-              </h2>
-              <div className="flex gap-3">
-                <button
-                  onClick={syncAll}
-                  disabled={isSyncing}
-                  className="bg-hover-bg hover:bg-glass text-foreground px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors text-sm disabled:opacity-50"
+            <button
+              onClick={() => setIsImportDialogOpen(true)}
+              className="glass-button flex items-center gap-2 text-[13px] font-semibold"
+            >
+              <FileUp size={14} />
+              {t("importFile")}
+            </button>
+            <div className="relative">
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowCreateDropdown((v) => !v); }}
+                className="bg-primary hover:bg-primary/90 text-on-accent px-4 py-2 rounded-[10px] font-semibold flex items-center gap-2 transition-all text-[13px] shadow-[var(--glow-primary)]"
+              >
+                <Plus size={14} />
+                {t("new")}
+                <ChevronDown size={12} />
+              </button>
+              {showCreateDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute right-0 top-full mt-1 w-48 bg-elevated border border-glass-border rounded-xl shadow-xl z-20 overflow-hidden"
                 >
-                  <RefreshCw size={16} className={isSyncing ? "animate-spin" : ""} />
-                  {tc("sync")}
-                </button>
-                <button
-                  onClick={() => setIsImportDialogOpen(true)}
-                  className="bg-hover-bg hover:bg-glass text-foreground px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors text-sm"
-                >
-                  <FileUp size={16} />
-                  {t("importFile")}
-                </button>
-                {/* Unified create dropdown */}
-                <div className="relative">
                   <button
-                    onClick={(e) => { e.stopPropagation(); setShowCreateDropdown((v) => !v); }}
-                    className="bg-primary hover:bg-primary/90 text-foreground px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors text-sm"
+                    onClick={() => { setIsSeriesDialogOpen(true); setShowCreateDropdown(false); }}
+                    className="w-full px-4 py-2.5 text-sm text-left text-foreground hover:bg-hover-bg transition-colors flex items-center gap-2"
                   >
-                    <Plus size={16} />
-                    {t("new")}
-                    <ChevronDown size={14} />
+                    <Library size={16} className="text-primary" />
+                    {t("newSeries")}
                   </button>
-                  {showCreateDropdown && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute right-0 top-full mt-1 w-48 bg-elevated border border-glass-border rounded-lg shadow-xl z-20 overflow-hidden"
+                  <button
+                    onClick={() => { setIsDialogOpen(true); setShowCreateDropdown(false); }}
+                    className="w-full px-4 py-2.5 text-sm text-left text-foreground hover:bg-hover-bg transition-colors flex items-center gap-2"
+                  >
+                    <FileText size={16} className="text-text-muted" />
+                    {t("newProject")}
+                  </button>
+                  <div className="border-t border-glass-border" />
+                  <button
+                    onClick={() => { window.location.hash = '#/playground'; setShowCreateDropdown(false); }}
+                    className="w-full px-4 py-2.5 text-sm text-left text-foreground hover:bg-hover-bg transition-colors flex items-center gap-2"
+                  >
+                    <Sparkles size={16} className="text-accent" />
+                    Playground
+                  </button>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Toolbar — search + pill-tab view toggle */}
+        <div className="px-7 pb-2 flex items-center gap-3">
+          <div className="relative flex-1 max-w-[340px] atelier-search-input">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <input
+              type="search"
+              placeholder={t("searchPlaceholder") || "搜索项目 / 系列…"}
+              className="w-full bg-transparent border-0 rounded-full py-2 pl-9 pr-4 text-[13px] text-foreground placeholder-text-muted focus:outline-none"
+            />
+          </div>
+          <div className="inline-flex p-[3px] rounded-full bg-surface-inset atelier-pill-tabs ml-auto">
+            <button className="inline-flex items-center px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-foreground atelier-pill-tab-active bg-surface shadow-sm">
+              {t("gallery") || "画廊"}
+            </button>
+            <button className="inline-flex items-center px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-text-muted hover:text-foreground transition-colors">
+              {t("list") || "列表"}
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto px-7 pb-10 pt-3">
+          {totalCount === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-16"
+            >
+              <div className="glass-panel atelier-card p-10 rounded-2xl border border-glass-border text-center max-w-[620px] w-full relative overflow-hidden">
+                <div className="relative z-[1] flex flex-col items-center gap-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-text-muted">
+                    RENDER NOISE INTO NARRATIVE
+                  </div>
+                  <p className="text-[34px] font-display atelier-display font-medium italic leading-[1.25] tracking-tight text-foreground">
+                    {t("emptyQuote") || "\u201c每一座城市，都藏着一个还没被讲出来的故事。\u201d"}
+                  </p>
+                  <p className="text-[15px] text-text-secondary max-w-[440px]">
+                    {t("emptyHint")}
+                  </p>
+                  <div className="flex gap-3 mt-2">
+                    <button
+                      onClick={() => setIsSeriesDialogOpen(true)}
+                      className="bg-primary hover:bg-primary/90 text-on-accent px-5 py-2.5 rounded-[10px] font-semibold flex items-center gap-2 transition-all text-[13px] shadow-[var(--glow-primary)]"
                     >
-                      <button
-                        onClick={() => { setIsSeriesDialogOpen(true); setShowCreateDropdown(false); }}
-                        className="w-full px-4 py-2.5 text-sm text-left text-foreground hover:bg-hover-bg transition-colors flex items-center gap-2"
-                      >
-                        <Library size={16} className="text-blue-400" />
-                        {t("newSeries")}
-                      </button>
-                      <button
-                        onClick={() => { setIsDialogOpen(true); setShowCreateDropdown(false); }}
-                        className="w-full px-4 py-2.5 text-sm text-left text-foreground hover:bg-hover-bg transition-colors flex items-center gap-2"
-                      >
-                        <FileText size={16} className="text-gray-400" />
-                        {t("newProject")}
-                      </button>
-                      <div className="border-t border-glass-border" />
-                      <button
-                        onClick={() => { window.location.hash = '#/playground'; setShowCreateDropdown(false); }}
-                        className="w-full px-4 py-2.5 text-sm text-left text-foreground hover:bg-hover-bg transition-colors flex items-center gap-2"
-                      >
-                        <Sparkles size={16} className="text-purple-400" />
-                        Playground
-                      </button>
-                    </motion.div>
-                  )}
+                      <Plus size={14} />
+                      {t("createSeries")}
+                    </button>
+                    <button
+                      onClick={() => setIsDialogOpen(true)}
+                      className="glass-button flex items-center gap-2 text-[13px] font-semibold"
+                    >
+                      <FileText size={14} />
+                      {t("createProject")}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
+              <button
+                onClick={syncAll}
+                disabled={isSyncing}
+                className="mt-5 glass-button flex items-center gap-2 text-[13px] font-semibold disabled:opacity-50"
+              >
+                <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
+                {t("syncFromBackend")}
+              </button>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {mixedList.map((item, i) => (
                 <motion.div
                   key={item.type === 'series' ? `s-${item.data.id}` : `p-${(item.data as Project).id}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                  className={item.type === 'series' ? 'col-span-1 md:col-span-2' : ''}
+                  transition={{ delay: Math.min(i * 0.04, 0.3) }}
+                  className={`atelier-reveal ${item.type === 'series' ? 'col-span-1 md:col-span-2' : ''}`}
+                  style={{ animationDelay: `${Math.min(i * 60, 300)}ms` }}
                 >
                   {item.type === 'series' ? (
                     <SeriesCard
@@ -804,8 +830,8 @@ export default function Home() {
                 </motion.div>
               ))}
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     );
   };

@@ -40,7 +40,7 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ scale: 1.02 }}
-            className="glass-panel p-6 rounded-xl cursor-pointer group relative border-l-2 border-l-glass-border"
+            className="glass-panel atelier-proj-card p-6 rounded-xl cursor-pointer group relative border-l-2 border-l-glass-border"
             onClick={handleOpen}
         >
             <div className="flex items-start justify-between mb-4">
