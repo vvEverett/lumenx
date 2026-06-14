@@ -253,180 +253,22 @@ function CreateSeriesDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () 
   );
 }
 
-// ── Series Card (col-span-2 + episode preview strip) ──
-function SeriesCard({
-  series,
-  onDelete,
-  episodes,
-  episodesLoading,
-  onEpisodesChange,
-}: {
-  series: Series;
-  onDelete: (id: string) => void;
-  episodes: Project[] | undefined;
-  episodesLoading: boolean;
-  onEpisodesChange: (seriesId: string) => void;
-}) {
-  const [inlineTitle, setInlineTitle] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
-  const [showInlineInput, setShowInlineInput] = useState(false);
+// ── New Project Tile (Line B dashed add card) ──
+function NewProjectTile({ onClick }: { onClick: () => void }) {
   const t = useTranslations("workspace");
-  const tc = useTranslations("common");
-  const locale = useSettingsStore((s) => s.locale);
-
-  const handleOpen = () => {
-    window.location.hash = `#/series/${series.id}`;
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (confirm(t("confirmDeleteSeries", { title: series.title }))) {
-      onDelete(series.id);
-    }
-  };
-
-  const handleInlineAddEpisode = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!inlineTitle.trim()) return;
-    setIsAdding(true);
-    try {
-      const nextEpNum = (episodes?.length || 0) + 1;
-      await api.createEpisodeForSeries(series.id, inlineTitle.trim(), nextEpNum);
-      setInlineTitle("");
-      setShowInlineInput(false);
-      onEpisodesChange(series.id);
-    } catch (error) {
-      console.error("Failed to add episode inline:", error);
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
-  const sortedEpisodes = episodes
-    ? [...episodes].sort((a, b) => (a.episode_number || 0) - (b.episode_number || 0))
-    : [];
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.01 }}
-      className="glass-panel atelier-proj-card p-6 rounded-xl cursor-pointer group relative border-l-2 border-l-blue-500"
-      onClick={handleOpen}
+    <button
+      onClick={onClick}
+      className="atelier-new-tile group flex flex-col items-center justify-center gap-3.5 rounded-2xl border-[1.5px] border-dashed border-border bg-transparent cursor-pointer min-h-[240px] text-text-secondary hover:text-foreground hover:border-primary transition-all"
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-medium">
-              {t("series")}
-            </span>
-            <h3 className="text-lg font-display font-bold text-foreground">
-              {series.title}
-            </h3>
-          </div>
-          {series.description && (
-            <p className="text-sm text-text-secondary mb-2 line-clamp-1">{series.description}</p>
-          )}
-          <div className="flex items-center gap-3 text-xs text-text-secondary">
-            <span>{t("episodeLabel")} <span className="text-foreground font-medium">{series.episode_ids?.length || 0}</span></span>
-            <span className="text-text-muted">·</span>
-            <span>{t("characterLabel")} <span className="text-foreground font-medium">{series.characters?.length || 0}</span></span>
-            <span className="text-text-muted">·</span>
-            <span>{t("sceneLabel")} <span className="text-foreground font-medium">{series.scenes?.length || 0}</span></span>
-          </div>
-        </div>
-
-        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={handleDelete}
-            className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Episode preview strip */}
-      <div className="mt-4 -mx-1">
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin" onClick={(e) => e.stopPropagation()}>
-          {episodesLoading ? (
-            <>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex-shrink-0 w-28 h-16 rounded-lg bg-glass animate-pulse" />
-              ))}
-            </>
-          ) : (
-            <>
-              {sortedEpisodes.map((ep) => (
-                <button
-                  key={ep.id}
-                  onClick={() => { window.location.hash = `#/series/${series.id}/episode/${ep.id}`; }}
-                  className="flex-shrink-0 w-28 p-2 rounded-lg bg-glass hover:bg-hover-bg border border-glass-border hover:border-glass-border transition-colors text-left"
-                >
-                  <span className="text-[10px] text-primary font-mono font-bold block">EP{ep.episode_number || "?"}</span>
-                  <span className="text-xs text-foreground truncate block mt-0.5">{ep.title}</span>
-                  <span className="text-[10px] text-text-muted block mt-0.5">{t("frames", { count: ep.frames?.length || 0 })}</span>
-                </button>
-              ))}
-
-              {/* Inline add episode */}
-              {showInlineInput ? (
-                <div className="flex-shrink-0 w-36 p-2 rounded-lg bg-glass border border-primary/30 flex flex-col gap-1">
-                  <input
-                    type="text"
-                    value={inlineTitle}
-                    onChange={(e) => setInlineTitle(e.target.value)}
-                    placeholder={t("episodeTitlePlaceholder")}
-                    className="w-full bg-transparent border-none text-xs text-foreground placeholder-text-muted focus:outline-none"
-                    autoFocus
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleInlineAddEpisode(e as unknown as React.MouseEvent);
-                      if (e.key === "Escape") { setShowInlineInput(false); setInlineTitle(""); }
-                    }}
-                  />
-                  <div className="flex gap-1">
-                    <button
-                      onClick={handleInlineAddEpisode}
-                      disabled={!inlineTitle.trim() || isAdding}
-                      className="flex-1 text-[10px] text-primary hover:text-white transition-colors disabled:opacity-50"
-                    >
-                      {isAdding ? "..." : tc("confirm")}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowInlineInput(false); setInlineTitle(""); }}
-                      className="text-[10px] text-text-muted hover:text-foreground transition-colors"
-                    >
-                      {tc("cancel")}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowInlineInput(true); }}
-                  className="flex-shrink-0 w-28 p-2 rounded-lg border border-dashed border-glass-border hover:border-text-muted bg-surface-inset hover:bg-glass transition-colors flex flex-col items-center justify-center gap-1"
-                >
-                  <Plus size={14} className="text-text-muted" />
-                  <span className="text-[10px] text-text-muted">{t("addEpisode")}</span>
-                </button>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-glass-border">
-        <div className="flex items-center gap-2 text-xs text-text-secondary">
-          <Calendar size={12} />
-          <span>{new Date(series.created_at * 1000).toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en-US')}</span>
-        </div>
-        <div className="flex items-center gap-1 text-primary text-xs font-medium">
-          <Play size={14} />
-          <span>{t("openSeries")}</span>
-        </div>
-      </div>
-    </motion.div>
+      <span className="w-[54px] h-[54px] rounded-full grid place-items-center bg-surface shadow-sm group-hover:text-primary transition-all">
+        <Plus size={24} />
+      </span>
+      <span className="text-[15px] font-semibold">{t("newProject")}</span>
+      <span className="font-mono text-[9.5px] uppercase tracking-wider text-text-muted">
+        {t("fromScript") || "从脚本开始"}
+      </span>
+    </button>
   );
 }
 
@@ -642,14 +484,7 @@ export default function Home() {
   // Filter standalone projects (not belonging to any series)
   const standaloneProjects = projects.filter((p) => !p.series_id);
 
-  // Build mixed list: series + standalone projects, sorted by creation time descending
-  type ListItem = { type: 'series'; data: Series; sortTime: number } | { type: 'project'; data: Project; sortTime: number };
-  const mixedList: ListItem[] = [
-    ...seriesList.map((s) => ({ type: 'series' as const, data: s, sortTime: s.created_at * 1000 })),
-    ...standaloneProjects.map((p) => ({ type: 'project' as const, data: p, sortTime: new Date(p.createdAt).getTime() })),
-  ].sort((a, b) => b.sortTime - a.sortTime);
-
-  const totalCount = mixedList.length;
+  const totalCount = seriesList.length + standaloneProjects.length;
 
   const handleTabChange = (tab: GlobalTab) => {
     setActiveTab(tab);
@@ -806,29 +641,68 @@ export default function Home() {
               </button>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {mixedList.map((item, i) => (
-                <motion.div
-                  key={item.type === 'series' ? `s-${item.data.id}` : `p-${(item.data as Project).id}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(i * 0.04, 0.3) }}
-                  className={`atelier-reveal ${item.type === 'series' ? 'col-span-1 md:col-span-2' : ''}`}
-                  style={{ animationDelay: `${Math.min(i * 60, 300)}ms` }}
-                >
-                  {item.type === 'series' ? (
-                    <SeriesCard
-                      series={item.data as Series}
-                      onDelete={deleteSeries}
-                      episodes={seriesEpisodes[(item.data as Series).id]}
-                      episodesLoading={episodesLoading}
-                      onEpisodesChange={refreshSeriesEpisodes}
-                    />
-                  ) : (
-                    <ProjectCard project={item.data as Project} onDelete={deleteProject} />
-                  )}
-                </motion.div>
-              ))}
+            <div className="flex flex-col gap-2">
+              {/* Per-series groups — Line B editorial gallery */}
+              {seriesList.map((s) => {
+                const eps = [...(seriesEpisodes[s.id] || [])].sort(
+                  (a, b) => (a.episode_number || 0) - (b.episode_number || 0)
+                );
+                return (
+                  <section key={`grp-${s.id}`} aria-label={s.title}>
+                    <div className="flex items-baseline gap-3 mt-4 mb-4 mx-0.5">
+                      <button
+                        onClick={() => { window.location.hash = `#/series/${s.id}`; }}
+                        className="font-display atelier-display text-[22px] font-semibold tracking-tight text-foreground hover:text-primary transition-colors"
+                      >
+                        {s.title}
+                      </button>
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">
+                        {t("series")} · {t("frames", { count: eps.length })}
+                      </span>
+                      <span className="atelier-group-line h-px flex-1 bg-glass-border" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                      {eps.map((ep, i) => (
+                        <div
+                          key={`ep-${ep.id}`}
+                          className="atelier-reveal"
+                          style={{ animationDelay: `${Math.min(i * 60, 300)}ms` }}
+                        >
+                          <ProjectCard project={ep} onDelete={deleteProject} />
+                        </div>
+                      ))}
+                      <NewProjectTile onClick={() => { window.location.hash = `#/series/${s.id}`; }} />
+                    </div>
+                  </section>
+                );
+              })}
+
+              {/* Standalone projects group */}
+              {standaloneProjects.length > 0 && (
+                <section aria-label={t("standaloneGroup") || "独立项目"}>
+                  <div className="flex items-baseline gap-3 mt-6 mb-4 mx-0.5">
+                    <span className="font-display atelier-display text-[22px] font-semibold tracking-tight text-foreground">
+                      {t("standaloneGroup") || "独立项目"}
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">
+                      {t("frames", { count: standaloneProjects.length })}
+                    </span>
+                    <span className="atelier-group-line h-px flex-1 bg-glass-border" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    {standaloneProjects.map((p, i) => (
+                      <div
+                        key={`p-${p.id}`}
+                        className="atelier-reveal"
+                        style={{ animationDelay: `${Math.min(i * 60, 300)}ms` }}
+                      >
+                        <ProjectCard project={p} onDelete={deleteProject} />
+                      </div>
+                    ))}
+                    <NewProjectTile onClick={() => setIsDialogOpen(true)} />
+                  </div>
+                </section>
+              )}
             </div>
           )}
         </div>

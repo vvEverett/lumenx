@@ -397,6 +397,8 @@
     "gallery": "画廊",
     "list": "列表",
     "searchPlaceholder": "搜索项目 / 系列…",
+    "fromScript": "从脚本开始",
+    "standaloneGroup": "独立项目",
     "emptyQuote": "\u201c每一座城市，都藏着一个还没被讲出来的故事。\u201d"
   },
   "settings": {
@@ -465,6 +467,12 @@
     "frameLabel": "分镜",
     "openProject": "打开项目",
     "pending": "待开始",
+    "statusDraft": "草稿",
+    "statusProcessing": "生成中",
+    "statusCompleted": "已完成",
+    "shotCount": "{count} 镜",
+    "featured": "精选",
+    "moreActions": "更多操作",
     "notFound": "项目未找到",
     "backToList": "返回项目列表",
     "apiKeyConfig": "API Key & OSS 配置",

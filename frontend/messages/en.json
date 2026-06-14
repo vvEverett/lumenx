@@ -397,6 +397,8 @@
     "gallery": "Gallery",
     "list": "List",
     "searchPlaceholder": "Search projects / series\u2026",
+    "fromScript": "Start from a script",
+    "standaloneGroup": "Standalone Projects",
     "emptyQuote": "\u201cEvery city hides a story yet to be told.\u201d"
   },
   "settings": {
@@ -465,6 +467,12 @@
     "frameLabel": "Frames",
     "openProject": "Open Project",
     "pending": "Pending",
+    "statusDraft": "Draft",
+    "statusProcessing": "Processing",
+    "statusCompleted": "Completed",
+    "shotCount": "{count} shots",
+    "featured": "Featured",
+    "moreActions": "More actions",
     "notFound": "Project not found",
     "backToList": "Back to project list",
     "apiKeyConfig": "API Key & OSS Configuration",

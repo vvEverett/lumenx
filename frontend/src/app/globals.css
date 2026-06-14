@@ -825,3 +825,19 @@ html.atelier-dark .atelier-reveal,
 html.atelier-light .atelier-reveal {
   animation: atelierReveal 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }
+
+/* .atelier-new-tile — dashed "add project" tile with spring lift + teal hover. */
+html.atelier-dark .atelier-new-tile,
+html.atelier-light .atelier-new-tile {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+html.atelier-dark .atelier-new-tile:hover,
+html.atelier-light .atelier-new-tile:hover {
+  transform: translateY(-3px);
+  background: rgba(52, 216, 196, 0.04);
+}
+html.atelier-dark .atelier-new-tile:hover > span:first-child,
+html.atelier-light .atelier-new-tile:hover > span:first-child {
+  box-shadow: var(--glow-primary);
+}
