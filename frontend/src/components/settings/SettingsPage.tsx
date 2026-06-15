@@ -17,7 +17,7 @@ import { useSettingsStore, type Locale, type ThemePreset } from "@/store/setting
 import { Image, Video, Layout, User, Building, Box } from "lucide-react";
 import GroupedModelGrid from "@/components/common/GroupedModelGrid";
 import LumenXBranding from "@/components/layout/LumenXBranding";
-import SettingsSidebar, { type SettingsCategory } from "./SettingsSidebar";
+import { type SettingsCategory } from "./SettingsSidebar";
 import {
   SectionCard,
   FormRow,
@@ -933,6 +933,16 @@ export default function SettingsPage() {
     about: "关于",
   };
 
+  // 横向 Tab 短标签（取代竖向 SettingsSidebar；与全局品牌侧栏轴向正交，不再撞脸）。
+  const TABS: { id: SettingsCategory; label: string }[] = [
+    { id: "general", label: "通用" },
+    { id: "models", label: "模型" },
+    { id: "prompts", label: "默认 Prompt" },
+    { id: "apikeys", label: "API 密钥" },
+    { id: "storage", label: "存储" },
+    { id: "about", label: "关于" },
+  ];
+
   const footerThemeLine =
     theme === "atelier-dark" || theme === "atelier-light"
       ? "LINE B · LUMINOUS ATELIER"
@@ -941,49 +951,62 @@ export default function SettingsPage() {
       : "LINE A · CYBER REFINED";
 
   return (
-    <div className="relative h-full flex">
+    <div className="relative h-full flex flex-col">
       {/* Atelier signature layers — inert on non-atelier themes. */}
       <div className="atelier-page-bloom" aria-hidden="true" />
       <div className="atelier-page-grain" aria-hidden="true" />
 
-      <SettingsSidebar
-        active={active}
-        onSelect={setActive}
-        footer={`LUMENX STUDIO · ${APP_VERSION}\n${footerThemeLine}`}
-      />
-
-      <div className="flex-1 flex flex-col min-w-0 relative z-10">
-        {/* Main head: current category title only — no redundant "SETTINGS ·" breadcrumb */}
-        <header className="flex-shrink-0 border-b border-glass-border px-10 pt-6 pb-5 bg-surface">
-          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">
-            偏好设置 · <span className="text-primary">PREFERENCES</span>
-          </div>
-          <h1 className="font-display atelier-display text-[32px] leading-none font-semibold text-foreground mt-2 tracking-tight">
-            {CATEGORY_TITLE[active]}
-          </h1>
-        </header>
-
-        {/* Scroll area */}
-        <div className="flex-1 overflow-y-auto px-10 py-8">
-          <div className="max-w-4xl mx-auto flex flex-col gap-6">
-            {!online && (
-              <div
-                role="status"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-status-processing-bg border border-status-processing-border"
+      {/* Head: eyebrow(当前分类) + 「设置」标题 + 横向 Tab —— 取代竖向子栏 */}
+      <header className="flex-shrink-0 border-b border-glass-border px-10 pt-6 pb-4 bg-surface relative z-10">
+        <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">
+          SETTINGS · <span className="text-primary">{CATEGORY_TITLE[active]}</span>
+        </div>
+        <h1 className="font-display atelier-display text-[32px] leading-none font-semibold text-foreground mt-2 tracking-tight">
+          设置
+        </h1>
+        <nav className="flex flex-wrap gap-1 mt-5" role="tablist" aria-label="设置分类">
+          {TABS.map((tab) => {
+            const isActive = active === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActive(tab.id)}
+                className={`px-3.5 py-1.5 rounded-full text-[13px] transition-colors ${
+                  isActive
+                    ? "bg-primary/10 text-foreground font-semibold"
+                    : "text-text-muted hover:text-foreground hover:bg-hover-bg font-medium"
+                }`}
               >
-                <WifiOff size={18} className="text-status-processing-fg flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="text-[12.5px] font-semibold text-foreground">当前处于离线模式</div>
-                  <div className="text-[11px] text-text-secondary mt-0.5">
-                    未检测到网络连接。已缓存的资产仍可浏览，生成与导出将在恢复网络后执行。
-                  </div>
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+      </header>
+
+      {/* Scroll area */}
+      <div className="flex-1 overflow-y-auto px-10 py-8 relative z-10">
+        <div className="max-w-4xl mx-auto flex flex-col gap-6">
+          {!online && (
+            <div
+              role="status"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-status-processing-bg border border-status-processing-border"
+            >
+              <WifiOff size={18} className="text-status-processing-fg flex-shrink-0" />
+              <div className="flex-1">
+                <div className="text-[12.5px] font-semibold text-foreground">当前处于离线模式</div>
+                <div className="text-[11px] text-text-secondary mt-0.5">
+                  未检测到网络连接。已缓存的资产仍可浏览，生成与导出将在恢复网络后执行。
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {renderActive()}
-            <div className="pb-8" />
-          </div>
+          {renderActive()}
+          <div className="pb-8" />
         </div>
       </div>
     </div>
