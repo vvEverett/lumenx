@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Users, MapPin, Package, Check, Loader2, ArrowRight, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { Series, Character, Scene, Prop } from '@/store/projectStore';
+import { characterImageUrl } from '@/lib/characterImage';
 import { useTranslations } from "next-intl";
 
 interface ImportAssetsDialogProps {
@@ -26,12 +27,7 @@ interface SelectableAsset {
 
 function getAssetImageUrl(asset: Character | Scene | Prop, type: AssetTab): string | undefined {
     if (type === "characters") {
-        const char = asset as Character;
-        if (char.full_body_asset?.variants?.length) {
-            const selected = char.full_body_asset.variants.find(v => v.id === char.full_body_asset?.selected_id);
-            return selected?.url || char.full_body_asset.variants[0]?.url;
-        }
-        return char.image_url || char.full_body_image_url;
+        return characterImageUrl(asset as Character);
     }
     if (type === "scenes") {
         const scene = asset as Scene;

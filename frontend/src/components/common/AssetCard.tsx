@@ -3,6 +3,7 @@
 import { Image as ImageIcon, Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Character, Scene, Prop } from "@/store/projectStore";
+import { characterImageUrl } from "@/lib/characterImage";
 
 type AssetTab = "characters" | "scenes" | "props";
 
@@ -13,14 +14,7 @@ interface AssetCardProps {
 
 function getImageUrl(asset: Character | Scene | Prop, type: AssetTab): string | undefined {
   if (type === "characters") {
-    const char = asset as Character;
-    if (char.full_body_asset?.variants?.length) {
-      const selected = char.full_body_asset.variants.find(
-        (v) => v.id === char.full_body_asset?.selected_id
-      );
-      return selected?.url || char.full_body_asset.variants[0]?.url;
-    }
-    return char.image_url || char.full_body_image_url;
+    return characterImageUrl(asset as Character);
   }
   if (type === "scenes") {
     const scene = asset as Scene;
