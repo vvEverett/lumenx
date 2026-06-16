@@ -21,9 +21,16 @@ interface AssetInspectorProps {
   onToggleStar: () => void;
 }
 
-/** Character 用 full_body_asset（与共享 AssetCard 取图一致），scene/prop 用 image_asset。 */
+/** Character 优先 reference_sheet（新 schema，归一化成 ImageAsset 形状）→ full_body_asset（legacy）；scene/prop 用 image_asset。 */
 function primaryImageAsset(asset: Character | Scene | Prop, type: AssetTab): ImageAsset | undefined {
-  if (type === "characters") return (asset as Character).full_body_asset;
+  if (type === "characters") {
+    const c = asset as Character;
+    const rs = c.reference_sheet;
+    if (rs?.image_variants?.length) {
+      return { selected_id: rs.selected_image_id, variants: rs.image_variants };
+    }
+    return c.full_body_asset;
+  }
   return (asset as Scene | Prop).image_asset;
 }
 

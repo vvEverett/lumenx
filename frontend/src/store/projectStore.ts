@@ -27,6 +27,14 @@ export interface ImageAsset {
     variants: ImageVariant[];
 }
 
+/** Character reference sheet container (new schema). Mirrors backend
+ *  AssetUnit: variants live under `image_variants` / selection under
+ *  `selected_image_id` (note: different field names from ImageAsset). */
+export interface AssetUnit {
+    selected_image_id: string | null;
+    image_variants: ImageVariant[];
+}
+
 export interface VideoTask {
     id: string;
     project_id: string;
@@ -60,6 +68,9 @@ export interface Character {
     headshot_image_url?: string;
 
     // New Asset Containers
+    // reference_sheet is the canonical character asset (new schema);
+    // full_body_asset is legacy, kept only as a read fallback.
+    reference_sheet?: AssetUnit;
     full_body_asset?: ImageAsset;
     three_view_asset?: ImageAsset;
     headshot_asset?: ImageAsset;
