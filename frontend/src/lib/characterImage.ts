@@ -26,19 +26,22 @@ export function selectedVariantUrl(asset?: ImageAsset | AssetUnit | null): strin
   return selected?.url || variants[0]?.url;
 }
 
+/** Resolve a character's primary image container to a normalized ImageAsset
+ *  ({ variants, selected_id }), preferring reference_sheet over legacy full_body. */
+export function characterImageAsset(c: Character): ImageAsset | undefined {
+  const rs = c.reference_sheet;
+  if (rs?.image_variants?.length) {
+    return { selected_id: rs.selected_image_id, variants: rs.image_variants };
+  }
+  return c.full_body_asset;
+}
+
 /** A character's variant list (reference_sheet → full_body), for counts / variant strips. */
 export function characterVariants(c: Character): ImageVariant[] {
-  return c.reference_sheet?.image_variants?.length
-    ? c.reference_sheet.image_variants
-    : c.full_body_asset?.variants ?? [];
+  return characterImageAsset(c)?.variants ?? [];
 }
 
 /** A character's best display image: reference_sheet → full_body → legacy top-level urls. */
 export function characterImageUrl(c: Character): string | undefined {
-  return (
-    selectedVariantUrl(c.reference_sheet) ||
-    selectedVariantUrl(c.full_body_asset) ||
-    c.image_url ||
-    c.full_body_image_url
-  );
+  return selectedVariantUrl(characterImageAsset(c)) || c.image_url || c.full_body_image_url;
 }

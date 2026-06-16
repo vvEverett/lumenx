@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Star, Download } from "lucide-react";
 import type { Character, Scene, Prop, ImageAsset } from "@/store/projectStore";
+import { characterImageAsset } from "@/lib/characterImage";
 
 type AssetTab = "characters" | "scenes" | "props";
 
@@ -21,16 +22,9 @@ interface AssetInspectorProps {
   onToggleStar: () => void;
 }
 
-/** Character 优先 reference_sheet（新 schema，归一化成 ImageAsset 形状）→ full_body_asset（legacy）；scene/prop 用 image_asset。 */
+/** Character 走 characterImageAsset（reference_sheet→full_body，归一化成 ImageAsset 形状）；scene/prop 用 image_asset。 */
 function primaryImageAsset(asset: Character | Scene | Prop, type: AssetTab): ImageAsset | undefined {
-  if (type === "characters") {
-    const c = asset as Character;
-    const rs = c.reference_sheet;
-    if (rs?.image_variants?.length) {
-      return { selected_id: rs.selected_image_id, variants: rs.image_variants };
-    }
-    return c.full_body_asset;
-  }
+  if (type === "characters") return characterImageAsset(asset as Character);
   return (asset as Scene | Prop).image_asset;
 }
 

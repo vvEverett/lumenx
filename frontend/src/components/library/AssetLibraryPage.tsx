@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Search, Image as ImageIcon, Star, ArrowDownUp } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Series, Project, Character, Scene, Prop } from "@/store/projectStore";
+import { characterImageUrl, characterVariants } from "@/lib/characterImage";
 import AssetInspector from "./AssetInspector";
 
 type AssetTab = "characters" | "scenes" | "props";
@@ -23,21 +24,9 @@ interface AssetSource {
   props: Prop[];
 }
 
-/** 取图：character 优先 reference_sheet（新 schema）→ full_body_asset（legacy）→ 顶层 url；scene/prop 用 image_asset。 */
+/** 取图：character 走 characterImageUrl（reference_sheet→full_body→legacy）；scene/prop 用 image_asset。 */
 function getImageUrl(asset: Character | Scene | Prop, type: AssetTab): string | undefined {
-  if (type === "characters") {
-    const c = asset as Character;
-    const rs = c.reference_sheet;
-    if (rs?.image_variants?.length) {
-      const sel = rs.image_variants.find((v) => v.id === rs.selected_image_id);
-      return sel?.url || rs.image_variants[0]?.url;
-    }
-    if (c.full_body_asset?.variants?.length) {
-      const sel = c.full_body_asset.variants.find((v) => v.id === c.full_body_asset?.selected_id);
-      return sel?.url || c.full_body_asset.variants[0]?.url;
-    }
-    return c.image_url || c.full_body_image_url;
-  }
+  if (type === "characters") return characterImageUrl(asset as Character);
   const a = asset as Scene | Prop;
   if (a.image_asset?.variants?.length) {
     const sel = a.image_asset.variants.find((v) => v.id === a.image_asset?.selected_id);
@@ -47,11 +36,7 @@ function getImageUrl(asset: Character | Scene | Prop, type: AssetTab): string | 
 }
 
 function variantCount(asset: Character | Scene | Prop, type: AssetTab): number {
-  if (type === "characters") {
-    const c = asset as Character;
-    const rsLen = c.reference_sheet?.image_variants?.length ?? 0;
-    return rsLen || (c.full_body_asset?.variants?.length ?? 0);
-  }
+  if (type === "characters") return characterVariants(asset as Character).length;
   return (asset as Scene | Prop).image_asset?.variants?.length ?? 0;
 }
 
