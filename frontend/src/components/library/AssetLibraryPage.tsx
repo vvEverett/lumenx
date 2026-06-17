@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import type { Series, Project, Character, Scene, Prop } from "@/store/projectStore";
 import { toast } from "@/store/toastStore";
 import { characterImageUrl, characterVariants } from "@/lib/characterImage";
+import { rovingKeyDown } from "@/lib/a11y";
 import AssetInspector from "./AssetInspector";
 
 type AssetTab = "characters" | "scenes" | "props";
@@ -214,7 +215,7 @@ export default function AssetLibraryPage() {
 
       {/* Toolbar: 类型 pills（带计数）+ ★ + 搜索 + 排序 */}
       <div className="px-4 md:px-7 pb-2 flex flex-wrap items-center gap-3">
-        <div className="inline-flex p-[3px] rounded-full bg-surface-inset atelier-pill-tabs" role="tablist" aria-label="资产类型">
+        <div className="inline-flex p-[3px] rounded-full bg-surface-inset atelier-pill-tabs" role="tablist" aria-label="资产类型" onKeyDown={rovingKeyDown}>
           {typePills.map((pill) => {
             const on = activeType === pill.id;
             return (
@@ -222,6 +223,7 @@ export default function AssetLibraryPage() {
                 key={pill.id}
                 role="tab"
                 aria-selected={on}
+                tabIndex={on ? 0 : -1}
                 onClick={() => setActiveType(pill.id)}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold transition-colors ${
                   on ? "text-foreground atelier-pill-tab-active bg-surface shadow-sm" : "text-text-muted hover:text-foreground"

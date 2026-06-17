@@ -15,6 +15,7 @@ import {
 } from "@/lib/modelCatalog";
 import { useSettingsStore, type Locale, type ThemePreset } from "@/store/settingsStore";
 import { toast } from "@/store/toastStore";
+import { rovingKeyDown } from "@/lib/a11y";
 import { Image, Video, Layout, User, Building, Box } from "lucide-react";
 import GroupedModelGrid from "@/components/common/GroupedModelGrid";
 import LumenXBranding from "@/components/layout/LumenXBranding";
@@ -364,11 +365,14 @@ export default function SettingsPage() {
       </FormRow>
 
       <FormRow label={t("theme")} hint={t("themeDesc")}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="radiogroup" aria-label={t("theme")} onKeyDown={rovingKeyDown}>
           {THEME_OPTIONS.map((preset) => (
             <button
               key={preset.id}
               type="button"
+              role="radio"
+              aria-checked={theme === preset.id}
+              tabIndex={theme === preset.id ? 0 : -1}
               onClick={() => setTheme(preset.id)}
               className={`group relative flex flex-col gap-2 p-3 rounded-xl border text-left transition-all ${
                 theme === preset.id
@@ -991,7 +995,7 @@ export default function SettingsPage() {
         <h1 className="font-display atelier-display text-[24px] md:text-[32px] leading-none font-semibold text-foreground mt-2 tracking-tight">
           设置
         </h1>
-        <nav className="flex flex-wrap gap-1 mt-5" role="tablist" aria-label="设置分类">
+        <nav className="flex flex-wrap gap-1 mt-5" role="tablist" aria-label="设置分类" onKeyDown={rovingKeyDown}>
           {TABS.map((tab) => {
             const isActive = active === tab.id;
             return (
@@ -1000,6 +1004,7 @@ export default function SettingsPage() {
                 type="button"
                 role="tab"
                 aria-selected={isActive}
+                tabIndex={isActive ? 0 : -1}
                 onClick={() => setActive(tab.id)}
                 className={`px-3.5 py-1.5 rounded-full text-[13px] transition-colors ${
                   isActive
