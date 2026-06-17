@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Video, AlertCircle } from 'lucide-react';
-import { API_URL } from '@/lib/api';
 import type { PlaygroundGeneration } from './usePlaygroundStore';
+import { getPlaygroundMediaUrl } from './mediaUrls';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -18,10 +18,6 @@ interface GalleryViewProps {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function getMediaUrl(path: string): string {
-  return API_URL + '/files/' + path.replace(/^output\//, '');
-}
 
 function formatTime(dateStr: string): string {
   const date = new Date(dateStr);
@@ -42,7 +38,9 @@ export default function GalleryView({
   onRetry,
 }: GalleryViewProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedOutputIndex, setSelectedOutputIndex] = useState(0);
   const thumbnailStripRef = useRef<HTMLDivElement>(null);
+  const selectedGenerationId = generations[selectedIndex]?.id;
 
   // Clamp selectedIndex when generations change
   useEffect(() => {
@@ -50,6 +48,10 @@ export default function GalleryView({
       setSelectedIndex(Math.max(0, generations.length - 1));
     }
   }, [generations.length, selectedIndex]);
+
+  useEffect(() => {
+    setSelectedOutputIndex(0);
+  }, [selectedGenerationId]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -97,10 +99,14 @@ export default function GalleryView({
   const current = generations[selectedIndex];
   if (!current) return null;
 
-  const output = current.outputs[0];
+  const safeOutputIndex = Math.min(
+    selectedOutputIndex,
+    Math.max(current.outputs.length - 1, 0),
+  );
+  const output = current.outputs[safeOutputIndex];
   const isVideo =
     output?.media_type === 'video' || VIDEO_MODES.has(current.mode);
-  const mediaUrl = output?.media_path ? getMediaUrl(output.media_path) : null;
+  const mediaUrl = getPlaygroundMediaUrl(output?.media_path);
 
   return (
     <div className="flex flex-col h-full">
@@ -153,6 +159,43 @@ export default function GalleryView({
         )}
       </div>
 
+      {current.status === 'completed' && current.outputs.length > 1 && (
+        <div className="shrink-0 border-t border-white/[0.04] bg-[#08080b] px-6 py-3">
+          <div className="flex gap-2 overflow-x-auto">
+            {current.outputs.map((item, index) => {
+              const itemUrl = getPlaygroundMediaUrl(item.media_path);
+              const itemIsVideo = item.media_type === 'video';
+              const isSelected = index === safeOutputIndex;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setSelectedOutputIndex(index)}
+                  className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border transition-colors ${
+                    isSelected
+                      ? 'border-[#646cff]'
+                      : 'border-white/[0.08] hover:border-white/25'
+                  }`}
+                  title={`Output ${index + 1}`}
+                >
+                  {itemUrl && !itemIsVideo ? (
+                    <img src={itemUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a]">
+                      <Video className="h-4 w-4 text-white/30" />
+                    </div>
+                  )}
+                  <span className="absolute bottom-0.5 left-0.5 rounded bg-black/65 px-1 font-mono text-[9px] text-white/70">
+                    {index + 1}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Info bar */}
       <div className="px-6 py-3 bg-[#0a0a0d] space-y-1.5">
         <p className="text-xs text-white/50 line-clamp-2 leading-relaxed cursor-pointer hover:text-white/70 transition-colors" onClick={handleClick} title="点击查看详情">
@@ -188,11 +231,10 @@ export default function GalleryView({
             const genOutput = gen.outputs[0];
             const genIsVideo =
               genOutput?.media_type === 'video' || VIDEO_MODES.has(gen.mode);
-            const genMediaUrl = genOutput?.media_path
-              ? getMediaUrl(genOutput.media_path)
-              : null;
+            const genMediaUrl = getPlaygroundMediaUrl(genOutput?.media_path);
             const isSelected = idx === selectedIndex;
             const isFailed = gen.status === 'failed';
+            const isBatch = gen.outputs.length > 1;
 
             return (
               <button
@@ -211,6 +253,22 @@ export default function GalleryView({
                 ) : genIsVideo ? (
                   <div className="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] flex items-center justify-center">
                     <Video className="w-4 h-4 text-white/30" />
+                  </div>
+                ) : isBatch ? (
+                  <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-px bg-black/50">
+                    {gen.outputs.slice(0, 4).map((item) => {
+                      const itemUrl = getPlaygroundMediaUrl(item.media_path);
+                      return itemUrl ? (
+                        <img
+                          key={item.id}
+                          src={itemUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div key={item.id} className="h-full w-full bg-white/[0.04]" />
+                      );
+                    })}
                   </div>
                 ) : genMediaUrl ? (
                   <img

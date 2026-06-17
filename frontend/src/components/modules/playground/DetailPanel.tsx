@@ -13,8 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { API_URL, playgroundApi } from '@/lib/api';
+import { playgroundApi } from '@/lib/api';
 import { usePlaygroundStore, type PlaygroundGeneration } from './usePlaygroundStore';
+import { getPlaygroundMediaUrl } from './mediaUrls';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -42,11 +43,6 @@ const MODE_LABELS: Record<string, string> = {
   i2i: 'I2I',
 };
 
-function getMediaUrl(path: string): string {
-  const relativePath = path.replace(/^output\//, '');
-  return `${API_URL}/files/${relativePath}`;
-}
-
 function formatTimestamp(dateStr: string): string {
   const date = new Date(dateStr);
   const yyyy = date.getFullYear();
@@ -73,19 +69,24 @@ export default function DetailPanel({
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [selectedOutputIndex, setSelectedOutputIndex] = useState(0);
   const updateGeneration = usePlaygroundStore((s) => s.updateGeneration);
   const history = usePlaygroundStore((s) => s.history);
 
   // Always read the latest generation from store (so saved_to_library stays in sync)
   const generation = history.find((g) => g.id === generationProp.id) ?? generationProp;
-  const saved = generation.outputs[0]?.saved_to_library ?? false;
 
   // Determine media
-  const output = generation.outputs[0];
+  const safeOutputIndex = Math.min(
+    selectedOutputIndex,
+    Math.max(generation.outputs.length - 1, 0),
+  );
+  const output = generation.outputs[safeOutputIndex];
+  const saved = output?.saved_to_library ?? false;
   const isVideo =
     output?.media_type === 'video' ||
     ['t2v', 'i2v', 'r2v', 'v2v'].includes(generation.mode);
-  const mediaUrl = output?.media_path ? getMediaUrl(output.media_path) : null;
+  const mediaUrl = getPlaygroundMediaUrl(output?.media_path);
 
   // Navigation
   const currentIndex = allGenerations.findIndex((g) => g.id === generation.id);
@@ -118,6 +119,10 @@ export default function DetailPanel({
       document.body.style.overflow = '';
     };
   }, []);
+
+  useEffect(() => {
+    setSelectedOutputIndex(0);
+  }, [generationProp.id]);
 
   // Actions
   const handleCopyPrompt = () => {
@@ -224,6 +229,44 @@ export default function DetailPanel({
             <div className="flex flex-col items-center gap-2 text-white/20">
               <Video className="w-12 h-12" />
               <span className="font-mono text-xs">No media</span>
+            </div>
+          )}
+
+          {generation.outputs.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 flex max-w-[calc(100%-2rem)] -translate-x-1/2 gap-2 overflow-x-auto rounded-xl border border-white/[0.08] bg-black/55 p-2 backdrop-blur-md">
+              {generation.outputs.map((item, index) => {
+                const itemUrl = getPlaygroundMediaUrl(item.media_path);
+                const itemIsVideo = item.media_type === 'video';
+                const isSelected = index === safeOutputIndex;
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedOutputIndex(index);
+                    }}
+                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border transition-colors ${
+                      isSelected
+                        ? 'border-[#646cff]'
+                        : 'border-white/[0.08] hover:border-white/25'
+                    }`}
+                    title={`Output ${index + 1}`}
+                  >
+                    {itemUrl && !itemIsVideo ? (
+                      <img src={itemUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-white/[0.04]">
+                        <Video className="h-4 w-4 text-white/35" />
+                      </div>
+                    )}
+                    <span className="absolute bottom-0.5 left-0.5 rounded bg-black/65 px-1 font-mono text-[9px] text-white/70">
+                      {index + 1}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
 

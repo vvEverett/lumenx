@@ -2,8 +2,9 @@
 
 import { useState, useCallback } from 'react';
 import { Download, Video, Star, Copy, Check } from 'lucide-react';
-import { API_URL, playgroundApi } from '@/lib/api';
+import { playgroundApi } from '@/lib/api';
 import { usePlaygroundStore, type PlaygroundGeneration } from './usePlaygroundStore';
+import { getPlaygroundMediaUrl } from './mediaUrls';
 
 interface ResultCardProps {
   generation: PlaygroundGeneration;
@@ -21,11 +22,6 @@ const MODE_LABELS: Record<string, string> = {
   t2i: 'T2I',
   i2i: 'I2I',
 };
-
-function getMediaUrl(path: string): string {
-  const relativePath = path.replace(/^output\//, '');
-  return `${API_URL}/files/${relativePath}`;
-}
 
 function formatTime(dateStr: string): string {
   const date = new Date(dateStr);
@@ -122,12 +118,13 @@ function FailedCard({ generation, onRetry, onDelete }: { generation: PlaygroundG
 
 function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generation: PlaygroundGeneration; onGenerateVideo?: (path: string) => void; onOpenDetail?: (generation: PlaygroundGeneration) => void }) {
   const { prompt, model_id, mode, outputs, created_at } = generation;
-  const output = outputs[0];
-  const isVideo = output?.media_type === 'video' || ['t2v', 'i2v', 'r2v', 'v2v'].includes(mode);
+  const primaryOutput = outputs[0];
+  const isVideo = primaryOutput?.media_type === 'video' || ['t2v', 'i2v', 'r2v', 'v2v'].includes(mode);
+  const hasMultipleOutputs = outputs.length > 1;
   const [saving, setSaving] = useState(false);
 
-  const saved = output?.saved_to_library ?? false;
-  const mediaUrl = output?.media_path ? getMediaUrl(output.media_path) : null;
+  const saved = primaryOutput?.saved_to_library ?? false;
+  const mediaUrl = getPlaygroundMediaUrl(primaryOutput?.media_path);
   const updateGeneration = usePlaygroundStore((s) => s.updateGeneration);
 
   const handleDownload = useCallback(async (e: React.MouseEvent) => {
@@ -139,7 +136,7 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = output?.media_path?.split('/').pop() || 'download';
+      a.download = primaryOutput?.media_path?.split('/').pop() || 'download';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -147,19 +144,19 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
     } catch {
       window.open(mediaUrl, '_blank');
     }
-  }, [mediaUrl, output]);
+  }, [mediaUrl, primaryOutput]);
 
   const handleSaveToLibrary = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!output || saving) return;
+    if (!primaryOutput || saving) return;
     setSaving(true);
     try {
       const newSaved = !saved;
       if (newSaved) {
-        await playgroundApi.saveToLibrary(generation.id, output.id);
+        await playgroundApi.saveToLibrary(generation.id, primaryOutput.id);
       }
       const updatedOutputs = generation.outputs.map((o) =>
-        o.id === output.id ? { ...o, saved_to_library: newSaved } : o
+        o.id === primaryOutput.id ? { ...o, saved_to_library: newSaved } : o
       );
       updateGeneration({ ...generation, outputs: updatedOutputs });
     } catch (err) {
@@ -167,7 +164,7 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
     } finally {
       setSaving(false);
     }
-  }, [generation, output, saved, saving, updateGeneration]);
+  }, [generation, primaryOutput, saved, saving, updateGeneration]);
 
   return (
     <div
@@ -176,7 +173,30 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
     >
       {/* Media area */}
       <div className="relative overflow-hidden bg-[#141416]" style={{ aspectRatio: '16/9' }}>
-        {mediaUrl ? (
+        {outputs.length > 0 ? (
+          hasMultipleOutputs ? (
+            <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-0.5 p-0.5">
+              {outputs.slice(0, 4).map((item, index) => {
+                const itemMediaUrl = getPlaygroundMediaUrl(item.media_path);
+                const itemIsVideo = item.media_type === 'video' || ['t2v', 'i2v', 'r2v', 'v2v'].includes(mode);
+
+                return (
+                  <div key={item.id} className="relative overflow-hidden rounded-[6px] bg-[#0f0f1a]">
+                    {itemMediaUrl && !itemIsVideo ? (
+                      <img src={itemMediaUrl} alt={`${prompt} ${index + 1}`} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] flex items-center justify-center">
+                        <Video className="w-5 h-5 text-white/20" />
+                      </div>
+                    )}
+                    <span className="absolute left-1 bottom-1 rounded bg-black/65 px-1.5 py-0.5 font-mono text-[9px] text-white/70">
+                      {index + 1}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : mediaUrl ? (
           isVideo ? (
             <div className="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] flex items-center justify-center">
               <Video className="w-8 h-8 text-white/20" />
@@ -184,8 +204,17 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
           ) : (
             <img src={mediaUrl} alt={prompt} className="w-full h-full object-cover" />
           )
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a]" />
+          )
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a]" />
+        )}
+
+        {hasMultipleOutputs && (
+          <span className="absolute top-2 right-2 font-mono text-[9px] bg-black/60 text-white/80 backdrop-blur-sm rounded px-[6px] py-[2px]">
+            ×{outputs.length}
+          </span>
         )}
 
         {/* Video badge top-left */}
@@ -204,9 +233,9 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
           >
             <Download className="w-3.5 h-3.5 text-white" />
           </button>
-          {output?.media_type === 'image' && onGenerateVideo && (
+          {primaryOutput?.media_type === 'image' && onGenerateVideo && (
             <button
-              onClick={(e) => { e.stopPropagation(); onGenerateVideo(output.media_path); }}
+              onClick={(e) => { e.stopPropagation(); onGenerateVideo(primaryOutput.media_path); }}
               className="w-7 h-7 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/25 transition"
               title="生成视频"
             >
@@ -245,6 +274,11 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
           <span className="font-mono text-[9px] bg-[#646cff]/10 text-[#646cff]/70 rounded px-[6px] py-[2px] uppercase">
             {MODE_LABELS[mode] || mode}
           </span>
+          {hasMultipleOutputs && (
+            <span className="font-mono text-[9px] bg-white/[0.04] text-white/40 rounded px-[6px] py-[2px]">
+              ×{outputs.length}
+            </span>
+          )}
           <span className="font-mono text-[9px] text-white/30 ml-auto">{formatTime(created_at)}</span>
           {saved && (
             <span className="flex items-center gap-0.5 text-[9px] text-green-400/70">

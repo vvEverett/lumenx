@@ -5,6 +5,7 @@ import { ImagePlus, Film, X } from 'lucide-react';
 import { playgroundApi } from '@/lib/api';
 import { usePlaygroundStore, type PlaygroundMode } from './usePlaygroundStore';
 import AssetPickerModal from './AssetPickerModal';
+import { getPlaygroundFileName, getPlaygroundMediaUrl } from './mediaUrls';
 
 // ---------------------------------------------------------------------------
 // Mode config
@@ -66,11 +67,6 @@ const MODE_CONFIG: Partial<Record<PlaygroundMode, ModeConfig>> = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getFileName(path: string): string {
-  const parts = path.split('/');
-  return parts[parts.length - 1] || path;
-}
-
 function isVideoPath(path: string): boolean {
   return /\.(mp4|mov|webm|avi|mkv)$/i.test(path);
 }
@@ -104,17 +100,13 @@ export default function MediaInput() {
     };
   }
 
-  // Don't render for t2v mode (no input media needed)
-  if (!config) return null;
-
-  const hasMedia = inputMedia.length > 0;
-  const canAddMore = config.multiple && inputMedia.length < config.maxFiles;
-
   // -------------------------------------------------------------------------
   // Upload handler
   // -------------------------------------------------------------------------
 
-  const handleFiles = async (files: FileList | File[]) => {
+  const handleFiles = useCallback(async (files: FileList | File[]) => {
+    if (!config) return;
+
     const fileArray = Array.from(files);
     if (fileArray.length === 0) return;
 
@@ -139,7 +131,7 @@ export default function MediaInput() {
     } finally {
       setUploading(false);
     }
-  };
+  }, [config, inputMedia, setInputMedia]);
 
   // -------------------------------------------------------------------------
   // Event handlers
@@ -178,7 +170,7 @@ export default function MediaInput() {
         handleFiles(e.dataTransfer.files);
       }
     },
-    [inputMedia, config]
+    [handleFiles]
   );
 
   const handleRemove = (index: number) => {
@@ -193,6 +185,12 @@ export default function MediaInput() {
   const handleAssetSelect = (path: string) => {
     setInputMedia([...inputMedia, path]);
   };
+
+  // Don't render for t2v mode (no input media needed)
+  if (!config) return null;
+
+  const hasMedia = inputMedia.length > 0;
+  const canAddMore = config.multiple && inputMedia.length < config.maxFiles;
 
   // Determine accept type for AssetPickerModal
   const acceptType: 'image' | 'video' | 'all' =
@@ -312,47 +310,50 @@ export default function MediaInput() {
       <div className="border border-solid border-white/[0.08] rounded-xl p-3 space-y-3">
         {/* Thumbnail row */}
         <div className="flex flex-wrap gap-2">
-          {inputMedia.map((path, index) => (
-            <div
-              key={path + index}
-              className="group relative w-20 h-[60px] rounded-lg overflow-hidden bg-white/[0.04] border border-white/[0.06]"
-            >
-              {isVideoPath(path) ? (
-                <video
-                  src={path}
-                  className="w-full h-full object-cover"
-                  muted
-                />
-              ) : (
-                <img
-                  src={path}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              )}
-
-              {/* Remove button on hover */}
-              <button
-                type="button"
-                onClick={() => handleRemove(index)}
-                className="
-                  absolute top-0.5 right-0.5
-                  w-4 h-4 rounded-full
-                  bg-black/70 text-white/80
-                  flex items-center justify-center
-                  opacity-0 group-hover:opacity-100
-                  transition-opacity
-                "
+          {inputMedia.map((path, index) => {
+            const mediaUrl = getPlaygroundMediaUrl(path) ?? path;
+            return (
+              <div
+                key={path + index}
+                className="group relative w-20 h-[60px] rounded-lg overflow-hidden bg-white/[0.04] border border-white/[0.06]"
               >
-                <X className="w-3 h-3" />
-              </button>
+                {isVideoPath(path) ? (
+                  <video
+                    src={mediaUrl}
+                    className="w-full h-full object-cover"
+                    muted
+                  />
+                ) : (
+                  <img
+                    src={mediaUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                )}
 
-              {/* File name tooltip */}
-              <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5 bg-black/60 text-[9px] text-white/70 truncate">
-                {getFileName(path)}
+                {/* Remove button on hover */}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(index)}
+                  className="
+                    absolute top-0.5 right-0.5
+                    w-4 h-4 rounded-full
+                    bg-black/70 text-white/80
+                    flex items-center justify-center
+                    opacity-0 group-hover:opacity-100
+                    transition-opacity
+                  "
+                >
+                  <X className="w-3 h-3" />
+                </button>
+
+                {/* File name tooltip */}
+                <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5 bg-black/60 text-[9px] text-white/70 truncate">
+                  {getPlaygroundFileName(path)}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Add more button for r2v */}
           {canAddMore && (
