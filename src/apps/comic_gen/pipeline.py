@@ -1241,8 +1241,14 @@ class ComicGenPipeline:
             "props": [{"id": p.id, "name": p.name, "description": p.description} for p in all_props],
         }
 
+        # Resolve effective storyboard-extraction prompt (Episode → Series → built-in default).
+        series = self.get_series(script.series_id) if getattr(script, "series_id", None) else None
+        storyboard_extraction_prompt = self.get_effective_prompt("storyboard_extraction", script, series)
+
         # Call LLM to analyze text (may raise RuntimeError on parse failure)
-        raw_frames = self.script_processor.analyze_to_storyboard(text, entities_json)
+        raw_frames = self.script_processor.analyze_to_storyboard(
+            text, entities_json, custom_extraction_prompt=storyboard_extraction_prompt
+        )
 
         if not raw_frames:
             raise RuntimeError("AI 分镜分析未返回任何帧数据，请重试。")
@@ -4408,14 +4414,15 @@ class ComicGenPipeline:
 
     def get_effective_prompt(self, prompt_type: str, episode: Script, series: Optional[Series] = None) -> str:
         """Three-level fallback: Episode -> Series -> system default."""
-        valid_prompt_types = ("storyboard_polish", "video_polish", "r2v_polish")
+        valid_prompt_types = ("storyboard_polish", "video_polish", "r2v_polish", "storyboard_extraction")
         if prompt_type not in valid_prompt_types:
             raise ValueError(f"Invalid prompt_type: {prompt_type}. Must be one of {valid_prompt_types}")
-        from .llm import DEFAULT_STORYBOARD_POLISH_PROMPT, DEFAULT_VIDEO_POLISH_PROMPT, DEFAULT_R2V_POLISH_PROMPT
+        from .llm import DEFAULT_STORYBOARD_POLISH_PROMPT, DEFAULT_VIDEO_POLISH_PROMPT, DEFAULT_R2V_POLISH_PROMPT, DEFAULT_STORYBOARD_EXTRACTION_PROMPT
         defaults = {
             "storyboard_polish": DEFAULT_STORYBOARD_POLISH_PROMPT,
             "video_polish": DEFAULT_VIDEO_POLISH_PROMPT,
             "r2v_polish": DEFAULT_R2V_POLISH_PROMPT,
+            "storyboard_extraction": DEFAULT_STORYBOARD_EXTRACTION_PROMPT,
         }
         episode_value = getattr(episode.prompt_config, prompt_type, "")
         if episode_value.strip():

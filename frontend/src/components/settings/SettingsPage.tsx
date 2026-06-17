@@ -107,6 +107,7 @@ interface DefaultPromptConfig {
   r2v_polish: string;
   entity_extraction: string;
   style_analysis: string;
+  storyboard_extraction: string;
 }
 
 const EMPTY_PROMPT_CONFIG: DefaultPromptConfig = {
@@ -115,6 +116,7 @@ const EMPTY_PROMPT_CONFIG: DefaultPromptConfig = {
   r2v_polish: "",
   entity_extraction: "",
   style_analysis: "",
+  storyboard_extraction: "",
 };
 
 function loadFromLS<T>(key: string, fallback: T): T {
@@ -190,9 +192,14 @@ export default function SettingsPage() {
   );
 
   // ── Default Prompt Config ──
+  // `promptConfig` is the displayed/editable text. localStorage (LS_KEY_PROMPT)
+  // only ever stores DELTAS: an empty value means "use the built-in default".
+  // `promptDefaults` holds the real built-in defaults fetched from the backend
+  // so we can pre-fill the fields and run the delta comparison on save.
   const [promptConfig, setPromptConfig] = useState<DefaultPromptConfig>(() =>
     loadFromLS(LS_KEY_PROMPT, EMPTY_PROMPT_CONFIG)
   );
+  const [promptDefaults, setPromptDefaults] = useState<Record<string, string>>({});
 
   // ── About / system ──
   const [online, setOnline] = useState(true);
@@ -219,6 +226,34 @@ export default function SettingsPage() {
   useEffect(() => {
     loadConfig();
   }, [loadConfig]);
+
+  // Pre-fill the prompt fields with the real built-in defaults so users can see
+  // and edit from them. We remember the fetched defaults for the delta-save
+  // comparison, and only fill a field the user has NOT overridden (empty in LS).
+  // If the fetch fails we leave the fields empty (placeholder) — no crash.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const defaults = await api.fetchPromptDefaults();
+        if (cancelled || !defaults) return;
+        setPromptDefaults(defaults);
+        setPromptConfig((prev) => {
+          const next = { ...prev };
+          (Object.keys(EMPTY_PROMPT_CONFIG) as (keyof DefaultPromptConfig)[]).forEach((k) => {
+            const d = defaults[k];
+            if (typeof d === "string" && d && !prev[k]) next[k] = d;
+          });
+          return next;
+        });
+      } catch {
+        /* defaults unavailable — fields fall back to empty placeholders */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Online/offline detection for the banner.
   useEffect(() => {
@@ -334,7 +369,14 @@ export default function SettingsPage() {
   };
 
   const handleSavePromptDefaults = () => {
-    localStorage.setItem(LS_KEY_PROMPT, JSON.stringify(promptConfig));
+    // DELTA persistence: a field equal to its built-in default is stored as ""
+    // (=> use built-in, no snapshot pinning); only genuine overrides are saved.
+    const delta: DefaultPromptConfig = { ...EMPTY_PROMPT_CONFIG };
+    (Object.keys(EMPTY_PROMPT_CONFIG) as (keyof DefaultPromptConfig)[]).forEach((k) => {
+      const text = promptConfig[k] ?? "";
+      delta[k] = text === promptDefaults[k] ? "" : text;
+    });
+    localStorage.setItem(LS_KEY_PROMPT, JSON.stringify(delta));
     toast.success(t("saved"));
   };
 
@@ -570,6 +612,7 @@ export default function SettingsPage() {
   const PROMPT_FIELDS: { key: keyof DefaultPromptConfig; label: string; desc: string }[] = [
     { key: "entity_extraction", label: "角色/场景/道具提取", desc: "从剧本/小说提取实体的系统提示词。留空使用内置默认。" },
     { key: "style_analysis", label: "视觉风格分析", desc: "从剧本推荐美术风格的系统提示词。留空使用内置默认。" },
+    { key: "storyboard_extraction", label: "分镜提取 (剧本→分镜)", desc: "从剧本生成分镜（剧本→分镜）的系统提示词。留空使用内置默认。" },
     { key: "storyboard_polish", label: "分镜润色", desc: "分镜 / 图像提示词润色的系统提示词。" },
     { key: "video_polish", label: "I2V 视频润色", desc: "图生视频提示词润色的系统提示词。" },
     { key: "r2v_polish", label: "R2V 视频润色", desc: "参考生视频提示词润色的系统提示词。" },
@@ -590,7 +633,7 @@ export default function SettingsPage() {
               value={promptConfig[f.key]}
               onChange={(e) => setPromptConfig((prev) => ({ ...prev, [f.key]: e.target.value }))}
               placeholder="留空使用系统默认…"
-              className="w-full h-32 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-text-secondary resize-y focus:outline-none focus:border-primary/50 font-mono placeholder-text-muted"
+              className="w-full h-32 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-foreground resize-y focus:outline-none focus:border-primary/50 font-mono placeholder-text-muted"
             />
           </div>
         ))}

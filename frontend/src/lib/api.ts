@@ -645,8 +645,18 @@ export const api = {
         return res.data;
     },
 
-    updatePromptConfig: async (scriptId: string, config: { storyboard_polish?: string; video_polish?: string; r2v_polish?: string; entity_extraction?: string; style_analysis?: string }) => {
+    updatePromptConfig: async (scriptId: string, config: { storyboard_polish?: string; video_polish?: string; r2v_polish?: string; entity_extraction?: string; style_analysis?: string; storyboard_extraction?: string }) => {
         const res = await axios.put(`${API_URL}/projects/${scriptId}/prompt_config`, config);
+        return res.data;
+    },
+
+    /** Phase-2 默认 Prompt — built-in DEFAULT text for all six prompt keys
+     *  (storyboard_polish / video_polish / r2v_polish / entity_extraction /
+     *  style_analysis / storyboard_extraction). Settings pre-fills fields from
+     *  this; on save it stores "" for any field still equal to its default
+     *  (delta semantics → backend uses the built-in). */
+    fetchPromptDefaults: async (): Promise<Record<string, string>> => {
+        const res = await axios.get<Record<string, string>>(`${API_URL}/prompt_defaults`);
         return res.data;
     },
 
@@ -1378,7 +1388,7 @@ export const api = {
         const response = await axios.get(`${API_URL}/series/${seriesId}/prompt_config`);
         return response.data;
     },
-    updateSeriesPromptConfig: async (seriesId: string, config: { storyboard_polish?: string; video_polish?: string; r2v_polish?: string }) => {
+    updateSeriesPromptConfig: async (seriesId: string, config: { storyboard_polish?: string; video_polish?: string; r2v_polish?: string; storyboard_extraction?: string }) => {
         const response = await axios.put(`${API_URL}/series/${seriesId}/prompt_config`, config);
         return response.data;
     },

@@ -228,6 +228,7 @@ export interface PromptConfig {
     storyboard_polish: string;
     video_polish: string;
     r2v_polish: string;
+    storyboard_extraction?: string;
 }
 
 export interface Series {
@@ -365,6 +366,7 @@ async function injectDefaultsIntoProject(projectId: string): Promise<Project | n
         r2v_polish?: string;
         entity_extraction?: string;
         style_analysis?: string;
+        storyboard_extraction?: string;
     }>(LS_KEY_DEFAULT_PROMPT);
 
     let applied = false;

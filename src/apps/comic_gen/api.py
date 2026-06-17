@@ -46,7 +46,7 @@ from .models import (
     StoryboardFrame,
     VideoTask,
 )
-from .llm import ScriptProcessor, DEFAULT_STORYBOARD_POLISH_PROMPT, DEFAULT_VIDEO_POLISH_PROMPT, DEFAULT_R2V_POLISH_PROMPT
+from .llm import ScriptProcessor, DEFAULT_STORYBOARD_POLISH_PROMPT, DEFAULT_VIDEO_POLISH_PROMPT, DEFAULT_R2V_POLISH_PROMPT, DEFAULT_ENTITY_EXTRACTION_PROMPT, DEFAULT_STYLE_ANALYSIS_PROMPT, DEFAULT_STORYBOARD_EXTRACTION_PROMPT
 from ...utils.oss_utils import OSSImageUploader, sign_oss_urls_in_data
 from ...utils import setup_logging
 from fastapi.responses import JSONResponse
@@ -564,6 +564,7 @@ def get_series_prompt_config(series_id: str):
             "storyboard_polish": DEFAULT_STORYBOARD_POLISH_PROMPT,
             "video_polish": DEFAULT_VIDEO_POLISH_PROMPT,
             "r2v_polish": DEFAULT_R2V_POLISH_PROMPT,
+            "storyboard_extraction": DEFAULT_STORYBOARD_EXTRACTION_PROMPT,
         },
     }
 
@@ -2390,6 +2391,7 @@ class UpdatePromptConfigRequest(BaseModel):
     r2v_polish: str = ""
     entity_extraction: str = ""
     style_analysis: str = ""
+    storyboard_extraction: str = ""
 
 
 @app.get("/projects/{script_id}/prompt_config")
@@ -2406,6 +2408,7 @@ def get_prompt_config(script_id: str):
                 "storyboard_polish": DEFAULT_STORYBOARD_POLISH_PROMPT,
                 "video_polish": DEFAULT_VIDEO_POLISH_PROMPT,
                 "r2v_polish": DEFAULT_R2V_POLISH_PROMPT,
+                "storyboard_extraction": DEFAULT_STORYBOARD_EXTRACTION_PROMPT,
             }
         }
     except HTTPException:
@@ -2429,6 +2432,7 @@ def update_prompt_config(script_id: str, request: UpdatePromptConfigRequest):
             r2v_polish=request.r2v_polish,
             entity_extraction=request.entity_extraction,
             style_analysis=request.style_analysis,
+            storyboard_extraction=request.storyboard_extraction,
             polish_model=preserved_polish_model,
         )
         pipeline._save_data()
@@ -2437,6 +2441,24 @@ def update_prompt_config(script_id: str, request: UpdatePromptConfigRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/prompt_defaults")
+def get_prompt_defaults():
+    """Return the built-in default system prompts for all configurable prompt keys.
+
+    The frontend uses this to pre-fill the prompt fields and to compute the
+    "delta" on save (a field equal to its default is stored as "" so the
+    built-in default is used instead of pinning a snapshot).
+    """
+    return {
+        "storyboard_polish": DEFAULT_STORYBOARD_POLISH_PROMPT,
+        "video_polish": DEFAULT_VIDEO_POLISH_PROMPT,
+        "r2v_polish": DEFAULT_R2V_POLISH_PROMPT,
+        "entity_extraction": DEFAULT_ENTITY_EXTRACTION_PROMPT,
+        "style_analysis": DEFAULT_STYLE_ANALYSIS_PROMPT,
+        "storyboard_extraction": DEFAULT_STORYBOARD_EXTRACTION_PROMPT,
+    }
 
 
 class BindVoiceRequest(BaseModel):
