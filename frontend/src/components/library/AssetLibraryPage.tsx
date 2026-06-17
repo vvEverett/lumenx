@@ -234,7 +234,7 @@ export default function AssetLibraryPage() {
           {counts.starred}
         </button>
 
-        <div className="relative flex-1 min-w-[200px] max-w-[340px] atelier-search-input">
+        <div className="relative flex-1 min-w-[200px] max-w-[340px] bg-surface-inset border border-glass-border rounded-full atelier-search-input">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
           <input
             type="search"
@@ -297,6 +297,8 @@ export default function AssetLibraryPage() {
                           tabIndex={0}
                           onClick={() => setSelected({ sourceId: src.id, assetId: asset.id, type })}
                           onKeyDown={(e) => {
+                            // 仅当卡片自身获得焦点时才响应；避免嵌套的 star <button> 在 Enter/Space 时双触发
+                            if (e.target !== e.currentTarget) return;
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
                               setSelected({ sourceId: src.id, assetId: asset.id, type });
@@ -329,6 +331,7 @@ export default function AssetLibraryPage() {
                                   e.stopPropagation();
                                   toggleStar(src.id, asset.id, type);
                                 }}
+                                onKeyDown={(e) => e.stopPropagation()}
                                 className={`w-7 h-7 rounded-full grid place-items-center backdrop-blur-md cursor-pointer transition-colors ${
                                   isStar ? "text-status-starred-fg bg-status-starred-bg" : "text-white bg-black/45 hover:text-status-starred-fg"
                                 }`}

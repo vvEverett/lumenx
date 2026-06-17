@@ -90,8 +90,18 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
             whileHover={{ scale: 1.005 }}
             className={`glass-panel atelier-proj-card ${isFeatured ? "atelier-proj-featured" : ""} group relative rounded-2xl overflow-hidden cursor-pointer border border-glass-border`}
             onClick={handleOpen}
+            role="button"
             tabIndex={0}
-            onKeyDown={(e) => { if (e.key === "Enter") handleOpen(); }}
+            onKeyDown={(e) => {
+                // Only activate when the keydown originates on the card itself,
+                // not on a nested control (delete/more), whose Enter/Space would
+                // otherwise bubble here and trigger navigation.
+                if (e.target !== e.currentTarget) return;
+                if (e.key === "Enter" || e.key === " ") {
+                    if (e.key === " ") e.preventDefault(); // avoid page scroll on Space
+                    handleOpen();
+                }
+            }}
         >
             {/* Thumbnail */}
             <div className="relative aspect-[16/10] overflow-hidden bg-surface-inset">
@@ -165,7 +175,7 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
                 <div className="flex items-center gap-1">
                     <button
                         onClick={handleDelete}
-                        className="w-8 h-8 rounded-lg grid place-items-center text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                        className="w-8 h-8 rounded-lg grid place-items-center text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
                         aria-label={t("confirmDelete", { title: project.title })}
                     >
                         <Trash2 size={15} />

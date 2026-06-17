@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Star, Download } from "lucide-react";
 import type { Character, Scene, Prop, ImageAsset } from "@/store/projectStore";
 import { characterImageAsset } from "@/lib/characterImage";
@@ -46,6 +46,29 @@ function timeAgo(ts?: number): string {
   return `${Math.floor(days / 30)} 个月前`;
 }
 
+const MIME_EXT: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/avif": "avif",
+  "image/svg+xml": "svg",
+};
+
+/** 下载文件名扩展名：优先取 URL 路径后缀（剥掉 query/签名），否则回退到 blob content-type，默认 png。 */
+function downloadExt(url: string, contentType?: string): string {
+  try {
+    const path = new URL(url, window.location.origin).pathname;
+    const m = path.match(/\.([a-z0-9]+)$/i);
+    if (m) return m[1].toLowerCase();
+  } catch {
+    // URL 解析失败时退回 content-type / 默认
+  }
+  const fromType = contentType?.split(";")[0].trim().toLowerCase();
+  if (fromType && MIME_EXT[fromType]) return MIME_EXT[fromType];
+  return "png";
+}
+
 /**
  * 资产库右侧详情抽屉（Line B "Luminous Atelier"）。
  * 库专用，不复用共享 AssetCard。展示选中资产的 hero + 变体条 + 元数据 + prompt + 下载。
@@ -70,23 +93,56 @@ export default function AssetInspector({
     setActiveVariantId(defaultId);
   }, [asset.id, defaultId]);
 
+  // a11y：抽屉打开时把焦点移入面板、Escape 关闭、关闭后还原焦点（非模态，不做 focus trap）。
+  const asideRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    asideRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCloseRef.current();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus?.();
+    };
+  }, []);
+
   const activeVariant = variants.find((v) => v.id === activeVariantId) ?? variants[0];
   const heroUrl = activeVariant?.url ?? fallbackUrl(asset, type);
   const prompt = activeVariant?.prompt_used ?? "";
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!heroUrl) return;
-    const a = document.createElement("a");
-    a.href = heroUrl;
-    a.download = `${asset.name || "asset"}.png`;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.click();
+    const fileBase = asset.name || "asset";
+    try {
+      const res = await fetch(heroUrl);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const ext = downloadExt(heroUrl, blob.type);
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `${fileBase}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      // 跨域(CORS)/网络失败：download 属性对跨域 URL 无效，退回到新标签打开。
+      window.open(heroUrl, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
     <aside
-      className="w-[340px] flex-shrink-0 h-full flex flex-col overflow-y-auto bg-surface border-l border-glass-border shadow-2xl atelier-reveal"
+      ref={asideRef}
+      tabIndex={-1}
+      className="w-[340px] flex-shrink-0 h-full flex flex-col overflow-y-auto bg-surface border-l border-glass-border shadow-2xl atelier-reveal focus:outline-none"
       aria-label="资产详情"
     >
       {/* Hero */}

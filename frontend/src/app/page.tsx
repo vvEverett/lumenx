@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useId } from "react";
 import { motion } from "framer-motion";
 import {
   Plus, RefreshCw, Library, FileUp, X, ChevronDown, FileText,
@@ -38,6 +38,56 @@ function CreateSeriesDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () 
   const tc = useTranslations("common");
   const tp = useTranslations("project");
 
+  // a11y — dialog labelling + focus management
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    // Move focus into the dialog (the title input is the first field).
+    const node = dialogRef.current;
+    if (node) {
+      const field = node.querySelector<HTMLElement>("input, textarea");
+      (field ?? node.querySelector<HTMLElement>("button:not([disabled])"))?.focus();
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const focusables = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        )
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey) {
+        if (active === first || !dialogRef.current.contains(active)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (active === last || !dialogRef.current.contains(active)) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus?.();
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleCreate = async () => {
@@ -69,14 +119,18 @@ function CreateSeriesDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm" onClick={onClose}>
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-elevated border border-border rounded-2xl p-8 w-full max-w-4xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-display font-bold text-foreground">{t("newSeries")}</h2>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-hover-bg transition-colors">
+          <h2 id={titleId} className="text-2xl font-display font-bold text-foreground">{t("newSeries")}</h2>
+          <button onClick={onClose} aria-label={tc("close")} className="p-2 rounded-lg hover:bg-hover-bg transition-colors">
             <X size={20} className="text-text-secondary" />
           </button>
         </div>
@@ -90,7 +144,6 @@ function CreateSeriesDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () 
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("seriesTitlePlaceholder")}
               className="glass-input w-full"
-              autoFocus
             />
           </div>
 
@@ -504,9 +557,10 @@ export default function Home() {
     for (const p of wsAllProjects) wsStatusCounts[deriveStatus(p)]++;
     const wsQuery = wsSearch.trim().toLowerCase();
     const wsFiltering = wsStatus !== "all" || wsQuery.length > 0;
-    const wsMatch = (p: Project) => {
+    const wsMatch = (p: Project, seriesTitleMatched = false) => {
       if (wsStatus !== "all" && deriveStatus(p) !== wsStatus) return false;
-      if (wsQuery && !p.title.toLowerCase().includes(wsQuery)) return false;
+      // A matching series title keeps the whole series' episodes visible (search at group level).
+      if (wsQuery && !seriesTitleMatched && !p.title.toLowerCase().includes(wsQuery)) return false;
       return true;
     };
     const wsStatusPills: { id: "all" | DerivedStatus; label: string; count: number }[] = [
@@ -515,6 +569,18 @@ export default function Home() {
       { id: "processing", label: "进行中", count: wsStatusCounts.processing },
       { id: "pending", label: "草稿", count: wsStatusCounts.pending },
     ];
+    // Precompute filtered groups once — single source of truth for the grid render
+    // and the filtered-empty count below (avoids the two diverging).
+    const wsSeriesGroups = seriesList.map((s) => {
+      const seriesTitleMatched = wsQuery.length > 0 && s.title.toLowerCase().includes(wsQuery);
+      const eps = [...(seriesEpisodes[s.id] || [])]
+        .sort((a, b) => (a.episode_number || 0) - (b.episode_number || 0))
+        .filter((ep) => wsMatch(ep, seriesTitleMatched));
+      return { s, eps };
+    });
+    const wsVisibleStandalone = standaloneProjects.filter((p) => wsMatch(p));
+    const wsVisibleCount =
+      wsVisibleStandalone.length + wsSeriesGroups.reduce((n, g) => n + g.eps.length, 0);
     return (
       <div className="flex flex-col h-full overflow-hidden">
         {/* Page header — eyebrow + Fraunces title + actions */}
@@ -607,7 +673,7 @@ export default function Home() {
               );
             })}
           </div>
-          <div className="relative flex-1 min-w-[180px] max-w-[340px] atelier-search-input">
+          <div className="relative flex-1 min-w-[180px] max-w-[340px] bg-surface-inset border border-glass-border rounded-full atelier-search-input">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
             <input
               type="search"
@@ -673,13 +739,26 @@ export default function Home() {
                 {t("syncFromBackend")}
               </button>
             </motion.div>
+          ) : wsFiltering && wsVisibleCount === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-20 text-text-muted"
+            >
+              <Search size={48} className="mb-3 opacity-60" />
+              <p className="text-[15px] font-display atelier-display text-foreground">没有匹配的项目</p>
+              <p className="text-[12px] text-text-muted mt-1">试试调整筛选条件或搜索关键词</p>
+              <button
+                onClick={() => { setWsStatus("all"); setWsSearch(""); }}
+                className="mt-4 glass-button text-[13px] font-semibold"
+              >
+                清除筛选
+              </button>
+            </motion.div>
           ) : (
             <div className="flex flex-col gap-2">
               {/* Per-series groups — Line B editorial gallery */}
-              {seriesList.map((s) => {
-                const eps = [...(seriesEpisodes[s.id] || [])]
-                  .sort((a, b) => (a.episode_number || 0) - (b.episode_number || 0))
-                  .filter(wsMatch);
+              {wsSeriesGroups.map(({ s, eps }) => {
                 if (eps.length === 0 && wsFiltering) return null;
                 return (
                   <section key={`grp-${s.id}`} aria-label={s.title}>
@@ -714,7 +793,7 @@ export default function Home() {
               {/* Standalone projects group */}
               {(() => {
                 if (standaloneProjects.length === 0) return null;
-                const sp = standaloneProjects.filter(wsMatch);
+                const sp = wsVisibleStandalone;
                 if (sp.length === 0 && wsFiltering) return null;
                 return (
                 <section aria-label={t("standaloneGroup") || "独立项目"}>
