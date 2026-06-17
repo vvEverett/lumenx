@@ -304,6 +304,12 @@ export default function SettingsPage() {
     }
   };
 
+  // MuleRun 登录轮询的 interval 句柄：卸载时清理，避免轮询泄漏 + setConfig-after-unmount。
+  const mulerunPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => () => {
+    if (mulerunPollRef.current) clearInterval(mulerunPollRef.current);
+  }, []);
+
   const PathField = ({ value, label }: { value: string; label: string }) => (
     <div>
       <FieldLabel>{label}</FieldLabel>
@@ -629,18 +635,25 @@ export default function SettingsPage() {
                 onClick={async () => {
                   try {
                     await api.triggerMulerunLogin();
-                    const poll = setInterval(async () => {
+                    if (mulerunPollRef.current) clearInterval(mulerunPollRef.current); // 重入守卫
+                    const stop = () => {
+                      if (mulerunPollRef.current) {
+                        clearInterval(mulerunPollRef.current);
+                        mulerunPollRef.current = null;
+                      }
+                    };
+                    mulerunPollRef.current = setInterval(async () => {
                       try {
                         const env = await api.getEnvConfig();
                         if (env.MULERUN_CLI_LOGGED_IN) {
-                          clearInterval(poll);
+                          stop();
                           setConfig((c) => ({ ...c, MULERUN_CLI_LOGGED_IN: true }));
                         }
                       } catch {
                         /* silent */
                       }
                     }, 3000);
-                    setTimeout(() => clearInterval(poll), 120000);
+                    setTimeout(stop, 120000);
                   } catch (err: any) {
                     toast.error(err?.response?.data?.detail || "登录失败");
                   }
