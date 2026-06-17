@@ -154,22 +154,35 @@ export default function AssetLibraryPage() {
 
   const visibleCount = groups.reduce((acc, g) => acc + g.items.length, 0);
 
+  // 选中的资产被筛掉后自动关 inspector（避免残留指向已隐藏资产）。
+  useEffect(() => {
+    if (!selected) return;
+    const stillVisible = groups.some(
+      (g) =>
+        g.src.id === selected.sourceId &&
+        g.items.some((it) => it.asset.id === selected.assetId && it.type === selected.type)
+    );
+    if (!stillVisible) setSelected(null);
+  }, [groups, selected]);
+
   const toggleStar = async (sourceId: string, assetId: string, type: AssetTab) => {
     const src = sources.find((s) => s.id === sourceId);
     if (!src) return;
-    const flip = (prev: AssetSource[]) =>
+    const cur = (src[type] as (Character | Scene | Prop)[]).find((a) => a.id === assetId);
+    const prevStarred = !!cur?.starred;
+    const setStarredTo = (val: boolean) => (prev: AssetSource[]) =>
       prev.map((s) =>
         s.id !== sourceId
           ? s
-          : { ...s, [type]: (s[type] as (Character | Scene | Prop)[]).map((a) => (a.id === assetId ? { ...a, starred: !a.starred } : a)) }
+          : { ...s, [type]: (s[type] as (Character | Scene | Prop)[]).map((a) => (a.id === assetId ? { ...a, starred: val } : a)) }
       );
-    setSources(flip); // 乐观更新
+    setSources(setStarredTo(!prevStarred)); // 乐观更新
     try {
       if (src.kind === "series") await api.toggleSeriesAssetStarred(src.rawId, assetId, SINGULAR[type]);
       else await api.toggleAssetStarred(src.rawId, assetId, SINGULAR[type]);
     } catch (e) {
       console.error("toggle star failed", e);
-      setSources(flip); // 失败回滚（再翻一次）
+      setSources(setStarredTo(prevStarred)); // 失败:精确还原到原值（不靠再翻一次，避免并发下双翻 desync）
     }
   };
 
@@ -225,6 +238,7 @@ export default function AssetLibraryPage() {
         <button
           type="button"
           aria-pressed={starredOnly}
+          aria-label="只看加星"
           onClick={() => setStarredOnly((v) => !v)}
           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors ${
             starredOnly
@@ -243,6 +257,7 @@ export default function AssetLibraryPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t("searchPlaceholder")}
+            aria-label={t("searchPlaceholder")}
             className="w-full bg-transparent border-0 rounded-full py-2 pl-9 pr-4 text-[13px] text-foreground placeholder-text-muted focus:outline-none"
           />
         </div>
