@@ -36,6 +36,7 @@ type EnvConfig = EnvConfigPayload & {
   DASHSCOPE_API_KEY: string;
   ALIBABA_CLOUD_ACCESS_KEY_ID: string;
   ALIBABA_CLOUD_ACCESS_KEY_SECRET: string;
+  OSS_ENABLE: boolean;
   OSS_BUCKET_NAME: string;
   OSS_ENDPOINT: string;
   OSS_BASE_PATH: string;
@@ -61,6 +62,7 @@ const DEFAULT_CONFIG: EnvConfig = {
   DASHSCOPE_API_KEY: "",
   ALIBABA_CLOUD_ACCESS_KEY_ID: "",
   ALIBABA_CLOUD_ACCESS_KEY_SECRET: "",
+  OSS_ENABLE: true,
   OSS_BUCKET_NAME: "",
   OSS_ENDPOINT: "",
   OSS_BASE_PATH: "",
@@ -867,6 +869,16 @@ export default function SettingsPage() {
       title="云端镜像与本地路径"
       desc="生成结果默认本地优先；OSS 仅用于可选云端镜像。"
     >
+      <FormRow label="云存储">
+        <Toggle
+          checked={config.OSS_ENABLE}
+          onChange={(v) => setConfig((c) => ({ ...c, OSS_ENABLE: v }))}
+          label="启用云存储"
+          sub="启用云存储，将资产与成片上传到对象存储。关闭则仅保存在本地 output/。"
+          ariaLabel="启用云存储开关"
+        />
+      </FormRow>
+
       <FormRow label="阿里云 AK / SK" hint="仅在启用 OSS 镜像时需要填写。">
         <div className="space-y-3">
           <div>

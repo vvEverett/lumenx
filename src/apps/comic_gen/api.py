@@ -906,6 +906,7 @@ class EnvConfig(ProviderRoutingConfig):
     OSS_BUCKET_NAME: Optional[str] = None
     OSS_ENDPOINT: Optional[str] = None
     OSS_BASE_PATH: Optional[str] = None
+    OSS_ENABLE: bool = True
     KLING_ACCESS_KEY: Optional[str] = None
     KLING_SECRET_KEY: Optional[str] = None
     VIDU_API_KEY: Optional[str] = None
@@ -1046,7 +1047,11 @@ def update_env_config(config: EnvConfig):
         for key, value in raw_config.items():
             if value is None:
                 continue
-            if isinstance(value, ProviderBackend):
+            if isinstance(value, bool):
+                # Booleans (e.g. OSS_ENABLE) persist as "true"/"false" strings so
+                # they round-trip through os.environ and the .env/config.json store.
+                config_dict[key] = "true" if value else "false"
+            elif isinstance(value, ProviderBackend):
                 config_dict[key] = value.value
             else:
                 config_dict[key] = value
@@ -3660,6 +3665,7 @@ def get_env_config():
     endpoint overrides) is returned as-is."""
     try:
         from ...utils.endpoints import PROVIDER_DEFAULTS
+        from ...utils.oss_utils import is_oss_enabled
         endpoint_overrides = {}
         for provider in PROVIDER_DEFAULTS:
             env_key = f"{provider}_BASE_URL"
@@ -3685,6 +3691,7 @@ def get_env_config():
             "OSS_BUCKET_NAME": os.getenv("OSS_BUCKET_NAME", ""),
             "OSS_ENDPOINT": os.getenv("OSS_ENDPOINT", ""),
             "OSS_BASE_PATH": os.getenv("OSS_BASE_PATH", ""),
+            "OSS_ENABLE": is_oss_enabled(),
             "MULERUN_CLI_LOGGED_IN": _check_mulerun_cli_status(),
             "KLING_PROVIDER_MODE": _normalize_provider_mode(os.getenv("KLING_PROVIDER_MODE")),
             "VIDU_PROVIDER_MODE": _normalize_provider_mode(os.getenv("VIDU_PROVIDER_MODE")),

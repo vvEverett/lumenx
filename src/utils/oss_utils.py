@@ -25,6 +25,21 @@ def is_oss_configured() -> bool:
     return all(required)
 
 
+def is_oss_enabled() -> bool:
+    """Check whether OSS upload is enabled.
+
+    Controlled by the ``OSS_ENABLE`` flag (env / saved config). Defaults to True
+    when unset so existing installs keep uploading. When disabled, new uploads
+    are skipped and callers fall back to the local ``output/`` path
+    (local-first). This only gates uploads — signing/display of objects that
+    were already uploaded is unaffected.
+    """
+    value = os.getenv("OSS_ENABLE")
+    if value is None:
+        return True
+    return value.strip().lower() not in ("false", "0", "no", "off")
+
+
 def get_oss_base_path() -> str:
     """Get OSS base path from environment or use default."""
     return os.getenv("OSS_BASE_PATH", DEFAULT_OSS_BASE_PATH).rstrip("/")
@@ -138,6 +153,10 @@ class OSSImageUploader:
         Returns:
             Object Key (e.g., "lumenx/proj_123/assets/characters/file.png") or None if failed
         """
+        if not is_oss_enabled():
+            logger.info("OSS upload disabled (OSS_ENABLE=false); skipping, using local path.")
+            return None
+
         if not self.bucket:
             logger.warning("OSS not configured, cannot upload file.")
             return None

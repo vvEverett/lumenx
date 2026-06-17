@@ -81,6 +81,7 @@ export interface EnvConfigPayload {
     OSS_BUCKET_NAME?: string;
     OSS_ENDPOINT?: string;
     OSS_BASE_PATH?: string;
+    OSS_ENABLE?: boolean;
     KLING_PROVIDER_MODE?: ProviderMode;
     VIDU_PROVIDER_MODE?: ProviderMode;
     PIXVERSE_PROVIDER_MODE?: ProviderMode;
