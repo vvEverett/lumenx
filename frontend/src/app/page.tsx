@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useProjectStore, Project } from "@/store/projectStore";
 import { toast } from "@/store/toastStore";
+import { useOnline } from "@/lib/useOnline";
 import ProjectCard, { deriveStatus, type DerivedStatus } from "@/components/project/ProjectCard";
 import CreateProjectDialog from "@/components/project/CreateProjectDialog";
 import EnvConfigDialog from "@/components/project/EnvConfigDialog";
@@ -371,6 +372,7 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<'home' | 'project' | 'series' | 'series-episode' | 'library' | 'settings' | 'playground'>('home');
   const [activeTab, setActiveTab] = useState<GlobalTab>("workspace");
   const [wsSearch, setWsSearch] = useState("");
+  const online = useOnline();
   const [wsStatus, setWsStatus] = useState<DerivedStatus | "all">("all");
   const [projectId, setProjectId] = useState<string | null>(null);
   const [seriesId, setSeriesId] = useState<string | null>(null);
@@ -605,7 +607,8 @@ export default function Home() {
           <div className="flex items-center flex-wrap gap-2.5 md:pb-1">
             <button
               onClick={syncAll}
-              disabled={isSyncing}
+              disabled={isSyncing || !online}
+              title={!online ? "网络已断开 — 重新连接后可用" : undefined}
               className="glass-button flex items-center gap-2 text-[13px] font-semibold disabled:opacity-50"
             >
               <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
@@ -613,7 +616,9 @@ export default function Home() {
             </button>
             <button
               onClick={() => setIsImportDialogOpen(true)}
-              className="glass-button flex items-center gap-2 text-[13px] font-semibold"
+              disabled={!online}
+              title={!online ? "网络已断开 — 重新连接后可用" : undefined}
+              className="glass-button flex items-center gap-2 text-[13px] font-semibold disabled:opacity-50"
             >
               <FileUp size={14} />
               {t("importFile")}
@@ -621,7 +626,9 @@ export default function Home() {
             <div className="relative">
               <button
                 onClick={(e) => { e.stopPropagation(); setShowCreateDropdown((v) => !v); }}
-                className="bg-primary hover:bg-primary/90 text-on-accent px-4 py-2 rounded-[10px] font-semibold flex items-center gap-2 transition-all text-[13px] shadow-[var(--glow-primary)]"
+                disabled={!online}
+                title={!online ? "网络已断开 — 重新连接后可用" : undefined}
+                className="bg-primary hover:bg-primary/90 text-on-accent px-4 py-2 rounded-[10px] font-semibold flex items-center gap-2 transition-all text-[13px] shadow-[var(--glow-primary)] disabled:opacity-50"
               >
                 <Plus size={14} />
                 {t("new")}

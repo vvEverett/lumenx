@@ -7,26 +7,13 @@
  * user knows queued actions won't reach the backend until reconnection.
  * Disabling action buttons app-wide is intentionally deferred (out of MVP).
  */
-import { useEffect, useState } from "react";
 import { WifiOff } from "lucide-react";
+import { useOnline } from "@/lib/useOnline";
 
 export default function OfflineBanner() {
-  // Assume online for the server/initial render to avoid hydration mismatch;
-  // the real navigator.onLine value is read on mount in the effect below.
-  const [isOnline, setIsOnline] = useState(true);
+  const online = useOnline();
 
-  useEffect(() => {
-    const sync = () => setIsOnline(navigator.onLine);
-    sync(); // initial navigator.onLine read on mount
-    window.addEventListener("online", sync);
-    window.addEventListener("offline", sync);
-    return () => {
-      window.removeEventListener("online", sync);
-      window.removeEventListener("offline", sync);
-    };
-  }, []);
-
-  if (isOnline) return null;
+  if (online) return null;
 
   return (
     <div
