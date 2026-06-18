@@ -90,6 +90,9 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
     // state, initialised from the server flag; rolls back if the toggle fails.
     const [starred, setStarred] = useState<boolean>(!!project.starred);
     const isFeatured = starred;
+    // Cover image can 404 at runtime; on error fall back to the typographic
+    // gradient cover (same as no-image) instead of the ugly broken-img glyph.
+    const [coverError, setCoverError] = useState(false);
 
     const handleToggleStar = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -153,10 +156,11 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
         >
             {/* Thumbnail */}
             <div className="relative aspect-[16/10] overflow-hidden bg-surface-inset">
-                {cover ? (
+                {cover && !coverError ? (
                     <img
                         src={cover}
                         alt={project.title}
+                        onError={() => setCoverError(true)}
                         className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                     />
                 ) : (
