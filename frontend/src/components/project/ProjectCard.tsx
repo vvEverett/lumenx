@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Play, Trash2, Film, Clock, FileText, MoreVertical } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Play, Trash2, Film, Clock, MoreVertical, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Project } from "@/store/projectStore";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -16,7 +17,7 @@ export type DerivedStatus = "completed" | "processing" | "pending";
 
 // Derive a cover image from the project's frames / scenes. The backend has no
 // dedicated cover field, so we fall back through the richest available source.
-function deriveCover(project: Project): string | undefined {
+export function deriveCover(project: Project): string | undefined {
     const frames = (project.frames || []) as Array<Record<string, any>>;
     for (const f of frames) {
         const direct = f?.rendered_image_url || f?.image_url;
@@ -39,6 +40,28 @@ function deriveCover(project: Project): string | undefined {
     return undefined;
 }
 
+// Fine film-grain texture (matches the Atelier mockup), layered over derived
+// covers via mix-blend overlay so a flat gradient gains a tactile, photographic feel.
+const GRAIN_URL =
+    "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
+// Deterministic typographic-cover palette for projects without an image. Each
+// entry blends a cinematic accent (teal / amber) into warm graphite so the serif
+// title stays legible; the entry is chosen by hashing the project id (falling back
+// to the title) so a given project keeps the same cover across renders.
+const COVER_GRADIENTS = [
+    "linear-gradient(150deg, var(--color-primary) -10%, var(--color-bg-inset) 72%)",
+    "linear-gradient(135deg, var(--color-accent) -15%, var(--color-bg-surface) 70%)",
+    "linear-gradient(160deg, var(--color-primary) -18%, var(--color-bg-elevated) 55%, var(--color-bg-inset) 100%)",
+    "linear-gradient(140deg, var(--color-bg-surface) 0%, var(--color-primary) 165%)",
+];
+
+function coverGradient(seed: string): string {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return COVER_GRADIENTS[h % COVER_GRADIENTS.length];
+}
+
 // Status is absent on the data model, so derive a coarse lifecycle state:
 // a merged video => completed; rendered frames present => processing; else draft.
 export function deriveStatus(project: Project): DerivedStatus {
@@ -51,7 +74,33 @@ export function deriveStatus(project: Project): DerivedStatus {
 
 export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
     const t = useTranslations("project");
+    const tCommon = useTranslations("common");
     const locale = useSettingsStore((s) => s.locale);
+
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuWrapRef = useRef<HTMLDivElement>(null);
+    const firstItemRef = useRef<HTMLButtonElement>(null);
+
+    // Close the actions menu on outside click / Escape, and move focus to the
+    // first item when it opens (keyboard + a11y parity with the rest of Studio).
+    useEffect(() => {
+        if (!menuOpen) return;
+        firstItemRef.current?.focus();
+        const onDocDown = (e: MouseEvent) => {
+            if (menuWrapRef.current && !menuWrapRef.current.contains(e.target as Node)) {
+                setMenuOpen(false);
+            }
+        };
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setMenuOpen(false);
+        };
+        document.addEventListener("mousedown", onDocDown);
+        document.addEventListener("keydown", onKey);
+        return () => {
+            document.removeEventListener("mousedown", onDocDown);
+            document.removeEventListener("keydown", onKey);
+        };
+    }, [menuOpen]);
 
     const cover = deriveCover(project);
     const status = deriveStatus(project);
@@ -112,15 +161,27 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
                         className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-text-muted">
-                        <FileText size={32} />
+                    // Typographic cover — a deterministic graphite/teal gradient stands in
+                    // for the image; the serif project name (bottom overlay) reads over it.
+                    <div
+                        className="absolute inset-0"
+                        style={{ background: coverGradient(project.id || project.title) }}
+                        aria-hidden="true"
+                    >
+                        {/* fine film grain — tactile texture over the flat gradient */}
+                        <div
+                            className="absolute inset-0 pointer-events-none mix-blend-overlay"
+                            style={{ backgroundImage: GRAIN_URL, opacity: 0.07 }}
+                        />
+                        {/* vignette — darkens the edges, lifts the title zone */}
+                        <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{ background: "radial-gradient(120% 120% at 50% 38%, transparent 50%, rgb(0 0 0 / 0.55))" }}
+                        />
                     </div>
                 )}
                 {/* Gradient legibility scrim */}
-                <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{ background: "linear-gradient(180deg, transparent 40%, rgba(8,7,10,0.62))" }}
-                />
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent from-40% to-black/60" />
 
                 {/* Status badge — top-left */}
                 <div className="absolute top-3 left-3 z-[2]">
@@ -132,10 +193,7 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
 
                 {/* Hover-reveal play */}
                 <div className="absolute inset-0 z-[2] grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <span
-                        className="w-12 h-12 rounded-full grid place-items-center shadow-lg"
-                        style={{ background: "rgba(242,237,228,0.92)" }}
-                    >
+                    <span className="w-12 h-12 rounded-full grid place-items-center shadow-lg bg-foreground/90">
                         <Play size={18} className="text-on-accent ml-0.5" fill="currentColor" />
                     </span>
                 </div>
@@ -145,10 +203,7 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
                     <h3 className="font-display atelier-display text-[22px] font-semibold leading-[1.05] tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] truncate">
                         {project.title}
                     </h3>
-                    <div
-                        className="font-mono text-[9px] uppercase tracking-wider mt-1 truncate"
-                        style={{ color: "rgba(242,237,228,0.75)" }}
-                    >
+                    <div className="font-mono text-[9px] uppercase tracking-wider mt-1 truncate text-foreground/75">
                         {project.episode_number ? `EP.${String(project.episode_number).padStart(2, "0")} · ` : ""}
                         {t("shotCount", { count: frameCount })}
                     </div>
@@ -172,21 +227,55 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
                         </span>
                     </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="relative" ref={menuWrapRef} onClick={(e) => e.stopPropagation()}>
                     <button
-                        onClick={handleDelete}
-                        className="w-8 h-8 rounded-lg grid place-items-center text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
-                        aria-label={t("confirmDelete", { title: project.title })}
-                    >
-                        <Trash2 size={15} />
-                    </button>
-                    <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-8 h-8 rounded-lg grid place-items-center text-text-muted hover:text-foreground hover:bg-hover-bg transition-colors"
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuOpen((v) => !v);
+                        }}
+                        className={`w-8 h-8 rounded-lg grid place-items-center transition-colors ${menuOpen ? "text-foreground bg-hover-bg" : "text-text-muted hover:text-foreground hover:bg-hover-bg"}`}
                         aria-label={t("moreActions")}
+                        aria-haspopup="menu"
+                        aria-expanded={menuOpen}
                     >
                         <MoreVertical size={15} />
                     </button>
+                    {menuOpen ? (
+                        <div
+                            role="menu"
+                            aria-label={t("moreActions")}
+                            className="absolute right-0 bottom-full z-20 mb-2 w-40 overflow-hidden rounded-md border border-glass-border bg-surface/96 shadow-[0_8px_28px_-6px_rgba(0,0,0,0.7)] backdrop-blur-md"
+                        >
+                            <button
+                                type="button"
+                                role="menuitem"
+                                ref={firstItemRef}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setMenuOpen(false);
+                                    handleOpen();
+                                }}
+                                className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left font-sans text-body-sm text-foreground transition-colors hover:bg-primary/12 hover:text-primary focus-visible:outline-none focus-visible:bg-primary/12"
+                            >
+                                <ExternalLink size={14} aria-hidden="true" />
+                                {tCommon("open")}
+                            </button>
+                            <button
+                                type="button"
+                                role="menuitem"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setMenuOpen(false);
+                                    handleDelete(e);
+                                }}
+                                className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left font-sans text-body-sm text-foreground transition-colors hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:bg-red-500/10 focus-visible:text-red-400"
+                            >
+                                <Trash2 size={14} aria-hidden="true" />
+                                {tCommon("delete")}
+                            </button>
+                        </div>
+                    ) : null}
                 </div>
             </div>
         </motion.article>
