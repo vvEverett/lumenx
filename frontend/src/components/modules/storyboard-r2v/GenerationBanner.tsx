@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export type BannerState = "idle" | "phase1" | "phase2" | "dialogue" | "summary";
 
@@ -38,6 +39,8 @@ export function GenerationBanner({
         return () => clearInterval(timer);
     }, [state, phase1Captions.length]);
 
+    const t = useTranslations("storyboardR2V");
+
     if (state === "idle") return null;
     if (state === "summary" && !summary) return null;
 
@@ -65,11 +68,10 @@ export function GenerationBanner({
                 <BannerShell key="phase2">
                     <Loader2 size={13} className="animate-spin text-amber-400 shrink-0" />
                     <span className="text-xs text-text-secondary">
-                        精修第{" "}
-                        <span className="text-foreground font-medium">
-                            {refineProgress?.current ?? 0}/{refineProgress?.total ?? 0}
-                        </span>{" "}
-                        帧…
+                        {t("bannerRefineProgress", {
+                            current: refineProgress?.current ?? 0,
+                            total: refineProgress?.total ?? 0,
+                        })}
                     </span>
                 </BannerShell>
             )}
@@ -78,11 +80,10 @@ export function GenerationBanner({
                 <BannerShell key="dialogue">
                     <Loader2 size={13} className="animate-spin text-blue-400 shrink-0" />
                     <span className="text-xs text-text-secondary">
-                        生成对白{" "}
-                        <span className="text-foreground font-medium">
-                            {dialogueProgress?.current ?? 0}/{dialogueProgress?.total ?? 0}
-                        </span>
-                        …
+                        {t("bannerDialogueProgress", {
+                            current: dialogueProgress?.current ?? 0,
+                            total: dialogueProgress?.total ?? 0,
+                        })}
                     </span>
                 </BannerShell>
             )}
@@ -121,6 +122,7 @@ function SummaryBar({
     summary: { frameCount: number; dialogueReady: number; dialogueMissing: number };
     onGenerateDialogue?: () => void;
 }) {
+    const t = useTranslations("storyboardR2V");
     const showCTA = summary.dialogueReady > 0;
 
     return (
@@ -134,22 +136,22 @@ function SummaryBar({
             <div className="flex items-center gap-2.5 h-9 px-6 border-b border-border-subtle bg-glass">
                 <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
                 <span className="text-[0.8125rem] text-text-secondary">
-                    {summary.frameCount} 帧
+                    {t("bannerFrameCount", { count: summary.frameCount })}
                     {summary.dialogueReady > 0 && (
-                        <span className="ml-1.5">· {summary.dialogueReady} 帧对白待生成</span>
+                        <span className="ml-1.5">{t("bannerDialoguePending", { count: summary.dialogueReady })}</span>
                     )}
                     {summary.dialogueMissing > 0 && (
-                        <span className="ml-1.5 text-amber-400/80">· {summary.dialogueMissing} 帧缺语音绑定</span>
+                        <span className="ml-1.5 text-amber-400/80">{t("bannerDialogueMissingVoice", { count: summary.dialogueMissing })}</span>
                     )}
                 </span>
                 {showCTA && onGenerateDialogue && (
                     <button
                         type="button"
                         onClick={onGenerateDialogue}
-                        title="用绑定的角色声音合成对白音频（在 Assembly 步骤中与视频合并）"
+                        title={t("bannerSynthDialogueTooltip")}
                         className="ml-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[0.75rem] font-medium text-primary bg-primary/10 hover:bg-primary/15 transition-colors"
                     >
-                        🎙 合成对白语音
+                        {t("bannerSynthDialogue")}
                     </button>
                 )}
             </div>

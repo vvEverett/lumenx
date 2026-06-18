@@ -39,6 +39,7 @@ function startAssetPoll(
     projectId: string,
     kind: CastKind,
     generationType: string,
+    t: ReturnType<typeof useTranslations<"castWorkbench">>,
     getStore: () => {
         updateProject: (id: string, data: any) => void;
         removeGeneratingTask: (assetId: string, generationType: string) => void;
@@ -60,14 +61,14 @@ function startAssetPoll(
                 const entityPool = (kind === "character" ? fresh.characters : kind === "scene" ? fresh.scenes : fresh.props) || [];
                 const updatedEntity = entityPool.find((e: any) => e.id === entityId);
                 const count = updatedEntity ? readVariants(updatedEntity, kind).length : 0;
-                toast.success(`生成完成`, { body: `已生成 ${count} 张变体` });
+                toast.success(t("toastVariantDone"), { body: t("toastVariantDoneBody", { count }) });
             } else if (status?.status === "failed") {
                 clearInterval(interval);
                 activePolls.delete(entityId);
                 if (progressToastId) toast.dismiss(progressToastId);
                 const { removeGeneratingTask } = getStore();
                 removeGeneratingTask(entityId, generationType);
-                toast.error("生成失败", { body: status?.error || "未知错误" });
+                toast.error(t("toastGenErr"), { body: status?.error || t("toastGenErrUnknown") });
             }
         } catch (err) {
             clearInterval(interval);
@@ -75,7 +76,7 @@ function startAssetPoll(
             if (progressToastId) toast.dismiss(progressToastId);
             const { removeGeneratingTask } = getStore();
             removeGeneratingTask(entityId, generationType);
-            toast.error("轮询异常", { body: "请刷新页面查看结果" });
+            toast.error(t("toastPollErr"), { body: t("toastPollErrBody") });
         }
     }, 2500);
     activePolls.set(entityId, interval);
@@ -327,7 +328,7 @@ export default function CastWorkbenchModal({ isOpen, kind, entityId, onClose }: 
                 const capturedEntityId = entity.id;
                 const capturedKind = kind;
                 const capturedProjectId = currentProject.id;
-                startAssetPoll(capturedEntityId, taskId, capturedProjectId, capturedKind, kind === "character" ? "reference_sheet" : "all", () => ({
+                startAssetPoll(capturedEntityId, taskId, capturedProjectId, capturedKind, kind === "character" ? "reference_sheet" : "all", t, () => ({
                     updateProject: useProjectStore.getState().updateProject,
                     removeGeneratingTask: useProjectStore.getState().removeGeneratingTask,
                 }), progressId);

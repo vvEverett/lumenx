@@ -20,7 +20,7 @@ export default function BottomTabBar({
   return (
     <nav
       className="md:hidden flex-shrink-0 flex items-stretch border-t border-glass-border bg-surface/80 backdrop-blur-xl"
-      aria-label="主导航"
+      aria-label={t("mainNavAria")}
     >
       {GLOBAL_NAV_ITEMS.map(({ id, icon: Icon, hash }) => {
         const active = activeTab === id;

@@ -16,8 +16,6 @@ import { useTranslations } from "next-intl";
 import { api, type CustomVoice } from "@/lib/api";
 import { getAssetUrl } from "@/lib/utils";
 
-const DEFAULT_PREVIEW_TEXT = "你好，这是一段音色测试。请仔细听一听是否符合预期。";
-
 interface VoiceDesignModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -38,8 +36,9 @@ export default function VoiceDesignModal({
     onCreated,
 }: VoiceDesignModalProps) {
     const t = useTranslations("voiceDesign");
+    const defaultPreviewText = t("previewTextDefault");
     const [voicePrompt, setVoicePrompt] = useState("");
-    const [previewText, setPreviewText] = useState(DEFAULT_PREVIEW_TEXT);
+    const [previewText, setPreviewText] = useState(defaultPreviewText);
     const [label, setLabel] = useState("");
     const [phase, setPhase] = useState<Phase>("draft");
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -55,7 +54,7 @@ export default function VoiceDesignModal({
             audioRef.current = null;
         }
         setVoicePrompt("");
-        setPreviewText(DEFAULT_PREVIEW_TEXT);
+        setPreviewText(defaultPreviewText);
         setLabel("");
         setPhase("draft");
         setErrorMsg(null);
@@ -117,7 +116,7 @@ export default function VoiceDesignModal({
         try {
             const { voice_id, preview_url } = await api.designVoicePreview({
                 voice_prompt: voicePrompt.trim(),
-                preview_text: previewText.trim() || DEFAULT_PREVIEW_TEXT,
+                preview_text: previewText.trim() || defaultPreviewText,
             });
             setPreviewVoiceId(voice_id);
             setPreviewUrl(preview_url);

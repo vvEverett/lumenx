@@ -35,8 +35,8 @@ function formatUploadError(err: T2IUploadError, t: ReturnType<typeof useTranslat
     const base =
         code === "type" ? t("t2iHeroUploadInvalidType") :
         code === "size" ? t("t2iHeroUploadTooLarge") :
-        code === "not_found" ? "镜头还未保存到服务器，先添加描述再上传首帧。" :
-        code === "server" ? "服务端处理失败。" :
+        code === "not_found" ? t("t2iUploadErrNotFound") :
+        code === "server" ? t("t2iUploadErrServer") :
         t("t2iHeroUploadFailed");
     return detail ? `${base}（${detail}）` : base;
 }

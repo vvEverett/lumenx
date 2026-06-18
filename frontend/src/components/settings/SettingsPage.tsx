@@ -131,12 +131,14 @@ function loadFromLS<T>(key: string, fallback: T): T {
   }
 }
 
+// `name` / `desc` hold i18n keys (relative to the `settings` namespace) so the
+// module-scope list can be resolved with t(...) at render time.
 const THEME_OPTIONS: { id: ThemePreset; name: string; desc: string; base: string; primary: string; accent: string }[] = [
-  { id: "atelier-dark",  name: "Atelier 暗",  desc: "暖石墨 · teal",   base: "#0c0b0e", primary: "#34d8c4", accent: "#ffa94d" },
-  { id: "bridge-dark",   name: "Warm Bridge", desc: "暖中性 · 品牌蓝", base: "#0a0a0d", primary: "#646cff", accent: "#ffa94d" },
-  { id: "brand-dark",    name: "Brand 暗",    desc: "冷黑 · 品牌蓝",   base: "#050508", primary: "#646cff", accent: "#ff0080" },
-  { id: "atelier-light", name: "Atelier 亮",  desc: "暖陶白 · teal",   base: "#f6f1e9", primary: "#1d9c8d", accent: "#e8852b" },
-  { id: "brand-light",   name: "品牌亮",      desc: "冷白 · 品牌蓝",   base: "#f8f9fa", primary: "#646cff", accent: "#ff0080" },
+  { id: "atelier-dark",  name: "themeAtelierDark",  desc: "themeAtelierDarkDesc",  base: "#0c0b0e", primary: "#34d8c4", accent: "#ffa94d" },
+  { id: "bridge-dark",   name: "themeBridgeDark",   desc: "themeBridgeDarkDesc",   base: "#0a0a0d", primary: "#646cff", accent: "#ffa94d" },
+  { id: "brand-dark",    name: "themeBrandDark",    desc: "themeBrandDarkDesc",    base: "#050508", primary: "#646cff", accent: "#ff0080" },
+  { id: "atelier-light", name: "themeAtelierLight", desc: "themeAtelierLightDesc", base: "#f6f1e9", primary: "#1d9c8d", accent: "#e8852b" },
+  { id: "brand-light",   name: "themeBrandLight",   desc: "themeBrandLightDesc",   base: "#f8f9fa", primary: "#646cff", accent: "#ff0080" },
 ];
 
 interface SystemReport {
@@ -224,7 +226,7 @@ export default function SettingsPage() {
       const data = await api.getEnvConfig();
       setConfig((prev) => normalizeEnvConfig(prev, data));
     } catch {
-      setLoadError("无法加载配置。后端是否已启动？");
+      setLoadError(t("loadConfigFailed"));
     } finally {
       setLoading(false);
     }
@@ -323,7 +325,7 @@ export default function SettingsPage() {
   const handleSaveApiConfig = async () => {
     const errors = getValidationErrors(config);
     if (errors.length > 0) {
-      toast.error("请填写必填项", { body: `- ${errors.join("\n- ")}` });
+      toast.error(t("fillRequired"), { body: `- ${errors.join("\n- ")}` });
       return;
     }
     setSaving(true);
@@ -331,7 +333,7 @@ export default function SettingsPage() {
       await api.saveEnvConfig(config);
       toast.success(t("saveSuccess"));
     } catch {
-      toast.error("保存配置失败。");
+      toast.error(t("saveConfigFailed"));
     } finally {
       setSaving(false);
     }
@@ -344,7 +346,7 @@ export default function SettingsPage() {
       await api.saveEnvConfig(config);
       toast.success(t("saveSuccess"));
     } catch {
-      toast.error("保存配置失败。");
+      toast.error(t("saveConfigFailed"));
     } finally {
       setSaving(false);
     }
@@ -418,11 +420,11 @@ export default function SettingsPage() {
           type="button"
           onClick={() => copyPath(value)}
           disabled={!value}
-          title="复制路径"
+          title={t("copyPath")}
           className="flex-shrink-0 px-3 rounded-md border border-glass-border bg-surface text-text-secondary hover:text-foreground transition-colors disabled:opacity-40 flex items-center gap-1.5 text-xs"
         >
           {copiedPath === value ? <Check size={13} className="text-emerald-400" /> : <FolderOpen size={13} />}
-          {copiedPath === value ? "已复制" : "复制"}
+          {copiedPath === value ? t("copied") : t("copy")}
         </button>
       </div>
     </div>
@@ -431,7 +433,7 @@ export default function SettingsPage() {
   /* ── Section renderers ──────────────────────────────────────── */
 
   const renderGeneral = () => (
-    <Section id="general" title="语言、主题与动效">
+    <Section id="general" title={t("secGeneralTitle")}>
       <FormRow label={t("language")} hint={t("languageDesc")}>
         <FieldLabel>LANGUAGE</FieldLabel>
         <ModeSegment
@@ -468,8 +470,8 @@ export default function SettingsPage() {
                 <span className="h-3 w-3 rounded-full" style={{ background: preset.accent }} />
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-medium text-foreground truncate">{preset.name}</div>
-                <div className="text-[0.625rem] text-text-muted truncate">{preset.desc}</div>
+                <div className="text-xs font-medium text-foreground truncate">{t(preset.name)}</div>
+                <div className="text-[0.625rem] text-text-muted truncate">{t(preset.desc)}</div>
               </div>
               {theme === preset.id && (
                 <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
@@ -479,20 +481,20 @@ export default function SettingsPage() {
         </div>
       </FormRow>
 
-      <FormRow label="动效" hint="关闭后将降低过渡动画，并尊重系统的减少动态偏好。">
+      <FormRow label={t("motionLabel")} hint={t("motionHint")}>
         <Toggle
           checked={animations}
           onChange={setAnimations}
-          label={animations ? "已启用过渡动效" : "已降低动效"}
-          sub="包含面板进出、签名动效等"
-          ariaLabel="界面动效开关"
+          label={animations ? t("motionOn") : t("motionReduced")}
+          sub={t("motionSub")}
+          ariaLabel={t("motionToggleAria")}
         />
       </FormRow>
     </Section>
   );
 
   const aspectButtons = (key: keyof FrontendModelSettings) => (
-    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="画幅比例" onKeyDown={rovingKeyDown}>
+    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t("aspectRatioAria")} onKeyDown={rovingKeyDown}>
       {ASPECT_RATIOS.map((ratio) => (
         <button
           key={ratio.id}
@@ -516,14 +518,14 @@ export default function SettingsPage() {
   const renderModels = () => (
     <Section
       id="models"
-      title="模型与画幅选择"
-      desc="新建项目时套用的默认模型与画幅。可在项目内单独覆盖。"
+      title={t("secModelsTitle")}
+      desc={t("secModelsDesc")}
     >
       {/* Image model (T2I + I2I unified) */}
-      <FormRow label="图像模型" hint="文生图与图生图（分镜首帧）使用同一模型。">
+      <FormRow label={t("imageModelLabel")} hint={t("imageModelHint")}>
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
           <Image size={15} className="text-emerald-400" />
-          <span>Image Model · 文生图 / 图生图</span>
+          <span>{t("imageModelCaption")}</span>
         </div>
         <GroupedModelGrid
           models={GLOBAL_IMAGE_MODELS}
@@ -533,13 +535,13 @@ export default function SettingsPage() {
       </FormRow>
 
       {/* Asset aspect ratios */}
-      <FormRow label="资产画幅" hint="角色 / 场景 / 道具的默认生成比例。">
+      <FormRow label={t("assetAspectLabel")} hint={t("assetAspectHint")}>
         <div className="grid grid-cols-3 gap-4">
           {(
             [
-              { key: "character_aspect_ratio" as const, label: "角色", icon: User },
-              { key: "scene_aspect_ratio" as const, label: "场景", icon: Building },
-              { key: "prop_aspect_ratio" as const, label: "道具", icon: Box },
+              { key: "character_aspect_ratio" as const, label: t("assetCharacter"), icon: User },
+              { key: "scene_aspect_ratio" as const, label: t("assetScene"), icon: Building },
+              { key: "prop_aspect_ratio" as const, label: t("assetProp"), icon: Box },
             ] as const
           ).map(({ key, label, icon: Icon }) => (
             <div key={key} className="space-y-2">
@@ -569,7 +571,7 @@ export default function SettingsPage() {
       </FormRow>
 
       {/* Storyboard aspect ratio */}
-      <FormRow label="分镜画幅" hint="分镜（图生图）首帧的默认比例。">
+      <FormRow label={t("storyboardAspectLabel")} hint={t("storyboardAspectHint")}>
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
           <Layout size={15} className="text-primary" />
           <span>Storyboard Aspect Ratio</span>
@@ -578,7 +580,7 @@ export default function SettingsPage() {
       </FormRow>
 
       {/* I2V */}
-      <FormRow label="首帧生视频(I2V)" hint="图生视频 · 分镜动态化。">
+      <FormRow label={t("i2vModelLabel")} hint={t("i2vModelHint")}>
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
           <Video size={15} className="text-purple-400" />
           <span>Image-to-Video</span>
@@ -591,7 +593,7 @@ export default function SettingsPage() {
       </FormRow>
 
       {/* R2V */}
-      <FormRow label="参考生视频 (R2V)" hint="参考图驱动的视频生成默认模型。">
+      <FormRow label={t("r2vModelLabel")} hint={t("r2vModelHint")}>
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
           <Video size={15} className="text-purple-400" />
           <span>Reference-to-Video</span>
@@ -610,26 +612,26 @@ export default function SettingsPage() {
           className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-on-accent text-sm font-medium rounded-lg transition-all"
         >
           <Save size={16} />
-          保存默认
+          {t("saveDefaults")}
         </button>
       </div>
     </Section>
   );
 
   const PROMPT_FIELDS: { key: keyof DefaultPromptConfig; label: string; desc: string }[] = [
-    { key: "entity_extraction", label: "角色/场景/道具提取", desc: "从剧本/小说提取实体的系统提示词。留空使用内置默认。" },
-    { key: "style_analysis", label: "视觉风格分析", desc: "从剧本推荐美术风格的系统提示词。留空使用内置默认。" },
-    { key: "storyboard_extraction", label: "分镜提取 (剧本→分镜)", desc: "从剧本生成分镜（剧本→分镜）的系统提示词。留空使用内置默认。" },
-    { key: "storyboard_polish", label: "分镜润色", desc: "分镜 / 图像提示词润色的系统提示词。" },
-    { key: "video_polish", label: "I2V 视频润色", desc: "图生视频提示词润色的系统提示词。" },
-    { key: "r2v_polish", label: "R2V 视频润色", desc: "参考生视频提示词润色的系统提示词。" },
+    { key: "entity_extraction", label: t("promptEntityLabel"), desc: t("promptEntityDesc") },
+    { key: "style_analysis", label: t("promptStyleLabel"), desc: t("promptStyleDesc") },
+    { key: "storyboard_extraction", label: t("promptStoryboardExtractLabel"), desc: t("promptStoryboardExtractDesc") },
+    { key: "storyboard_polish", label: t("promptStoryboardPolishLabel"), desc: t("promptStoryboardPolishDesc") },
+    { key: "video_polish", label: t("promptVideoPolishLabel"), desc: t("promptVideoPolishDesc") },
+    { key: "r2v_polish", label: t("promptR2vPolishLabel"), desc: t("promptR2vPolishDesc") },
   ];
 
   const renderPrompts = () => (
     <Section
       id="prompts"
-      title="系统提示词配置"
-      desc="新建项目的默认系统提示词（留空使用内置默认）。"
+      title={t("secPromptsTitle")}
+      desc={t("secPromptsDesc")}
     >
       <div className="space-y-5">
         {PROMPT_FIELDS.map((f) => (
@@ -639,7 +641,7 @@ export default function SettingsPage() {
             <textarea
               value={promptConfig[f.key]}
               onChange={(e) => setPromptConfig((prev) => ({ ...prev, [f.key]: e.target.value }))}
-              placeholder="留空使用系统默认…"
+              placeholder={t("promptPlaceholder")}
               className="w-full h-32 bg-input-bg border border-glass-border rounded-lg p-3 text-xs text-foreground resize-y focus:outline-none focus:border-primary/50 font-mono placeholder-text-muted"
             />
           </div>
@@ -652,7 +654,7 @@ export default function SettingsPage() {
           className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-on-accent text-sm font-medium rounded-lg transition-colors"
         >
           <Save size={16} />
-          保存默认
+          {t("saveDefaults")}
         </button>
       </div>
     </Section>
@@ -661,13 +663,13 @@ export default function SettingsPage() {
   const renderApiKeys = () => (
     <Section
       id="apikeys"
-      title="供应商凭证"
-      desc="DashScope 优先；按需开启供应商直连。"
+      title={t("secApiTitle")}
+      desc={t("secApiDesc")}
     >
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 size={24} className="animate-spin text-primary" />
-          <span className="ml-2 text-text-secondary">加载配置中…</span>
+          <span className="ml-2 text-text-secondary">{t("loadingConfig")}</span>
         </div>
       ) : loadError ? (
         <div className="bg-status-failed-bg border border-status-failed-border rounded-lg p-4 text-sm text-status-failed-fg">
@@ -675,7 +677,7 @@ export default function SettingsPage() {
         </div>
       ) : (
         <div className="space-y-1">
-          <FormRow label="DashScope 密钥" hint="阿里云百炼 / 通义系列服务凭证（必填）。">
+          <FormRow label={t("dashscopeKeyLabel")} hint={t("dashscopeKeyHint")}>
             <FieldLabel>DASHSCOPE_API_KEY *</FieldLabel>
             <KeyField
               value={config.DASHSCOPE_API_KEY}
@@ -683,19 +685,19 @@ export default function SettingsPage() {
               placeholder="sk-..."
               status={
                 config.DASHSCOPE_API_KEY?.trim()
-                  ? { kind: "ok", text: "已填写" }
-                  : { kind: "warn", text: "未配置 · 模型不可用" }
+                  ? { kind: "ok", text: t("filled") }
+                  : { kind: "warn", text: t("notConfiguredUnavailable") }
               }
             />
           </FormRow>
 
-          <FormRow label="可灵 Kling" hint="DashScope 模式用主密钥；供应商直连需 AK/SK。">
+          <FormRow label={t("klingLabel")} hint={t("klingHint")}>
             <ModeSegment
               value={config.KLING_PROVIDER_MODE}
               onChange={(v) => handleChange("KLING_PROVIDER_MODE", v)}
               options={[
                 { id: "dashscope", label: "DashScope" },
-                { id: "vendor", label: "供应商直连" },
+                { id: "vendor", label: t("vendorDirect") },
               ]}
             />
             {config.KLING_PROVIDER_MODE === "vendor" && (
@@ -712,13 +714,13 @@ export default function SettingsPage() {
             )}
           </FormRow>
 
-          <FormRow label="Vidu" hint="DashScope 模式用主密钥；供应商直连需 API Key。">
+          <FormRow label="Vidu" hint={t("viduHint")}>
             <ModeSegment
               value={config.VIDU_PROVIDER_MODE}
               onChange={(v) => handleChange("VIDU_PROVIDER_MODE", v)}
               options={[
                 { id: "dashscope", label: "DashScope" },
-                { id: "vendor", label: "供应商直连" },
+                { id: "vendor", label: t("vendorDirect") },
               ]}
             />
             {config.VIDU_PROVIDER_MODE === "vendor" && (
@@ -729,7 +731,7 @@ export default function SettingsPage() {
             )}
           </FormRow>
 
-          <FormRow label="MuleRun / MuleRouter" hint="用于 Seedance 2.0 视频与 GPT-Image-2 图片生成。">
+          <FormRow label={t("mulerunLabel")} hint={t("mulerunHint")}>
             {!config.MULEROUTER_API_KEY && !config.MULERUN_CLI_LOGGED_IN && (
               <button
                 type="button"
@@ -756,19 +758,19 @@ export default function SettingsPage() {
                     }, 3000);
                     setTimeout(stop, 120000);
                   } catch (err: any) {
-                    toast.error(err?.response?.data?.detail || "登录失败");
+                    toast.error(err?.response?.data?.detail || t("loginFailed"));
                   }
                 }}
                 className="w-full py-2.5 rounded-lg bg-primary text-on-accent text-sm font-medium hover:bg-primary-hover transition-colors mb-3"
               >
-                一键登录 MuleRun
+                {t("mulerunLogin")}
               </button>
             )}
             {!config.MULEROUTER_API_KEY && config.MULERUN_CLI_LOGGED_IN && (
               <div className="flex items-center gap-3 mb-3">
                 <div className="flex items-center gap-2 text-sm text-emerald-400">
                   <Check size={16} />
-                  MuleRun 已登录
+                  {t("mulerunLoggedIn")}
                 </div>
                 <button
                   type="button"
@@ -776,12 +778,12 @@ export default function SettingsPage() {
                     try {
                       await api.triggerMulerunLogin();
                     } catch (err: any) {
-                      toast.error(err?.response?.data?.detail || "登录失败");
+                      toast.error(err?.response?.data?.detail || t("loginFailed"));
                     }
                   }}
                   className="text-xs text-text-secondary hover:text-foreground transition-colors underline underline-offset-2"
                 >
-                  重新登录
+                  {t("reLogin")}
                 </button>
               </div>
             )}
@@ -794,13 +796,13 @@ export default function SettingsPage() {
             <details className="group mt-3">
               <summary className="text-xs text-primary cursor-pointer hover:underline flex items-center gap-1">
                 <ChevronRight size={12} className="transition-transform group-open:rotate-90" />
-                手动获取 Key
+                {t("manualGetKey")}
               </summary>
               <div className="mt-2 space-y-2 pl-4 border-l border-glass-border">
                 {[
-                  { n: "1", label: "安装 CLI", cmd: "npm i -g @mulerunai/cli" },
-                  { n: "2", label: "浏览器登录", cmd: "mulerun login" },
-                  { n: "3", label: "复制 Key", cmd: "mulerun studio config" },
+                  { n: "1", label: t("stepInstallCli"), cmd: "npm i -g @mulerunai/cli" },
+                  { n: "2", label: t("stepBrowserLogin"), cmd: "mulerun login" },
+                  { n: "3", label: t("stepCopyKey"), cmd: "mulerun studio config" },
                 ].map((step) => (
                   <div key={step.n} className="flex items-center gap-2 text-xs text-text-secondary">
                     <span className="shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[0.625rem] font-bold">
@@ -820,19 +822,19 @@ export default function SettingsPage() {
                     </code>
                   </div>
                 ))}
-                <p className="text-[0.6875rem] text-text-muted mt-1">Key 格式为 muk-...，粘贴到上方输入框即可。本地开发如已登录 CLI，无需填写。</p>
+                <p className="text-[0.6875rem] text-text-muted mt-1">{t("mulerunKeyHint")}</p>
               </div>
             </details>
           </FormRow>
 
-          <FormRow label="高级 · API 端点" hint="自定义各供应商 Base URL，留空使用默认。">
+          <FormRow label={t("advancedEndpointsLabel")} hint={t("advancedEndpointsHint")}>
             <button
               type="button"
               onClick={() => setEndpointsOpen(!endpointsOpen)}
               className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-foreground transition-colors"
             >
               {endpointsOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              {endpointsOpen ? "收起端点配置" : "展开端点配置"}
+              {endpointsOpen ? t("collapseEndpoints") : t("expandEndpoints")}
             </button>
             {endpointsOpen && (
               <div className="mt-3 space-y-3">
@@ -860,7 +862,7 @@ export default function SettingsPage() {
               className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-on-accent text-sm font-medium rounded-lg transition-all disabled:opacity-50"
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              {saving ? "保存中…" : "保存配置"}
+              {saving ? t("saving") : t("saveConfig")}
             </button>
           </div>
         </div>
@@ -871,27 +873,27 @@ export default function SettingsPage() {
   const renderStorage = () => (
     <Section
       id="storage"
-      title="云端镜像与本地路径"
-      desc="生成结果默认本地优先；OSS 仅用于可选云端镜像。"
+      title={t("secStorageTitle")}
+      desc={t("secStorageDesc")}
     >
-      <FormRow label="云存储">
+      <FormRow label={t("cloudStorageLabel")}>
         <Toggle
           checked={config.OSS_ENABLE}
           onChange={(v) => setConfig((c) => ({ ...c, OSS_ENABLE: v }))}
-          label="启用云存储"
-          sub="启用云存储，将资产与成片上传到对象存储。关闭则仅保存在本地 output/。"
-          ariaLabel="启用云存储开关"
+          label={t("enableCloudStorage")}
+          sub={t("enableCloudStorageSub")}
+          ariaLabel={t("enableCloudStorageAria")}
         />
       </FormRow>
 
-      <FormRow label="阿里云 AK / SK" hint="仅在启用 OSS 镜像时需要填写。">
+      <FormRow label={t("ossAkSkLabel")} hint={t("ossAkSkHint")}>
         <div className="space-y-3">
           <div>
             <FieldLabel>ALIBABA_CLOUD_ACCESS_KEY_ID</FieldLabel>
             <KeyField
               value={config.ALIBABA_CLOUD_ACCESS_KEY_ID}
               onChange={(v) => handleChange("ALIBABA_CLOUD_ACCESS_KEY_ID", v)}
-              placeholder="可选，用于 OSS 镜像"
+              placeholder={t("ossOptionalMirror")}
             />
           </div>
           <div>
@@ -899,7 +901,7 @@ export default function SettingsPage() {
             <KeyField
               value={config.ALIBABA_CLOUD_ACCESS_KEY_SECRET}
               onChange={(v) => handleChange("ALIBABA_CLOUD_ACCESS_KEY_SECRET", v)}
-              placeholder="可选，用于 OSS 镜像"
+              placeholder={t("ossOptionalMirror")}
             />
           </div>
           <a
@@ -908,34 +910,34 @@ export default function SettingsPage() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-[0.75rem] text-primary hover:underline"
           >
-            如何获取 AccessKey?
+            {t("howToGetAccessKey")}
           </a>
         </div>
       </FormRow>
 
-      <FormRow label="Bucket 名称" hint="存储桶标识。">
+      <FormRow label={t("bucketLabel")} hint={t("bucketHint")}>
         <FieldLabel>OSS_BUCKET</FieldLabel>
         <input
           type="text"
           value={config.OSS_BUCKET_NAME}
           onChange={(e) => handleChange("OSS_BUCKET_NAME", e.target.value)}
-          placeholder="your_bucket_name（可选）"
+          placeholder={t("bucketPlaceholder")}
           className={settingsInputClass + " font-mono text-[0.71875rem]"}
         />
       </FormRow>
 
-      <FormRow label="Endpoint" hint="区域访问端点。">
+      <FormRow label="Endpoint" hint={t("endpointHint")}>
         <FieldLabel>OSS_ENDPOINT</FieldLabel>
         <input
           type="text"
           value={config.OSS_ENDPOINT}
           onChange={(e) => handleChange("OSS_ENDPOINT", e.target.value)}
-          placeholder="oss-cn-beijing.aliyuncs.com（可选）"
+          placeholder={t("endpointPlaceholder")}
           className={settingsInputClass + " font-mono text-[0.71875rem]"}
         />
       </FormRow>
 
-      <FormRow label="Base Path" hint="对象前缀路径。">
+      <FormRow label="Base Path" hint={t("basePathHint")}>
         <FieldLabel>OSS_BASE_PATH</FieldLabel>
         <input
           type="text"
@@ -946,11 +948,11 @@ export default function SettingsPage() {
         />
       </FormRow>
 
-      <FormRow label="本地数据目录" hint="只读 · 由系统管理（可设 LUMENX_DATA_DIR 环境变量覆盖）。">
+      <FormRow label={t("dataDirLabel")} hint={t("dataDirHint")}>
         <PathField value={dataDir} label="DATA_DIR · MANAGED" />
       </FormRow>
 
-      <FormRow label="日志目录" hint="只读 · 由系统管理（可设 LUMENX_LOG_DIR 环境变量覆盖）。">
+      <FormRow label={t("logDirLabel")} hint={t("logDirHint")}>
         <PathField value={logDir} label="LOG_DIR · MANAGED" />
       </FormRow>
 
@@ -962,7 +964,7 @@ export default function SettingsPage() {
           className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-on-accent text-sm font-medium rounded-lg transition-all disabled:opacity-50"
         >
           {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-          {saving ? "保存中…" : "保存配置"}
+          {saving ? t("saving") : t("saveConfig")}
         </button>
       </div>
     </Section>
@@ -971,13 +973,13 @@ export default function SettingsPage() {
   const renderAbout = () => {
     const ff = system?.ffmpeg;
     const aboutRows: { k: string; v: string; tone?: "ok" | "warn" }[] = [
-      { k: "应用版本", v: `LumenX Studio ${APP_VERSION}` },
-      { k: "后端 API", v: API_URL },
-      { k: "数据目录", v: dataDir || "—" },
-      { k: "日志目录", v: logDir || "—" },
+      { k: t("aboutAppVersion"), v: `LumenX Studio ${APP_VERSION}` },
+      { k: t("aboutBackendApi"), v: API_URL },
+      { k: t("aboutDataDir"), v: dataDir || "—" },
+      { k: t("logDirLabel"), v: logDir || "—" },
     ];
     return (
-      <Section id="about" title="版本信息与系统状态">
+      <Section id="about" title={t("secAboutTitle")}>
         {/* Line B brand signature block — teal-glow logo, serif name, amber tagline */}
         <div className="flex flex-col items-start gap-3 pb-6 mb-6 border-b border-glass-border">
           <LumenXBranding size="md" showSlogan={false} />
@@ -988,7 +990,7 @@ export default function SettingsPage() {
             VERSION {APP_VERSION.replace(/^v/, "")} · BUILD 20260613
           </div>
           <p className="text-[0.78125rem] text-text-secondary leading-relaxed max-w-md">
-            AI 漫画 / 短片创作平台 · 由 Next.js + FastAPI 驱动，集成阿里云 Qwen / Wanx 服务。
+            {t("aboutTagline")}
           </p>
         </div>
 
@@ -999,7 +1001,7 @@ export default function SettingsPage() {
 
         {/* Technical info table */}
         <div className="font-mono text-[0.59375rem] uppercase tracking-[0.1em] text-text-muted mb-3">
-          技术信息 · SYSTEM
+          {t("aboutTechInfo")}
         </div>
         <div className="space-y-0">
           {aboutRows.map((r) => (
@@ -1014,16 +1016,16 @@ export default function SettingsPage() {
             <span className="font-mono text-[0.71875rem] text-right truncate">
               {systemLoading ? (
                 <span className="inline-flex items-center gap-1.5 text-text-muted">
-                  <Loader2 size={12} className="animate-spin" /> 检测中…
+                  <Loader2 size={12} className="animate-spin" /> {t("ffmpegChecking")}
                 </span>
               ) : ff ? (
                 ff.available ? (
-                  <span className="text-emerald-400" title={ff.message}>已检测 · 可用</span>
+                  <span className="text-emerald-400" title={ff.message}>{t("ffmpegAvailable")}</span>
                 ) : (
-                  <span className="text-amber-400" title={ff.message}>未检测到</span>
+                  <span className="text-amber-400" title={ff.message}>{t("ffmpegMissing")}</span>
                 )
               ) : (
-                <span className="text-text-muted">无法获取（后端离线？）</span>
+                <span className="text-text-muted">{t("ffmpegUnknown")}</span>
               )}
             </span>
           </div>
@@ -1036,7 +1038,7 @@ export default function SettingsPage() {
             className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-md border border-glass-border bg-surface text-text-secondary hover:text-foreground transition-colors disabled:opacity-50"
           >
             {systemLoading ? <Loader2 size={13} className="animate-spin" /> : <Copy size={13} />}
-            重新检测
+            {t("recheck")}
           </button>
         </div>
       </Section>
@@ -1063,22 +1065,22 @@ export default function SettingsPage() {
   };
 
   const CATEGORY_TITLE: Record<SettingsCategory, string> = {
-    general: "通用与主题",
-    models: "默认模型",
-    prompts: "默认 Prompt",
-    apikeys: "API 密钥",
-    storage: "存储 OSS",
-    about: "关于",
+    general: t("eyebrowGeneral"),
+    models: t("eyebrowModels"),
+    prompts: t("eyebrowPrompts"),
+    apikeys: t("eyebrowApikeys"),
+    storage: t("eyebrowStorage"),
+    about: t("eyebrowAbout"),
   };
 
   // 横向 Tab 短标签（取代竖向 SettingsSidebar；与全局品牌侧栏轴向正交，不再撞脸）。
   const TABS: { id: SettingsCategory; label: string }[] = [
-    { id: "general", label: "通用" },
-    { id: "models", label: "模型" },
-    { id: "prompts", label: "默认 Prompt" },
-    { id: "apikeys", label: "API 密钥" },
-    { id: "storage", label: "存储" },
-    { id: "about", label: "关于" },
+    { id: "general", label: t("tabGeneral") },
+    { id: "models", label: t("tabModels") },
+    { id: "prompts", label: t("eyebrowPrompts") },
+    { id: "apikeys", label: t("eyebrowApikeys") },
+    { id: "storage", label: t("tabStorage") },
+    { id: "about", label: t("eyebrowAbout") },
   ];
 
   return (
@@ -1094,9 +1096,9 @@ export default function SettingsPage() {
           SETTINGS · <span className="text-primary">{CATEGORY_TITLE[active]}</span>
         </div>
         <h1 className="font-display atelier-display text-[1.5rem] md:text-[2rem] leading-none font-semibold text-foreground mt-2 tracking-tight">
-          设置
+          {t("title")}
         </h1>
-        <nav className="flex flex-wrap gap-1 mt-5" role="tablist" aria-label="设置分类" onKeyDown={rovingKeyDown}>
+        <nav className="flex flex-wrap gap-1 mt-5" role="tablist" aria-label={t("tabsAria")} onKeyDown={rovingKeyDown}>
           {TABS.map((tab) => {
             const isActive = active === tab.id;
             return (
@@ -1131,9 +1133,9 @@ export default function SettingsPage() {
             >
               <WifiOff size={18} className="text-status-processing-fg flex-shrink-0" />
               <div className="flex-1">
-                <div className="text-[0.78125rem] font-semibold text-foreground">当前处于离线模式</div>
+                <div className="text-[0.78125rem] font-semibold text-foreground">{t("offlineTitle")}</div>
                 <div className="text-[0.6875rem] text-text-secondary mt-0.5">
-                  未检测到网络连接。已缓存的资产仍可浏览，生成与导出将在恢复网络后执行。
+                  {t("offlineBody")}
                 </div>
               </div>
             </div>

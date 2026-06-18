@@ -782,7 +782,7 @@ export default function ShotCard({
                                     className="inline-flex items-center gap-1 text-[0.6875rem] text-text-muted hover:text-text-secondary transition-colors"
                                 >
                                     <Code2 size={12} strokeWidth={1.5} />
-                                    <span>查看最终提示词</span>
+                                    <span>{t("viewFinalPrompt")}</span>
                                     <ChevronRight
                                         size={11}
                                         className={`transition-transform duration-200 ${promptPreviewOpen ? "rotate-90" : ""}`}
@@ -805,7 +805,7 @@ export default function ShotCard({
                                                 {/* Duration is the only field NOT in prompt — show as API param note */}
                                                 {shot.duration && (
                                                     <p className="text-text-muted border-t border-border-subtle pt-1.5">
-                                                        <span className="text-emerald-300/70">时长:</span> {shot.duration}s (API参数，不入提示词)
+                                                        <span className="text-emerald-300/70">{t("durationLabel")}:</span> {shot.duration}s {t("durationApiNote")}
                                                     </p>
                                                 )}
                                             </div>
@@ -847,7 +847,7 @@ export default function ShotCard({
                                     onClick={onMoveUp}
                                     disabled={index === 0}
                                     className="p-1.5 rounded-lg hover:bg-hover-bg text-text-secondary hover:text-foreground transition-colors disabled:opacity-20 disabled:hover:bg-transparent"
-                                    title="上移"
+                                    title={t("moveUp")}
                                 >
                                     <ChevronUp size={14} strokeWidth={1.5} />
                                 </motion.button>
@@ -857,7 +857,7 @@ export default function ShotCard({
                                     onClick={onMoveDown}
                                     disabled={index === totalShots - 1}
                                     className="p-1.5 rounded-lg hover:bg-hover-bg text-text-secondary hover:text-foreground transition-colors disabled:opacity-20 disabled:hover:bg-transparent"
-                                    title="下移"
+                                    title={t("moveDown")}
                                 >
                                     <ChevronDown size={14} strokeWidth={1.5} />
                                 </motion.button>
@@ -887,7 +887,7 @@ export default function ShotCard({
                                             whileTap={{ scale: 0.92 }}
                                             onClick={onRefineFrame}
                                             className="p-1.5 rounded-lg hover:bg-hover-bg text-text-secondary hover:text-amber-400 transition-colors"
-                                            title="精修此帧"
+                                            title={t("refineFrame")}
                                         >
                                             <Sparkles size={13} strokeWidth={1.5} />
                                         </motion.button>
@@ -906,7 +906,7 @@ export default function ShotCard({
                                             onClick={() => onSetGenerateCount?.(n)}
                                             aria-pressed={active}
                                             aria-label={`Generate ${n} at a time`}
-                                            title={`每次生成 ${n} 条候选`}
+                                            title={t("genCandidatesEachTooltip", { n })}
                                             className={`grid h-9 w-9 place-items-center rounded-md border font-mono text-[0.6875rem] font-medium transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${
                                                 active
                                                     ? "border-primary/55 bg-primary/15 text-primary"
@@ -926,20 +926,20 @@ export default function ShotCard({
                                 disabled={!canGenerate || inFlightCount > 0}
                                 title={!canGenerate
                                     ? (shot.tabMode === "t2i_i2v"
-                                        ? "请先在上方生成或上传首帧"
-                                        : "请先输入提示词")
-                                    : `生成 ${generateCount} 条视频候选`}
+                                        ? t("needFirstFrameTooltip")
+                                        : t("needPromptInputTooltip"))
+                                    : t("genVideoCandidatesTooltip", { count: generateCount })}
                                 className="inline-flex items-center justify-center gap-1.5 rounded-md px-5 py-2 min-w-[140px] font-sans text-[0.8125rem] font-semibold tracking-tight transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 disabled:cursor-not-allowed disabled:opacity-40 bg-primary text-white border border-[rgba(100,108,255,0.65)] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(60,68,200,0.45),0_4px_14px_-2px_rgba(100,108,255,0.45)] hover:bg-primary-hover hover:border-[rgba(100,108,255,0.85)] disabled:hover:bg-primary disabled:hover:border-[rgba(100,108,255,0.65)]"
                             >
                                 {inFlightCount > 0 ? (
                                     <>
                                         <Loader2 size={14} className="animate-spin" strokeWidth={2} />
-                                        <span>{`生成中 · ${inFlightCount}`}</span>
+                                        <span>{t("genClusterInFlight", { count: inFlightCount })}</span>
                                     </>
                                 ) : (
                                     <>
                                         <Sparkles size={14} strokeWidth={2} />
-                                        <span>{`生成 ×${generateCount}`}</span>
+                                        <span>{t("generateBatch", { count: generateCount })}</span>
                                     </>
                                 )}
                             </motion.button>

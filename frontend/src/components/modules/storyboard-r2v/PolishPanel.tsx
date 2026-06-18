@@ -68,7 +68,7 @@ function reasonToI18nKey(reason: PolishErrorReason): string {
 }
 
 /** 解析 axios error 成 PolishErrorState；非 502 / 无 detail 时归类为 api_error。 */
-function parsePolishError(err: any): PolishErrorState {
+function parsePolishError(err: any, t: (key: string) => string): PolishErrorState {
     const detail = err?.response?.data?.detail;
     if (detail && typeof detail === "object" && typeof detail.reason === "string") {
         return {
@@ -81,7 +81,7 @@ function parsePolishError(err: any): PolishErrorState {
     }
     return {
         reason: "api_error",
-        messageZh: "模型调用失败，请重试或检查网络。",
+        messageZh: t("polishErrorApi"),
         messageEn: "Model call failed. Please retry or check your network.",
     };
 }
@@ -126,13 +126,13 @@ export default function PolishPanel({
                 // 200 但缺 key 走错误态
                 setError({
                     reason: "missing_keys",
-                    messageZh: "模型返回了不完整的双语结果，建议重试。",
+                    messageZh: t("polishErrorMissingKeys"),
                     messageEn: "Model returned incomplete bilingual result. Please retry.",
                 });
             }
         } catch (err: any) {
             debugLog.error("Studio", "Polish failed:", err);
-            const parsed = parsePolishError(err);
+            const parsed = parsePolishError(err, t);
             setError(parsed);
             // model_echo 是 warning：仍把后端附带的双语 echo 展示给用户
             // （这样他们能在 feedback 框里参照原文追加要求）

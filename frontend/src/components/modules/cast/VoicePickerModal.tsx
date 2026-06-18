@@ -35,12 +35,6 @@ const RECOMMENDED_BY_GENDER: Record<string, string[]> = {
     Female: ["longxiaochun_v2", "longyue_v2", "longfeifei_v2", "longwan_v2"],
 };
 
-// Preview sample text — Q5 A2 fallback when character has no dialogue yet
-const SAMPLE_TEXT_TEMPLATE = (name: string) =>
-    name
-        ? `你好，我是${name}。今天遇到件有趣的事，让我慢慢说给你听。`
-        : "你好，这是音色试听。今天遇到件有趣的事，让我慢慢说给你听。";
-
 interface VoicePickerModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -157,7 +151,13 @@ export default function VoicePickerModal({
         }
     }, [isOpen]);
 
-    const sampleText = previewText || SAMPLE_TEXT_TEMPLATE(characterName);
+    // Preview sample text — Q5 A2 fallback when character has no dialogue yet.
+    // Prefer explicit previewText (Q5 A3); otherwise build from character name.
+    const sampleText =
+        previewText ||
+        (characterName
+            ? t("previewTextNamed", { name: characterName })
+            : t("previewTextDefault"));
 
     // PR-3h · unified preview-by-id (works for both system VoiceMeta and CustomVoice)
     const handlePreviewById = async (voiceId: string) => {

@@ -8,10 +8,12 @@
  * Disabling action buttons app-wide is intentionally deferred (out of MVP).
  */
 import { WifiOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useOnline } from "@/lib/useOnline";
 
 export default function OfflineBanner() {
   const online = useOnline();
+  const t = useTranslations("common");
 
   if (online) return null;
 
@@ -23,7 +25,7 @@ export default function OfflineBanner() {
     >
       <WifiOff size={14} aria-hidden="true" className="flex-shrink-0" />
       <span className="text-body-sm font-medium">
-        网络已断开 — 重新连接后可继续操作
+        {t("offlineBannerText")}
       </span>
     </div>
   );

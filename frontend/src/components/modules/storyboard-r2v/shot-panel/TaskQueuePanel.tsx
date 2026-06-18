@@ -14,6 +14,7 @@
  * "jump to shot" does.
  */
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { X, ArrowRight, Loader2, Copy, Check, RefreshCw, ChevronDown, ChevronRight, ListChecks } from "lucide-react";
 import type { VideoTask } from "@/lib/api";
 import PreviewImage from "@/components/shared/preview/PreviewImage";
@@ -199,6 +200,7 @@ function TaskRow({
     onCancel?: (task: VideoTask) => Promise<void> | void;
     onRetry?: (task: VideoTask) => Promise<void> | void;
 }) {
+    const t = useTranslations("storyboardR2V");
     const [copiedField, setCopiedField] = useState<"providerId" | "providerRequest" | "diagnose" | null>(null);
     const [retrying, setRetrying] = useState(false);
     const isFailed = task.status === "failed";
@@ -234,8 +236,8 @@ function TaskRow({
     // Provider ID display: when provider_name=dashscope, label as "百炼"
     // (user-friendly Chinese name) since that's the console they'll paste into.
     const providerLabel =
-        task.provider_name === "dashscope" ? "百炼"
-            : task.provider_name === "kling" ? "可灵"
+        task.provider_name === "dashscope" ? t("providerDashscope")
+            : task.provider_name === "kling" ? t("providerKling")
                 : task.provider_name === "vidu" ? "Vidu"
                     : task.provider_name === "pixverse" ? "PixVerse"
                         : task.provider_name || "provider";
@@ -290,7 +292,7 @@ function TaskRow({
                     onClick={() => setExpanded(v => !v)}
                     aria-expanded={expanded}
                     aria-label={expanded ? "Collapse task details" : "Expand task details"}
-                    title={expanded ? "收起" : "展开详情"}
+                    title={expanded ? t("queueCollapse") : t("queueExpandDetails")}
                     className="-m-1 grid h-6 w-6 place-items-center rounded text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                 >
                     {expanded ? <ChevronDown size={12} aria-hidden="true" /> : <ChevronRight size={12} aria-hidden="true" />}
@@ -307,7 +309,7 @@ function TaskRow({
                         <button
                             type="button"
                             aria-label="Jump to shot"
-                            title="跳转到该 shot"
+                            title={t("queueJumpToShot")}
                             onClick={() => onJumpToShot(task.frame_id!)}
                             className="-m-1 grid h-7 w-7 place-items-center rounded text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                         >
@@ -422,7 +424,7 @@ function TaskRow({
                                     <button
                                         type="button"
                                         onClick={() => void handleCopy("providerId", task.provider_task_id!)}
-                                        title="复制 task ID"
+                                        title={t("queueCopyTaskId")}
                                         aria-label="Copy task ID"
                                         className="-m-1 grid h-6 w-6 place-items-center rounded text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                                     >
@@ -439,7 +441,7 @@ function TaskRow({
                                     <button
                                         type="button"
                                         onClick={() => void handleCopy("providerRequest", task.provider_request_id!)}
-                                        title="复制 request ID"
+                                        title={t("queueCopyRequestId")}
                                         aria-label="Copy request ID"
                                         className="-m-1 grid h-6 w-6 place-items-center rounded text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                                     >
@@ -462,11 +464,11 @@ function TaskRow({
                             <button
                                 type="button"
                                 onClick={() => void handleCopy("diagnose", diagnoseBlob)}
-                                title="复制完整诊断信息"
+                                title={t("queueCopyDiagnose")}
                                 className="inline-flex min-h-[24px] items-center gap-1 rounded border border-glass-border bg-black/30 px-2 py-[2px] font-mono text-chrome-sm font-medium text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                             >
                                 {copiedField === "diagnose" ? <Check size={10} /> : <Copy size={10} />}
-                                {copiedField === "diagnose" ? "已复制" : "复制诊断"}
+                                {copiedField === "diagnose" ? t("queueCopied") : t("queueCopyDiagnoseShort")}
                             </button>
                             {isFailed && onRetry ? (
                                 <button

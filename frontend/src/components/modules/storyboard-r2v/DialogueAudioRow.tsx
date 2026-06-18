@@ -91,17 +91,17 @@ export default function DialogueAudioRow({
                     )}
                     {hasDub && (
                         <span className="px-1.5 py-0.5 rounded font-mono text-[0.59375rem] uppercase tracking-[0.14em] bg-emerald-500/10 text-emerald-400">
-                            已覆盖
+                            {t("overridden")}
                         </span>
                     )}
                     {hasPreview && !hasDub && (
                         <span className="px-1.5 py-0.5 rounded font-mono text-[0.59375rem] uppercase tracking-[0.14em] bg-amber-500/10 text-amber-400">
-                            预览中
+                            {t("previewingBadge")}
                         </span>
                     )}
 
                     <span className="ml-auto text-[0.6875rem] text-text-muted group-hover:text-text-secondary transition-colors">
-                        {hasVideo && hasAudio ? "配音工作台 →" : "语音生成 →"}
+                        {hasVideo && hasAudio ? t("openWorkbench") : t("openVoiceGen")}
                     </span>
                 </div>
 
@@ -268,7 +268,7 @@ function DialogueWorkbenchModal({
         try {
             await onPreviewDub(videoTaskId, offsetMs);
         } catch (e: any) {
-            setError(e?.response?.data?.detail || e?.message || "预览生成失败");
+            setError(e?.response?.data?.detail || e?.message || t("previewFailed"));
         } finally {
             setPreviewing(false);
         }
@@ -280,7 +280,7 @@ function DialogueWorkbenchModal({
         try {
             await onApplyDub();
         } catch (e: any) {
-            setError(e?.response?.data?.detail || e?.message || "应用失败");
+            setError(e?.response?.data?.detail || e?.message || t("applyFailed"));
         } finally {
             setApplying(false);
         }
@@ -293,7 +293,7 @@ function DialogueWorkbenchModal({
         try {
             await onRevertDub();
         } catch (e: any) {
-            setError(e?.response?.data?.detail || e?.message || "撤销失败");
+            setError(e?.response?.data?.detail || e?.message || t("undoFailed"));
         } finally {
             setReverting(false);
         }
@@ -325,8 +325,8 @@ function DialogueWorkbenchModal({
                                     <Mic size={16} className="text-primary" />
                                 </div>
                                 <div>
-                                    <h3 className="text-[0.875rem] font-medium text-foreground">配音工作台</h3>
-                                    <p className="text-[0.6875rem] text-text-muted mt-0.5">编辑对白 → 生成语音 → 覆盖到视频</p>
+                                    <h3 className="text-[0.875rem] font-medium text-foreground">{t("workbenchTitle")}</h3>
+                                    <p className="text-[0.6875rem] text-text-muted mt-0.5">{t("workbenchSubtitle")}</p>
                                 </div>
                             </div>
                             <button
@@ -343,16 +343,16 @@ function DialogueWorkbenchModal({
                             {/* Step 1: Dialogue text editing */}
                             <section className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[0.75rem] font-medium text-text-secondary">① 对白文本</span>
+                                    <span className="text-[0.75rem] font-medium text-text-secondary">{t("stepDialogueText")}</span>
                                     {!voiceId && (
-                                        <span className="text-[0.625rem] text-amber-400">需先在「角色」中绑定音色</span>
+                                        <span className="text-[0.625rem] text-amber-400">{t("needVoiceBindingHint")}</span>
                                     )}
                                 </div>
                                 <textarea
                                     value={dialogueDraft}
                                     onChange={(e) => setDialogueDraft(e.target.value)}
                                     onBlur={handleSaveDialogue}
-                                    placeholder="输入该镜头的对白文本..."
+                                    placeholder={t("dialoguePlaceholder")}
                                     rows={2}
                                     className="w-full rounded-md border border-glass-border bg-black/30 px-3 py-2 text-[0.75rem] text-foreground placeholder:text-text-muted focus:outline-none focus:border-primary/40 resize-none"
                                 />
@@ -361,7 +361,7 @@ function DialogueWorkbenchModal({
                             {/* Step 2: Emotion + TTS generation */}
                             <section className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[0.75rem] font-medium text-text-secondary">② 情绪与生成</span>
+                                    <span className="text-[0.75rem] font-medium text-text-secondary">{t("stepEmotionGen")}</span>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-1">
                                     {EMOTION_CHIPS.map((chip) => (
@@ -400,11 +400,11 @@ function DialogueWorkbenchModal({
                                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-glass-border bg-black/30 text-[0.75rem] text-text-secondary hover:border-foreground/30 hover:text-foreground transition-colors"
                                         >
                                             {playing ? <Pause size={12} /> : <Play size={12} />}
-                                            {playing ? "暂停" : "试听TTS"}
+                                            {playing ? t("pause") : t("previewTts")}
                                         </button>
                                     )}
                                     {audioUrl && (
-                                        <span className="text-[0.625rem] text-emerald-400">✓ 已生成</span>
+                                        <span className="text-[0.625rem] text-emerald-400">{t("generatedTag")}</span>
                                     )}
                                 </div>
                             </section>
@@ -413,15 +413,15 @@ function DialogueWorkbenchModal({
                             {canDub && (
                                 <section className="space-y-3 border-t border-glass-border/50 pt-4">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[0.75rem] font-medium text-text-secondary">③ 覆盖到视频</span>
+                                        <span className="text-[0.75rem] font-medium text-text-secondary">{t("stepOverride")}</span>
                                         {dubbedVideoUrl && !previewVideoUrl && (
                                             <span className="px-1.5 py-0.5 rounded font-mono text-[0.5625rem] uppercase tracking-[0.14em] bg-emerald-500/10 text-emerald-400">
-                                                已覆盖
+                                                {t("overridden")}
                                             </span>
                                         )}
                                         {previewVideoUrl && (
                                             <span className="px-1.5 py-0.5 rounded font-mono text-[0.5625rem] uppercase tracking-[0.14em] bg-amber-500/10 text-amber-400">
-                                                预览版
+                                                {t("previewVersion")}
                                             </span>
                                         )}
                                     </div>
@@ -442,12 +442,12 @@ function DialogueWorkbenchModal({
                                         />
                                         {previewVideoUrl && (
                                             <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-[0.5625rem] font-medium text-amber-300">
-                                                预览版
+                                                {t("previewVersion")}
                                             </div>
                                         )}
                                         {dubbedVideoUrl && !previewVideoUrl && (
                                             <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[0.5625rem] font-medium text-emerald-300">
-                                                配音版
+                                                {t("dubbedVersion")}
                                             </div>
                                         )}
                                     </div>
@@ -461,13 +461,13 @@ function DialogueWorkbenchModal({
                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-primary/30 bg-primary/5 text-[0.6875rem] font-medium text-primary hover:bg-primary/10 transition-colors"
                                             >
                                                 <Crosshair size={12} />
-                                                标记起始点
+                                                {t("markStartPoint")}
                                             </button>
-                                            <span className="text-[0.625rem] text-text-muted">暂停视频到口型张开处，点此标记</span>
+                                            <span className="text-[0.625rem] text-text-muted">{t("markStartHint")}</span>
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[0.6875rem] text-text-muted shrink-0">音频位置</span>
+                                            <span className="text-[0.6875rem] text-text-muted shrink-0">{t("audioPosition")}</span>
                                             <button
                                                 type="button"
                                                 onClick={() => setOffsetMs(Math.max(0, offsetMs - 50))}
@@ -511,7 +511,7 @@ function DialogueWorkbenchModal({
                                             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md border border-primary/40 bg-primary/10 text-[0.75rem] font-medium text-primary hover:bg-primary/15 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                             {previewing ? <Loader2 size={12} className="animate-spin" /> : <Film size={12} />}
-                                            {previewing ? "生成预览中..." : "预听"}
+                                            {previewing ? t("generatingPreview") : t("preview")}
                                         </button>
 
                                         {/* 应用覆盖 — only when preview exists */}
@@ -523,7 +523,7 @@ function DialogueWorkbenchModal({
                                                 className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 text-[0.75rem] font-medium text-emerald-300 hover:bg-emerald-500/15 hover:border-emerald-500/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                             >
                                                 {applying ? <Loader2 size={12} className="animate-spin" /> : <Film size={12} />}
-                                                应用覆盖
+                                                {t("applyOverride")}
                                             </button>
                                         )}
 
@@ -536,14 +536,14 @@ function DialogueWorkbenchModal({
                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-amber-500/30 bg-amber-500/5 text-[0.75rem] text-amber-300 hover:bg-amber-500/10 hover:border-amber-500/50 transition-colors disabled:opacity-40"
                                             >
                                                 {reverting ? <Loader2 size={12} className="animate-spin" /> : <Undo2 size={12} />}
-                                                撤销覆盖
+                                                {t("undoOverride")}
                                             </button>
                                         )}
                                     </div>
 
                                     {previewVideoUrl && (
                                         <p className="text-[0.625rem] text-text-muted">
-                                            当前为预览版——确认效果后点「应用覆盖」正式替换，或调整 offset 后重新预听。
+                                            {t("previewHintBody")}
                                         </p>
                                     )}
                                 </section>
@@ -568,7 +568,7 @@ function DialogueWorkbenchModal({
                                 onClick={onClose}
                                 className="px-3 py-1.5 rounded-md text-[0.75rem] text-text-muted hover:text-text-secondary transition-colors"
                             >
-                                关闭
+                                {t("close")}
                             </button>
                         </div>
                     </motion.div>

@@ -85,7 +85,7 @@ export default function GlobalSidebar({ activeTab, onTabChange }: GlobalSidebarP
       <button
         type="button"
         onClick={() => handleNav("workspace", "#/")}
-        aria-label="LumenX Studio · 工作区"
+        aria-label={t("workspaceAria")}
         className="text-left px-4 pt-5 pb-4 border-b border-glass-border hover:opacity-90 transition-opacity"
       >
         <LumenXBranding size="md" showSlogan={false} />
@@ -95,7 +95,7 @@ export default function GlobalSidebar({ activeTab, onTabChange }: GlobalSidebarP
       </button>
 
       {/* Primary navigation */}
-      <nav className="flex-1 flex flex-col gap-0.5 p-2.5" aria-label="主导航">
+      <nav className="flex-1 flex flex-col gap-0.5 p-2.5" aria-label={t("mainNavAria")}>
         {GLOBAL_NAV_ITEMS.slice(0, 3).map((item) => (
           <NavButton
             key={item.id}

@@ -139,9 +139,9 @@ export default function SeriesPromptConfigModal({ isOpen, onClose, seriesId, onS
                                     首帧/参考图的润色更准确。 */}
                                 <div className="space-y-2">
                                     <div>
-                                        <h3 className="text-sm font-bold text-foreground">Polish 模型</h3>
+                                        <h3 className="text-sm font-bold text-foreground">{t("polishModelTitle")}</h3>
                                         <p className="text-[0.625rem] text-text-secondary mt-0.5">
-                                            选择 AI 润色调用的 LLM 模型。三个选项都支持视觉理解，能在润色时参考首帧/参考图。
+                                            {t("polishModelDesc")}
                                         </p>
                                     </div>
                                     <select

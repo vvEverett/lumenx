@@ -223,7 +223,7 @@ export default function SeriesArtDirectionPanel({ seriesId, onSaved }: SeriesArt
                                             : "bg-elevated text-text-secondary hover:bg-hover-bg border border-transparent"
                                     }`}
                                 >
-                                    全部
+                                    {t("filterAll")}
                                 </button>
                                 {categories.map(cat => (
                                     <button
@@ -332,6 +332,8 @@ function SeriesPresetModal({ preset, isSelected, editing, positivePrompt, negati
     sameCategoryPresets: StylePreset[];
     onSwitchPreset: (p: StylePreset) => void;
 }) {
+    const t = useTranslations("seriesArtDirection");
+    const tCommon = useTranslations("common");
     const isCustomized = editing && (
         positivePrompt !== preset.positive_prompt ||
         negativePrompt !== preset.negative_prompt
@@ -395,36 +397,36 @@ function SeriesPresetModal({ preset, isSelected, editing, positivePrompt, negati
 
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <p className="text-[0.6875rem] uppercase tracking-wider text-text-muted font-medium">提示词</p>
+                                <p className="text-[0.6875rem] uppercase tracking-wider text-text-muted font-medium">{t("promptLabel")}</p>
                                 {!editing && (
                                     <button onClick={onStartEditing} className="flex items-center gap-1.5 text-[0.6875rem] text-text-muted hover:text-foreground transition-colors">
-                                        <Pencil size={12} /><span>自定义</span>
+                                        <Pencil size={12} /><span>{t("customize")}</span>
                                     </button>
                                 )}
                                 {editing && isCustomized && (
-                                    <span className="text-[0.625rem] text-amber-300 font-medium">已修改</span>
+                                    <span className="text-[0.625rem] text-amber-300 font-medium">{t("modified")}</span>
                                 )}
                             </div>
 
                             {!editing ? (
                                 <>
                                     <div>
-                                        <p className="text-[0.625rem] text-text-muted mb-1.5">正向</p>
+                                        <p className="text-[0.625rem] text-text-muted mb-1.5">{t("positive")}</p>
                                         <p className="text-[0.8125rem] text-text-secondary leading-relaxed">{preset.positive_prompt}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[0.625rem] text-text-muted mb-1.5">负向</p>
+                                        <p className="text-[0.625rem] text-text-muted mb-1.5">{t("negative")}</p>
                                         <p className="text-[0.8125rem] text-text-secondary leading-relaxed">{preset.negative_prompt}</p>
                                     </div>
                                 </>
                             ) : (
                                 <>
                                     <div>
-                                        <p className="text-[0.625rem] text-text-muted mb-1.5">正向</p>
+                                        <p className="text-[0.625rem] text-text-muted mb-1.5">{t("positive")}</p>
                                         <textarea value={positivePrompt} onChange={(e) => onPositiveChange(e.target.value)} rows={5} className="w-full bg-input-bg border border-glass-border rounded-lg p-3 text-[0.8125rem] text-foreground focus:border-primary focus:outline-none resize-none" />
                                     </div>
                                     <div>
-                                        <p className="text-[0.625rem] text-text-muted mb-1.5">负向</p>
+                                        <p className="text-[0.625rem] text-text-muted mb-1.5">{t("negative")}</p>
                                         <textarea value={negativePrompt} onChange={(e) => onNegativeChange(e.target.value)} rows={3} className="w-full bg-input-bg border border-glass-border rounded-lg p-3 text-[0.8125rem] text-foreground focus:border-primary focus:outline-none resize-none" />
                                     </div>
                                 </>
@@ -436,7 +438,7 @@ function SeriesPresetModal({ preset, isSelected, editing, positivePrompt, negati
                 {/* Same-category strip */}
                 {sameCategoryPresets.length > 0 && (
                     <div className="border-t border-glass-border px-6 py-3 shrink-0">
-                        <p className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-2">同类风格</p>
+                        <p className="text-[0.625rem] uppercase tracking-wider text-text-muted mb-2">{t("similarStyles")}</p>
                         <div className="flex gap-2.5 overflow-x-auto pb-1">
                             {sameCategoryPresets.slice(0, 5).map(p => (
                                 <button key={p.id} onClick={() => onSwitchPreset(p)} className="shrink-0 w-24 rounded-lg overflow-hidden border border-glass-border hover:border-foreground/30 transition-colors">
@@ -453,9 +455,9 @@ function SeriesPresetModal({ preset, isSelected, editing, positivePrompt, negati
                 )}
 
                 <footer className="flex items-center justify-end gap-3 px-6 py-4 border-t border-glass-border shrink-0">
-                    <WorkflowActionButton variant="ghost" onClick={onClose}>取消</WorkflowActionButton>
+                    <WorkflowActionButton variant="ghost" onClick={onClose}>{tCommon("cancel")}</WorkflowActionButton>
                     <WorkflowActionButton variant="primary" leftIcon={<Check />} onClick={onApply}>
-                        {isSelected ? "已选择" : isCustomized ? "应用自定义风格" : "使用此风格"}
+                        {isSelected ? t("selected") : isCustomized ? t("applyCustomStyle") : t("useThisStyle")}
                     </WorkflowActionButton>
                 </footer>
             </motion.div>

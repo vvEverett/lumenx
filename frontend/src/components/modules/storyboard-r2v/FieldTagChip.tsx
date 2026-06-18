@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Pencil, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export type FieldType = "duration" | "shotSize" | "cameraAngle" | "cameraMovement" | "transitionHint";
 
@@ -54,12 +55,12 @@ const FIELD_COLORS: Record<FieldType, { bg: string; border: string; text: string
     },
 };
 
-const FIELD_LABELS: Record<FieldType, string> = {
-    duration: "时长",
-    shotSize: "景别",
-    cameraAngle: "机位",
-    cameraMovement: "运镜",
-    transitionHint: "转场",
+const FIELD_LABEL_KEYS: Record<FieldType, string> = {
+    duration: "fieldDuration",
+    shotSize: "fieldShotSize",
+    cameraAngle: "fieldCameraAngle",
+    cameraMovement: "fieldCameraMovement",
+    transitionHint: "fieldTransition",
 };
 
 interface FieldTagChipProps {
@@ -74,8 +75,9 @@ export default function FieldTagChip({ field, value, editorConfig, onChange }: F
     const chipRef = useRef<HTMLButtonElement>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
 
+    const t = useTranslations("storyboardR2V");
     const colors = FIELD_COLORS[field];
-    const label = FIELD_LABELS[field];
+    const label = t(FIELD_LABEL_KEYS[field]);
     const isEmpty = value === null || value === undefined || value === "";
 
     useEffect(() => {
@@ -218,6 +220,7 @@ function PresetEditor({ presets, allowCustom, value, onChange }: {
     presets: string[]; allowCustom: boolean; value: string;
     onChange: (v: string) => void;
 }) {
+    const t = useTranslations("storyboardR2V");
     const [custom, setCustom] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -252,7 +255,7 @@ function PresetEditor({ presets, allowCustom, value, onChange }: {
                     value={custom}
                     onChange={(e) => setCustom(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="自定义…"
+                    placeholder={t("fieldCustomPlaceholder")}
                     className="w-full rounded-md border border-glass-border bg-black/30 px-2.5 py-1.5 text-[0.6875rem] text-foreground placeholder:text-text-muted outline-none focus:border-primary/40 transition-colors"
                 />
             )}
@@ -279,11 +282,12 @@ export function AddFieldButton({ onAdd }: { onAdd: (field: FieldType) => void })
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [open]);
 
+    const t = useTranslations("storyboardR2V");
     const fields: { key: FieldType; label: string }[] = [
-        { key: "shotSize", label: "景别" },
-        { key: "cameraAngle", label: "机位" },
-        { key: "cameraMovement", label: "运镜" },
-        { key: "transitionHint", label: "转场" },
+        { key: "shotSize", label: t("fieldShotSize") },
+        { key: "cameraAngle", label: t("fieldCameraAngle") },
+        { key: "cameraMovement", label: t("fieldCameraMovement") },
+        { key: "transitionHint", label: t("fieldTransition") },
     ];
 
     return (

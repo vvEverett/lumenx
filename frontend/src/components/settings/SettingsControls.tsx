@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { Eye, EyeOff, Copy, Check, CircleAlert } from "lucide-react";
 
 /* ── Section card (Line B clean `.panel` — serif title + desc, no eyebrow) ─ */
@@ -84,6 +85,7 @@ export function KeyField({
   placeholder?: string;
   status?: { kind: "ok" | "warn"; text: string };
 }) {
+  const t = useTranslations("settings");
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -112,8 +114,8 @@ export function KeyField({
           <button
             type="button"
             onClick={() => setRevealed((r) => !r)}
-            aria-label={revealed ? "隐藏密钥" : "显示密钥"}
-            title={revealed ? "隐藏" : "显示"}
+            aria-label={revealed ? t("hideKey") : t("showKey")}
+            title={revealed ? t("hide") : t("show")}
             className="w-7 h-7 rounded-md grid place-items-center text-text-muted hover:bg-hover-bg hover:text-foreground transition-colors"
           >
             {revealed ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -121,8 +123,8 @@ export function KeyField({
           <button
             type="button"
             onClick={copy}
-            aria-label="复制密钥"
-            title="复制"
+            aria-label={t("copyKey")}
+            title={t("copy")}
             className="w-7 h-7 rounded-md grid place-items-center text-text-muted hover:bg-hover-bg hover:text-foreground transition-colors"
           >
             {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}

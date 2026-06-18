@@ -12,6 +12,7 @@
  */
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { RefreshCw, Loader2, Check, Sparkles, ExternalLink, CircleAlert } from "lucide-react";
 
 // 本地版本常量,避免跨文件耦合(与 SettingsPage 的 APP_VERSION 同源)。
@@ -19,7 +20,6 @@ const APP_VERSION = "v0.2.0";
 const REPO = "alibaba/lumenx";
 const LATEST_API = `https://api.github.com/repos/${REPO}/releases/latest`;
 const RELEASES_URL = `https://github.com/${REPO}/releases`;
-const GENERIC_ERROR = "暂时无法检查更新(可能网络或限流)";
 
 type Status = "idle" | "checking" | "latest" | "update" | "error";
 
@@ -50,10 +50,11 @@ function isNewer(remote: string, current: string): boolean {
 }
 
 export default function UpdateChecker() {
+  const t = useTranslations("settings");
   const [status, setStatus] = useState<Status>("idle");
   const [remoteTag, setRemoteTag] = useState("");
   const [releaseUrl, setReleaseUrl] = useState("");
-  const [errorMsg, setErrorMsg] = useState(GENERIC_ERROR);
+  const [errorMsg, setErrorMsg] = useState(() => t("updateError"));
 
   const checking = status === "checking";
 
@@ -62,14 +63,14 @@ export default function UpdateChecker() {
 
   const handleCheck = async () => {
     setStatus("checking");
-    setErrorMsg(GENERIC_ERROR);
+    setErrorMsg(t("updateError"));
     try {
       const res = await fetch(LATEST_API, {
         headers: { Accept: "application/vnd.github+json" },
       });
       // 404 = 仓库尚无任何 release;403 通常是未授权限流。
       if (res.status === 404) {
-        setErrorMsg("GitHub 仓库暂无发布");
+        setErrorMsg(t("updateNoRelease"));
         setStatus("error");
         return;
       }
@@ -104,7 +105,7 @@ export default function UpdateChecker() {
 
   return (
     <div className="flex items-center justify-between gap-3 flex-wrap py-2.5 border-t border-glass-border text-[0.78125rem]">
-      <span className="text-text-secondary shrink-0">版本更新</span>
+      <span className="text-text-secondary shrink-0">{t("updateLabel")}</span>
 
       <div className="flex items-center gap-2.5 flex-wrap justify-end">
         {/* 结果区:屏幕阅读器实时播报 */}
@@ -116,13 +117,13 @@ export default function UpdateChecker() {
           {status === "latest" && (
             <>
               <Check size={13} />
-              已是最新 ({APP_VERSION})
+              {t("updateUpToDate", { version: APP_VERSION })}
             </>
           )}
           {status === "update" && (
             <>
               <Sparkles size={13} />
-              发现新版本 {remoteTag}
+              {t("updateNewVersion", { version: remoteTag })}
             </>
           )}
           {status === "error" && (
@@ -138,9 +139,9 @@ export default function UpdateChecker() {
             type="button"
             onClick={() => openReleases(status === "update" ? releaseUrl : undefined)}
             className="inline-flex items-center gap-1 text-primary hover:underline text-[0.75rem] font-medium"
-            aria-label="在 GitHub 打开发布页"
+            aria-label={t("updateOpenReleaseAria")}
           >
-            打开发布页
+            {t("updateOpenRelease")}
             <ExternalLink size={12} />
           </button>
         )}
@@ -149,7 +150,7 @@ export default function UpdateChecker() {
           type="button"
           onClick={handleCheck}
           disabled={checking}
-          aria-label="检查更新"
+          aria-label={t("updateCheckAria")}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-glass-border text-primary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[0.75rem] font-medium"
         >
           {checking ? (
@@ -157,7 +158,7 @@ export default function UpdateChecker() {
           ) : (
             <RefreshCw size={13} />
           )}
-          {checking ? "检查中…" : "检查更新"}
+          {checking ? t("updateChecking") : t("updateCheck")}
         </button>
       </div>
     </div>
