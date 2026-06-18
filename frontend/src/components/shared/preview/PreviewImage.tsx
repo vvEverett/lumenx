@@ -30,6 +30,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, RefreshCw, Maximize2, Copy, Check } from "lucide-react";
 import clsx from "clsx";
+import { useTranslations } from "next-intl";
 import { getAssetUrl } from "@/lib/utils";
 import { useLightbox, type LightboxItem } from "./LightboxProvider";
 
@@ -65,6 +66,7 @@ export default function PreviewImage({
     groupId, groupIndex, alwaysShowMagnify = false,
     clickToLightbox = false, placeholder,
 }: PreviewImageProps) {
+    const t = useTranslations("preview");
     const { open, openInGroup } = useLightbox();
     const [errored, setErrored] = useState(false);
     const [retryNonce, setRetryNonce] = useState(0);
@@ -164,7 +166,7 @@ export default function PreviewImage({
                     handleOpenLightbox();
                 }
             } : undefined}
-            aria-label={clickable ? "放大查看" : undefined}
+            aria-label={clickable ? t("zoom") : undefined}
         >
             {!errored ? (
                 <>
@@ -180,8 +182,8 @@ export default function PreviewImage({
                         <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); handleOpenLightbox(); }}
-                            aria-label="放大查看"
-                            title="放大查看"
+                            aria-label={t("zoom")}
+                            title={t("zoom")}
                             className={clsx(
                                 "absolute right-1 top-1 grid h-6 w-6 place-items-center rounded bg-black/55 text-foreground backdrop-blur transition-opacity duration-fast ease-out-quart hover:bg-black/75 focus-visible:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary/55",
                                 alwaysShowMagnify
@@ -215,14 +217,15 @@ interface FallbackPanelProps {
 }
 
 function FallbackPanel({ sizeBucket, url, onRetry, onCopyUrl, copied }: FallbackPanelProps) {
+    const t = useTranslations("preview");
     // Micro (≤ 40px) — just ⚠ icon, whole panel = retry on click
     if (sizeBucket === "micro") {
         return (
             <button
                 type="button"
                 onClick={onRetry}
-                title={`加载失败，点击重试\n${url}`}
-                aria-label="加载失败，点击重试"
+                title={`${t("imgLoadFailedRetry")}\n${url}`}
+                aria-label={t("imgLoadFailedRetry")}
                 className="grid h-full w-full place-items-center bg-status-failed-bg text-status-failed-fg transition-colors duration-fast ease-out-quart hover:bg-status-failed-bg/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-failed-border"
             >
                 <AlertTriangle size={12} aria-hidden="true" />
@@ -244,7 +247,7 @@ function FallbackPanel({ sizeBucket, url, onRetry, onCopyUrl, copied }: Fallback
                     className="inline-flex items-center gap-0.5 font-mono text-chrome-sm font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-failed-border"
                 >
                     <RefreshCw size={10} aria-hidden="true" />
-                    重试
+                    {t("retry")}
                 </button>
             </div>
         );
@@ -258,7 +261,7 @@ function FallbackPanel({ sizeBucket, url, onRetry, onCopyUrl, copied }: Fallback
         >
             <AlertTriangle size={22} aria-hidden="true" />
             <div className="space-y-1">
-                <p className="font-sans text-body-sm font-medium">图片加载失败</p>
+                <p className="font-sans text-body-sm font-medium">{t("imgLoadFailed")}</p>
                 <p
                     className="max-w-[26rem] truncate font-mono text-chrome-sm text-status-failed-fg/75"
                     title={url}
@@ -273,7 +276,7 @@ function FallbackPanel({ sizeBucket, url, onRetry, onCopyUrl, copied }: Fallback
                     className="inline-flex min-h-[28px] items-center gap-1 rounded border border-status-failed-border bg-status-failed-bg px-2.5 py-1 font-mono text-chrome font-medium text-status-failed-fg transition-colors duration-fast ease-out-quart hover:bg-status-failed-fg/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-failed-border"
                 >
                     <RefreshCw size={11} aria-hidden="true" />
-                    重试
+                    {t("retry")}
                 </button>
                 <button
                     type="button"
@@ -281,7 +284,7 @@ function FallbackPanel({ sizeBucket, url, onRetry, onCopyUrl, copied }: Fallback
                     className="inline-flex min-h-[28px] items-center gap-1 rounded border border-glass-border bg-black/30 px-2.5 py-1 font-mono text-chrome font-medium text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                 >
                     {copied ? <Check size={11} /> : <Copy size={11} />}
-                    {copied ? "已复制" : "复制 URL"}
+                    {copied ? t("copied") : t("copyUrl")}
                 </button>
             </div>
         </div>

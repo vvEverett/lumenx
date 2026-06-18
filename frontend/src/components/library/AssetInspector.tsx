@@ -11,12 +11,6 @@ import { coverGradient, GRAIN_URL } from "@/lib/atelierCover";
 
 type AssetTab = "characters" | "scenes" | "props";
 
-const TYPE_LABEL: Record<AssetTab, string> = {
-  characters: "角色",
-  scenes: "场景",
-  props: "道具",
-};
-
 // 资产类型 → 后端单数 type（生成端点用）。
 const SINGULAR_TYPE: Record<AssetTab, string> = {
   characters: "character",
@@ -56,16 +50,6 @@ function fallbackUrl(asset: Character | Scene | Prop, type: AssetTab): string | 
     return c.image_url || c.full_body_image_url;
   }
   return (asset as Scene | Prop).image_url;
-}
-
-function timeAgo(ts?: number): string {
-  if (!ts) return "—";
-  const tsMs = ts > 1e12 ? ts : ts * 1000; // created_at 来自 time.time()（秒）；容错已是毫秒的情况
-  const days = Math.floor((Date.now() - tsMs) / 86_400_000);
-  if (days <= 0) return "今天";
-  if (days === 1) return "昨天";
-  if (days < 30) return `${days} 天前`;
-  return `${Math.floor(days / 30)} 个月前`;
 }
 
 const MIME_EXT: Record<string, string> = {
@@ -110,6 +94,21 @@ export default function AssetInspector({
   onPromoted,
 }: AssetInspectorProps) {
   const t = useTranslations("library");
+  const TYPE_LABEL: Record<AssetTab, string> = {
+    characters: t("characterLabel"),
+    scenes: t("sceneLabel"),
+    props: t("propLabel"),
+  };
+  // created_at 来自 time.time()（秒）；容错已是毫秒的情况。相对时间标签走 i18n。
+  const timeAgo = (ts?: number): string => {
+    if (!ts) return "—";
+    const tsMs = ts > 1e12 ? ts : ts * 1000;
+    const days = Math.floor((Date.now() - tsMs) / 86_400_000);
+    if (days <= 0) return t("timeToday");
+    if (days === 1) return t("timeYesterday");
+    if (days < 30) return t("timeDaysAgo", { days });
+    return t("timeMonthsAgo", { months: Math.floor(days / 30) });
+  };
   const imageAsset = primaryImageAsset(asset, type);
   const baseVariants = imageAsset?.variants ?? [];
   // 本地新生成的变体（来自「生成更多变体」）。父层 library 自己持有 `sources` 且只在整页
@@ -170,10 +169,10 @@ export default function AssetInspector({
   // 故 assetMeta.* 读为 undefined → 不 push → 不渲染。后端补字段后此处零改自动出现。
   const assetMeta = asset as Partial<{ seed: number | string; model: string; size: string }>;
   const metaRows: { label: string; value: string }[] = [
-    { label: "类型", value: TYPE_LABEL[type] },
-    { label: "来源", value: sourceName },
-    { label: "变体", value: `${variants.length}` },
-    { label: "创建", value: timeAgo(activeVariant?.created_at) },
+    { label: t("metaType"), value: TYPE_LABEL[type] },
+    { label: t("metaSource"), value: sourceName },
+    { label: t("metaVariant"), value: `${variants.length}` },
+    { label: t("metaCreated"), value: timeAgo(activeVariant?.created_at) },
   ];
   if (assetMeta.seed != null) metaRows.push({ label: "SEED", value: String(assetMeta.seed) });
   if (assetMeta.model) metaRows.push({ label: "MODEL", value: assetMeta.model });
@@ -213,9 +212,9 @@ export default function AssetInspector({
         continue; // 瞬时网络错误：继续轮询
       }
       if (status?.status === "completed") return true;
-      if (status?.status === "failed") throw new Error(status.error || "生成失败");
+      if (status?.status === "failed") throw new Error(status.error || t("genFailed"));
     }
-    throw new Error("生成超时，请稍后重试");
+    throw new Error(t("genTimeout"));
   };
 
   // 生成更多变体：仅 project 资产可用（series 无生成端点）。复用按项目 batch 生成管线，
@@ -226,7 +225,9 @@ export default function AssetInspector({
     // 父层传入的是列表 key（`project-<id>`）；生成/刷新 API 需要裸 project id。
     const projectId = sourceId.replace(/^project-/, "");
     setGenerating(true);
-    const tid = toast.progress("正在生成变体…", { body: `${asset.name} · ${VARIANT_BATCH} 张` });
+    const tid = toast.progress(t("generatingVariants"), {
+      body: t("generatingVariantsBody", { name: asset.name, count: VARIANT_BATCH }),
+    });
     try {
       const resp = await api.generateAsset(
         projectId,
@@ -257,13 +258,13 @@ export default function AssetInspector({
       if (added[0]) setActiveVariantId(added[0].id);
       toast.update(tid, {
         kind: "success",
-        title: "变体已生成",
-        body: added.length ? `新增 ${added.length} 张变体` : "已刷新变体",
+        title: t("variantsGenerated"),
+        body: added.length ? t("variantsAddedBody", { count: added.length }) : t("variantsRefreshed"),
         autoCloseMs: 5000,
       });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "生成失败";
-      if (aliveRef.current) toast.update(tid, { kind: "error", title: "变体生成失败", body: msg, autoCloseMs: 0 });
+      const msg = e instanceof Error ? e.message : t("genFailed");
+      if (aliveRef.current) toast.update(tid, { kind: "error", title: t("variantsGenFailed"), body: msg, autoCloseMs: 0 });
     } finally {
       if (aliveRef.current) setGenerating(false);
     }
@@ -293,7 +294,7 @@ export default function AssetInspector({
       ref={asideRef}
       tabIndex={-1}
       className="fixed inset-0 z-50 w-full md:static md:inset-auto md:z-auto md:w-[340px] flex-shrink-0 h-full flex flex-col overflow-y-auto bg-surface border-l border-glass-border shadow-2xl atelier-reveal focus:outline-none"
-      aria-label="资产详情"
+      aria-label={t("inspectorAria")}
     >
       {/* Hero — 磨砂铺底 + object-contain：三视图/横竖混杂的资产完整展示不裁切（避免裁头）。 */}
       <div className="relative aspect-[3/4] bg-surface-inset overflow-hidden flex-shrink-0">
@@ -334,7 +335,7 @@ export default function AssetInspector({
           type="button"
           onClick={onToggleStar}
           aria-pressed={starred}
-          aria-label={starred ? "取消加星" : "加星"}
+          aria-label={starred ? t("unstar") : t("star")}
           className={`absolute top-3 left-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-[10px] font-bold uppercase tracking-[0.1em] backdrop-blur-md border transition-colors ${
             starred
               ? "text-status-starred-fg bg-status-starred-bg border-status-starred-border"
@@ -342,12 +343,12 @@ export default function AssetInspector({
           }`}
         >
           <Star size={12} className={starred ? "fill-current" : ""} />
-          {starred ? "已加星" : "加星"}
+          {starred ? t("starred") : t("star")}
         </button>
         <button
           type="button"
           onClick={onClose}
-          aria-label="关闭详情"
+          aria-label={t("closeInspector")}
           className="absolute top-3 right-3 w-8 h-8 rounded-full grid place-items-center bg-black/50 backdrop-blur-md text-foreground hover:bg-black/70 transition-colors"
         >
           <X size={15} />
@@ -360,7 +361,7 @@ export default function AssetInspector({
             {asset.name}
           </div>
           <div className="font-mono text-[9.5px] text-text-muted tracking-[0.06em] uppercase mt-1.5">
-            {TYPE_LABEL[type]} · {sourceName} · {variants.length} 变体
+            {TYPE_LABEL[type]} · {sourceName} · {t("variantCount", { count: variants.length })}
           </div>
         </div>
 
@@ -368,7 +369,7 @@ export default function AssetInspector({
         {variants.length > 1 && (
           <div>
             <div className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2.5">
-              变体 · VARIANTS
+              {t("variantsSection")}
             </div>
             <div className="grid grid-cols-4 gap-2">
               {variants.map((v) => {
@@ -383,7 +384,7 @@ export default function AssetInspector({
                       on ? "ring-2 ring-primary" : "ring-1 ring-glass-border"
                     }`}
                   >
-                    <img src={v.url} alt="变体" className="w-full h-full object-cover" />
+                    <img src={v.url} alt={t("variantAlt")} className="w-full h-full object-cover" />
                   </button>
                 );
               })}
@@ -394,7 +395,7 @@ export default function AssetInspector({
         {/* Metadata */}
         <div>
           <div className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2.5">
-            元数据 · METADATA
+            {t("metadataSection")}
           </div>
           <div className="flex flex-col">
             {metaRows.map((row) => (
@@ -413,7 +414,7 @@ export default function AssetInspector({
         {prompt && (
           <div>
             <div className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2.5">
-              生成提示词 · PROMPT
+              {t("promptSection")}
             </div>
             <div className="bg-surface-inset rounded-lg p-3.5 text-[13px] leading-relaxed text-text-secondary border-l-2 border-status-starred-border">
               {prompt}
@@ -436,19 +437,19 @@ export default function AssetInspector({
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-on-accent text-sm font-semibold hover:bg-primary-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {generating ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-              {generating ? "生成中…" : "生成更多变体"}
+              {generating ? t("generating") : t("generateMoreVariants")}
             </button>
           ) : (
             <button
               type="button"
               disabled
-              title="请在对应剧集内生成变体（资产库不直接对剧集生成）"
+              title={t("genInEpisodeTooltip")}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface-inset border border-glass-border text-text-muted text-sm font-medium cursor-not-allowed disabled:opacity-60"
             >
               <Sparkles size={15} />
-              生成更多变体
+              {t("generateMoreVariants")}
               <span className="inline-flex items-center rounded-full px-1.5 py-0.5 font-mono text-[8.5px] font-semibold tracking-[0.06em] text-status-pending-fg bg-status-pending-bg border border-status-pending-border">
-                剧集内生成
+                {t("genInEpisodeBadge")}
               </span>
             </button>
           )}
@@ -472,7 +473,7 @@ export default function AssetInspector({
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface-inset border border-glass-border text-foreground text-sm font-medium hover:bg-hover-bg transition-colors disabled:opacity-40"
           >
             <Download size={15} />
-            下载
+            {t("download")}
           </button>
         </div>
       </div>

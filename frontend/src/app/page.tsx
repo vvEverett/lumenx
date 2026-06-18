@@ -520,7 +520,7 @@ export default function Home() {
       setSeriesEpisodes(map);
     } catch (error) {
       console.error("Failed to load series episodes:", error);
-      toast.error("剧集加载失败", {
+      toast.error(t("toastEpisodesLoadFailed"), {
         body: error instanceof Error ? error.message : String(error),
       });
     } finally {
@@ -537,7 +537,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Failed to sync projects from backend:", error);
-      toast.error("项目同步失败", {
+      toast.error(t("toastProjectsSyncFailed"), {
         body: error instanceof Error ? error.message : String(error),
       });
     } finally {
@@ -684,10 +684,10 @@ export default function Home() {
       return true;
     };
     const wsStatusPills: { id: "all" | DerivedStatus; label: string; count: number }[] = [
-      { id: "all", label: "全部", count: wsStatusCounts.all },
-      { id: "completed", label: "已完成", count: wsStatusCounts.completed },
-      { id: "processing", label: "进行中", count: wsStatusCounts.processing },
-      { id: "pending", label: "草稿", count: wsStatusCounts.pending },
+      { id: "all", label: t("filterAll"), count: wsStatusCounts.all },
+      { id: "completed", label: t("filterCompleted"), count: wsStatusCounts.completed },
+      { id: "processing", label: t("filterProcessing"), count: wsStatusCounts.processing },
+      { id: "pending", label: t("filterDraft"), count: wsStatusCounts.pending },
     ];
     // Precompute filtered groups once — single source of truth for the grid render
     // and the filtered-empty count below (avoids the two diverging).
@@ -717,7 +717,7 @@ export default function Home() {
             <button
               onClick={syncAll}
               disabled={isSyncing || !online}
-              title={!online ? "网络已断开 — 重新连接后可用" : undefined}
+              title={!online ? tc("offlineTooltip") : undefined}
               className="glass-button flex items-center gap-2 text-[13px] font-semibold disabled:opacity-50"
             >
               <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
@@ -726,7 +726,7 @@ export default function Home() {
             <button
               onClick={() => setIsImportDialogOpen(true)}
               disabled={!online}
-              title={!online ? "网络已断开 — 重新连接后可用" : undefined}
+              title={!online ? tc("offlineTooltip") : undefined}
               className="glass-button flex items-center gap-2 text-[13px] font-semibold disabled:opacity-50"
             >
               <FileUp size={14} />
@@ -736,7 +736,7 @@ export default function Home() {
               <button
                 onClick={(e) => { e.stopPropagation(); setShowCreateDropdown((v) => !v); }}
                 disabled={!online}
-                title={!online ? "网络已断开 — 重新连接后可用" : undefined}
+                title={!online ? tc("offlineTooltip") : undefined}
                 className="bg-primary hover:bg-primary/90 text-on-accent px-4 py-2 rounded-[10px] font-semibold flex items-center gap-2 transition-all text-[13px] shadow-[var(--glow-primary)] disabled:opacity-50"
               >
                 <Plus size={14} />
@@ -779,7 +779,7 @@ export default function Home() {
 
         {/* Toolbar — 状态横向筛选 + 搜索 + 视图切换 */}
         <div className="px-7 pb-2 flex flex-wrap items-center gap-3">
-          <div className="inline-flex p-[3px] rounded-full bg-surface-inset atelier-pill-tabs" role="tablist" aria-label="项目状态" onKeyDown={rovingKeyDown}>
+          <div className="inline-flex p-[3px] rounded-full bg-surface-inset atelier-pill-tabs" role="tablist" aria-label={t("statusFilterAria")} onKeyDown={rovingKeyDown}>
             {wsStatusPills.map((pill) => {
               const on = wsStatus === pill.id;
               return (
@@ -887,13 +887,13 @@ export default function Home() {
               className="flex flex-col items-center justify-center py-20 text-text-muted"
             >
               <Search size={48} className="mb-3 opacity-60" />
-              <p className="text-[15px] font-display atelier-display text-foreground">没有匹配的项目</p>
-              <p className="text-[12px] text-text-muted mt-1">试试调整筛选条件或搜索关键词</p>
+              <p className="text-[15px] font-display atelier-display text-foreground">{t("noMatchTitle")}</p>
+              <p className="text-[12px] text-text-muted mt-1">{tc("noMatchHint")}</p>
               <button
                 onClick={() => { setWsStatus("all"); setWsSearch(""); }}
                 className="mt-4 glass-button text-[13px] font-semibold"
               >
-                清除筛选
+                {tc("clearFilters")}
               </button>
             </motion.div>
           ) : (

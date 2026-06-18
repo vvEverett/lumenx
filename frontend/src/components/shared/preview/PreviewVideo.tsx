@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, RefreshCw, Maximize2, Copy, Check, Play } from "lucide-react";
 import clsx from "clsx";
 import { getAssetUrl } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 import { useLightbox, type LightboxItem } from "./LightboxProvider";
 
 export interface PreviewVideoProps {
@@ -43,6 +44,7 @@ export default function PreviewVideo({
     hoverPlay = true, placeholder,
 }: PreviewVideoProps) {
     const { open, openInGroup } = useLightbox();
+    const t = useTranslations("preview");
     const [errored, setErrored] = useState(false);
     const [retryNonce, setRetryNonce] = useState(0);
     const [hasRetriedOnce, setHasRetriedOnce] = useState(false);
@@ -139,7 +141,7 @@ export default function PreviewVideo({
                     handleOpenLightbox();
                 }
             } : undefined}
-            aria-label={clickable ? "放大查看" : undefined}
+            aria-label={clickable ? t("zoom") : undefined}
             onMouseEnter={() => {
                 if (hoverPlay && videoRef.current) {
                     void videoRef.current.play().catch(() => {/* autoplay blocked */});
@@ -180,8 +182,8 @@ export default function PreviewVideo({
                         <button
                             type="button"
                             onClick={handleOpenLightbox}
-                            aria-label="放大查看"
-                            title="放大查看"
+                            aria-label={t("zoom")}
+                            title={t("zoom")}
                             className={clsx(
                                 "absolute right-1 top-1 grid h-6 w-6 place-items-center rounded bg-black/55 text-foreground backdrop-blur transition-opacity duration-fast ease-out-quart hover:bg-black/75 focus-visible:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary/55",
                                 alwaysShowMagnify
@@ -215,13 +217,14 @@ interface VideoFallbackPanelProps {
 }
 
 function VideoFallbackPanel({ sizeBucket, url, onRetry, onCopyUrl, copied }: VideoFallbackPanelProps) {
+    const t = useTranslations("preview");
     if (sizeBucket === "micro") {
         return (
             <button
                 type="button"
                 onClick={onRetry}
-                title={`视频加载失败，点击重试\n${url}`}
-                aria-label="视频加载失败，点击重试"
+                title={`${t("videoLoadFailedRetry")}\n${url}`}
+                aria-label={t("videoLoadFailedRetry")}
                 className="grid h-full w-full place-items-center bg-status-failed-bg text-status-failed-fg transition-colors duration-fast ease-out-quart hover:bg-status-failed-bg/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-failed-border"
             >
                 <AlertTriangle size={12} aria-hidden="true" />
@@ -241,7 +244,7 @@ function VideoFallbackPanel({ sizeBucket, url, onRetry, onCopyUrl, copied }: Vid
                     className="inline-flex items-center gap-0.5 font-mono text-chrome-sm font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-failed-border"
                 >
                     <RefreshCw size={10} aria-hidden="true" />
-                    重试
+                    {t("retry")}
                 </button>
             </div>
         );
@@ -253,7 +256,7 @@ function VideoFallbackPanel({ sizeBucket, url, onRetry, onCopyUrl, copied }: Vid
         >
             <AlertTriangle size={22} aria-hidden="true" />
             <div className="space-y-1">
-                <p className="font-sans text-body-sm font-medium">视频加载失败</p>
+                <p className="font-sans text-body-sm font-medium">{t("videoLoadFailed")}</p>
                 <p
                     className="max-w-[26rem] truncate font-mono text-chrome-sm text-status-failed-fg/75"
                     title={url}
@@ -268,7 +271,7 @@ function VideoFallbackPanel({ sizeBucket, url, onRetry, onCopyUrl, copied }: Vid
                     className="inline-flex min-h-[28px] items-center gap-1 rounded border border-status-failed-border bg-status-failed-bg px-2.5 py-1 font-mono text-chrome font-medium text-status-failed-fg transition-colors duration-fast ease-out-quart hover:bg-status-failed-fg/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-failed-border"
                 >
                     <RefreshCw size={11} aria-hidden="true" />
-                    重试
+                    {t("retry")}
                 </button>
                 <button
                     type="button"
@@ -276,7 +279,7 @@ function VideoFallbackPanel({ sizeBucket, url, onRetry, onCopyUrl, copied }: Vid
                     className="inline-flex min-h-[28px] items-center gap-1 rounded border border-glass-border bg-black/30 px-2.5 py-1 font-mono text-chrome font-medium text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                 >
                     {copied ? <Check size={11} /> : <Copy size={11} />}
-                    {copied ? "已复制" : "复制 URL"}
+                    {copied ? t("copied") : t("copyUrl")}
                 </button>
             </div>
         </div>

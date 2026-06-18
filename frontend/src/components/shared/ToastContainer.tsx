@@ -6,6 +6,7 @@
  */
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, Loader2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useToastStore, type Toast, type ToastKind } from "@/store/toastStore";
 
 const KIND_STYLES: Record<ToastKind, { ring: string; bg: string; icon: JSX.Element; iconClass: string }> = {
@@ -42,6 +43,7 @@ const KIND_STYLES: Record<ToastKind, { ring: string; bg: string; icon: JSX.Eleme
 };
 
 function ToastCard({ toast }: { toast: Toast }) {
+    const tc = useTranslations("common");
     const dismiss = useToastStore((s) => s.dismiss);
     const style = KIND_STYLES[toast.kind];
     return (
@@ -71,7 +73,7 @@ function ToastCard({ toast }: { toast: Toast }) {
                                 onClick={() => { navigator.clipboard.writeText(toast.body!); }}
                                 className="mt-1 text-[10px] text-text-muted hover:text-foreground transition-colors"
                             >
-                                复制错误详情
+                                {tc("copyErrorDetails")}
                             </button>
                         )}
                     </div>
@@ -90,7 +92,7 @@ function ToastCard({ toast }: { toast: Toast }) {
             </div>
             <button
                 onClick={() => dismiss(toast.id)}
-                aria-label="Dismiss"
+                aria-label={tc("dismiss")}
                 className="shrink-0 -mr-1 p-1 rounded text-text-muted hover:text-foreground transition-colors"
             >
                 <X size={12} />

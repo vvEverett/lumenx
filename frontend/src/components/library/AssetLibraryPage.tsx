@@ -490,7 +490,7 @@ export default function AssetLibraryPage() {
                     CAST · SCENES · PROPS
                   </div>
                   <p className="text-[34px] font-display atelier-display font-medium italic leading-[1.25] tracking-tight text-foreground">
-                    {"“每一个角色，都在等待属于自己的那一格画面。”"}
+                    {t("emptyQuote")}
                   </p>
                   <p className="text-[15px] text-text-secondary max-w-[440px]">{t("noAssetsHint")}</p>
                 </div>
@@ -499,14 +499,14 @@ export default function AssetLibraryPage() {
           ) : groups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-text-muted">
               <Search size={48} className="mb-3 opacity-60" />
-              <p className="text-[15px] font-display atelier-display text-foreground">没有匹配的资产</p>
-              <p className="text-[12px] text-text-muted mt-1">试试调整筛选条件或搜索关键词</p>
+              <p className="text-[15px] font-display atelier-display text-foreground">{t("noMatchTitle")}</p>
+              <p className="text-[12px] text-text-muted mt-1">{tc("noMatchHint")}</p>
               <button
                 type="button"
                 onClick={() => { setActiveType("all"); setSearchQuery(""); setStarredOnly(false); }}
                 className="mt-4 glass-button text-[13px] font-semibold"
               >
-                清除筛选
+                {tc("clearFilters")}
               </button>
             </div>
           ) : (

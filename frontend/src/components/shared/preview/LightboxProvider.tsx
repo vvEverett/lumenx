@@ -22,6 +22,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { X, ChevronLeft, ChevronRight, Copy, Check, ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { getAssetUrl } from "@/lib/utils";
 
 export type LightboxItem = {
@@ -199,6 +200,7 @@ interface LightboxPortalProps {
 function LightboxPortal({
     item, groupCount, groupIndex, onClose, onPrev, onNext, copied, onCopyUrl,
 }: LightboxPortalProps) {
+    const t = useTranslations("preview");
     const resolved = getAssetUrl(item.src);
     const dialogRef = useRef<HTMLDivElement | null>(null);
 
@@ -220,7 +222,7 @@ function LightboxPortal({
                 ref={dialogRef}
                 role="dialog"
                 aria-modal="true"
-                aria-label={item.alt || "preview"}
+                aria-label={item.alt || t("previewAlt")}
                 tabIndex={-1}
                 className="fixed inset-0 z-[61] flex items-center justify-center p-8 outline-none motion-safe:animate-[lightboxScaleIn_220ms_cubic-bezier(0.22,1,0.36,1)_both]"
             >
@@ -229,17 +231,17 @@ function LightboxPortal({
                     <button
                         type="button"
                         onClick={onCopyUrl}
-                        title="复制 URL"
+                        title={t("copyUrl")}
                         className="inline-flex h-9 items-center gap-1.5 rounded-md border border-foreground/15 bg-black/55 px-3 font-mono text-chrome-sm font-medium text-foreground backdrop-blur transition-colors duration-fast ease-out-quart hover:bg-black/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                     >
                         {copied ? <Check size={13} /> : <Copy size={13} />}
-                        {copied ? "已复制" : "复制 URL"}
+                        {copied ? t("copied") : t("copyUrl")}
                     </button>
                     <a
                         href={resolved}
                         target="_blank"
                         rel="noreferrer"
-                        title="在新标签打开"
+                        title={t("openInNewTab")}
                         className="grid h-9 w-9 place-items-center rounded-md border border-foreground/15 bg-black/55 text-foreground backdrop-blur transition-colors duration-fast ease-out-quart hover:bg-black/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                     >
                         <ExternalLink size={14} />
@@ -247,8 +249,8 @@ function LightboxPortal({
                     <button
                         type="button"
                         onClick={onClose}
-                        title="关闭 (Esc)"
-                        aria-label="关闭"
+                        title={t("closeEsc")}
+                        aria-label={t("close")}
                         className="grid h-9 w-9 place-items-center rounded-md border border-foreground/15 bg-black/55 text-foreground backdrop-blur transition-colors duration-fast ease-out-quart hover:bg-black/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                     >
                         <X size={16} />
@@ -260,8 +262,8 @@ function LightboxPortal({
                     <button
                         type="button"
                         onClick={onPrev}
-                        aria-label="上一张"
-                        title="← 上一张"
+                        aria-label={t("prev")}
+                        title={t("prevTitle")}
                         className="absolute left-4 top-1/2 z-[62] grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-foreground/15 bg-black/55 text-foreground backdrop-blur transition-colors duration-fast ease-out-quart hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                     >
                         <ChevronLeft size={20} />
@@ -271,8 +273,8 @@ function LightboxPortal({
                     <button
                         type="button"
                         onClick={onNext}
-                        aria-label="下一张"
-                        title="→ 下一张"
+                        aria-label={t("next")}
+                        title={t("nextTitle")}
                         className="absolute right-4 top-1/2 z-[62] grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-foreground/15 bg-black/55 text-foreground backdrop-blur transition-colors duration-fast ease-out-quart hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                     >
                         <ChevronRight size={20} />
@@ -296,7 +298,7 @@ function LightboxPortal({
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                             src={resolved}
-                            alt={item.alt || "preview"}
+                            alt={item.alt || t("previewAlt")}
                             onClick={(e) => e.stopPropagation()}
                             className="max-h-[90vh] max-w-[92vw] rounded-md shadow-[0_24px_64px_-20px_rgba(0,0,0,0.85)] object-contain"
                         />
