@@ -10,8 +10,7 @@ import { useProjectStore, Project } from "@/store/projectStore";
 import { toast } from "@/store/toastStore";
 import { useOnline } from "@/lib/useOnline";
 import { rovingKeyDown } from "@/lib/a11y";
-import { getAssetUrl } from "@/lib/utils";
-import ProjectCard, { deriveStatus, type DerivedStatus } from "@/components/project/ProjectCard";
+import ProjectCard, { deriveStatus, deriveCover, type DerivedStatus } from "@/components/project/ProjectCard";
 import CreateProjectDialog from "@/components/project/CreateProjectDialog";
 import EnvConfigDialog from "@/components/project/EnvConfigDialog";
 import CreativeCanvas from "@/components/canvas/CreativeCanvas";
@@ -331,31 +330,7 @@ function NewProjectTile({ onClick }: { onClick: () => void }) {
 // localStorage key for the workspace gallery/list view preference.
 const WS_VIEW_KEY = "lumenx_workspace_view";
 
-// Mirror of ProjectCard's cover derivation, kept local so the list view can
-// render thumbnails without importing from / altering ProjectCard. The backend
-// has no dedicated cover field, so we fall back through the richest source.
-function deriveCover(project: Project): string | undefined {
-  const frames = (project.frames || []) as Array<Record<string, any>>;
-  for (const f of frames) {
-    const direct = f?.rendered_image_url || f?.image_url;
-    if (direct) return getAssetUrl(direct);
-    const variants = f?.rendered_image_asset?.variants || f?.image_asset?.variants;
-    if (variants?.length) {
-      const sel = variants.find((v: any) => v.id === (f?.rendered_image_asset?.selected_id || f?.image_asset?.selected_id));
-      const url = sel?.url || variants[0]?.url;
-      if (url) return getAssetUrl(url);
-    }
-  }
-  for (const s of (project.scenes || []) as Array<Record<string, any>>) {
-    if (s?.image_url) return getAssetUrl(s.image_url);
-    const variants = s?.image_asset?.variants;
-    if (variants?.length) {
-      const url = variants[0]?.url;
-      if (url) return getAssetUrl(url);
-    }
-  }
-  return undefined;
-}
+// deriveCover is imported from ProjectCard (single source of truth).
 
 // ── Project Row (Line B list-view item) ──
 function ProjectRow({ project, crumb }: { project: Project; crumb: string }) {
