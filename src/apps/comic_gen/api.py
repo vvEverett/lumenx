@@ -437,6 +437,18 @@ def list_projects():
     return signed_response(scripts)
 
 
+@app.post("/projects/{script_id}/toggle_starred")
+def toggle_project_starred(script_id: str):
+    """Toggle the user-starred (featured shortlist) flag on a project."""
+    try:
+        script = pipeline.toggle_project_starred(script_id)
+        return signed_response(script)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============================================================
 # Series CRUD
 # ============================================================

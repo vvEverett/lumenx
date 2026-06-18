@@ -1024,6 +1024,19 @@ class ComicGenPipeline:
         self._save_after_asset_mutation(source)
         return script
 
+    def toggle_project_starred(self, script_id: str) -> Script:
+        """Toggle the user-starred (featured shortlist) flag on a project.
+        Starred projects get the amber-halation 'featured' treatment in the
+        gallery. Mirrors toggle_asset_starred but at the Script level. The
+        read-modify-write is wrapped in _save_lock so the toggle is atomic."""
+        with self._save_lock:
+            script = self.scripts.get(script_id)
+            if not script:
+                raise ValueError("Script not found")
+            script.starred = not script.starred
+            self._save_data()
+            return script
+
     def toggle_frame_lock(self, script_id: str, frame_id: str) -> Script:
         """Toggle the locked status of a frame."""
         script = self.scripts.get(script_id)

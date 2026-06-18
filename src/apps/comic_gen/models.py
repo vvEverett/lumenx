@@ -594,6 +594,11 @@ class Script(BaseModel):
         description="Hash/marker of THIS episode's original_text when the hook cache was built.",
     )
 
+    # User-starred (featured shortlist) flag. Starred projects get the
+    # amber-halation "featured" treatment in the gallery. Optional + default
+    # False keeps existing projects and the create path unchanged.
+    starred: bool = Field(False, description="User-starred flag for the project gallery featured shortlist")
+
     created_at: float
     updated_at: float
 
