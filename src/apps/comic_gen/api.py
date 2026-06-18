@@ -340,17 +340,29 @@ class CreateProjectRequest(BaseModel):
     title: str
     text: str
     workflow_mode: str = "r2v"  # "r2v" (default) or "i2v_legacy"
+    # Optional series binding (T9). When set, the new project is created as
+    # the next episode of this series (episode_number = current max + 1).
+    # Omit for a standalone project — behavior unchanged.
+    series_id: Optional[str] = None
 
 
 @app.post("/projects", response_model=Script)
 async def create_project(request: CreateProjectRequest, skip_analysis: bool = False):
-    """Creates a new project from a novel text."""
+    """Creates a new project from a novel text.
+
+    When `series_id` is provided the project is bound as the next episode
+    of that series; omitting it keeps the standalone-project behavior
+    unchanged.
+    """
     # Run in thread pool to avoid blocking event loop during LLM analysis (Python 3.8 compatible)
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(
-        None,  # Use default executor
-        partial(pipeline.create_project, request.title, request.text, skip_analysis, request.workflow_mode)
-    )
+    try:
+        result = await loop.run_in_executor(
+            None,  # Use default executor
+            partial(pipeline.create_project, request.title, request.text, skip_analysis, request.workflow_mode, request.series_id)
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return signed_response(result)
 
 
@@ -814,6 +826,106 @@ def import_series_assets(series_id: str, request: ImportAssetsRequest):
     try:
         series, imported_ids, skipped_ids = pipeline.import_assets_from_series(series_id, request.source_series_id, request.asset_ids)
         return signed_response(series)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================
+# Global Asset Library (project-independent shared pool) — CRUD + promote
+# ============================================================
+# Mirrors the /series/{id}/assets endpoints, one level up: a curated,
+# project-independent pool any project can reference. All mutations route
+# through the ComicGenPipeline.*_library_asset methods so the Playground
+# "录入资产库" flow stays consistent with these endpoints.
+
+class CreateLibraryAssetRequest(BaseModel):
+    asset_type: str                    # "character" | "scene" | "prop"
+    name: str
+    description: Optional[str] = ""
+    persona: Optional[str] = ""        # characters only — grouping label
+    image_url: Optional[str] = None    # optional pre-uploaded master image
+    voice_id: Optional[str] = None     # characters only — TTS voice binding
+
+
+class UpdateLibraryAssetRequest(BaseModel):
+    # Generic patch — only the fields the client actually sends are applied
+    # (PATCH semantics; PUT here is lenient/partial).
+    name: Optional[str] = None
+    description: Optional[str] = None
+    persona: Optional[str] = None
+    image_url: Optional[str] = None
+    voice_id: Optional[str] = None
+    starred: Optional[bool] = None
+    locked: Optional[bool] = None
+    visual_weight: Optional[int] = None
+
+
+class PromoteAssetRequest(BaseModel):
+    source_kind: str   # "project" | "series"
+    source_id: str
+    asset_type: str    # "character" | "scene" | "prop"
+    asset_id: str
+
+
+@app.get("/library/assets")
+def get_library_assets():
+    """List all assets in the global shared pool."""
+    lib = pipeline.list_library_assets()
+    return signed_response({
+        "characters": [c.model_dump() for c in lib.characters],
+        "scenes": [s.model_dump() for s in lib.scenes],
+        "props": [p.model_dump() for p in lib.props],
+    })
+
+
+@app.post("/library/assets")
+def create_library_asset(request: CreateLibraryAssetRequest):
+    """Create a new asset in the global shared pool."""
+    try:
+        payload = request.model_dump(exclude={"asset_type"})
+        asset = pipeline.create_library_asset(request.asset_type, payload)
+        return signed_response(asset.model_dump())
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.api_route("/library/assets/{asset_type}/{asset_id}", methods=["PUT", "PATCH"])
+def update_library_asset(asset_type: str, asset_id: str, request: UpdateLibraryAssetRequest):
+    """Patch a global library asset (only the provided fields are applied)."""
+    try:
+        patch = request.model_dump(exclude_unset=True)
+        asset = pipeline.update_library_asset(asset_type, asset_id, patch)
+        return signed_response(asset.model_dump())
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/library/assets/{asset_type}/{asset_id}")
+def delete_library_asset(asset_type: str, asset_id: str):
+    """Delete an asset from the global shared pool."""
+    try:
+        pipeline.delete_library_asset(asset_type, asset_id)
+        return {"status": "deleted", "asset_type": asset_type, "id": asset_id}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/library/assets/promote")
+def promote_asset_to_library(request: PromoteAssetRequest):
+    """Deep-copy an asset from a project or series into the global pool."""
+    try:
+        asset = pipeline.promote_asset_to_library(
+            request.source_kind, request.source_id, request.asset_type, request.asset_id
+        )
+        return signed_response(asset.model_dump())
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:

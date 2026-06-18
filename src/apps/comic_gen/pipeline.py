@@ -399,16 +399,37 @@ class ComicGenPipeline:
         if repaired:
             self._save_data()
 
-    def create_project(self, title: str, text: str, skip_analysis: bool = False, workflow_mode: str = "i2v_legacy") -> Script:
-        """Step 1: Parse novel and create project."""
+    def create_project(self, title: str, text: str, skip_analysis: bool = False, workflow_mode: str = "i2v_legacy", series_id: Optional[str] = None) -> Script:
+        """Step 1: Parse novel and create project.
+
+        When `series_id` is provided the new project is bound as the next
+        episode of that existing series (episode_number = current max
+        episode number in the series + 1) via the same
+        `add_episode_to_series` mechanism used elsewhere. When `series_id`
+        is None the behavior is the original standalone-project path,
+        bit-for-bit unchanged.
+        """
         if skip_analysis:
             script = self.script_processor.create_draft_script(title, text)
         else:
             script = self.script_processor.parse_novel(title, text)
-        
+
         script.workflow_mode = workflow_mode
         self.scripts[script.id] = script
         self._save_data()
+
+        # Optional series binding (T9). Reuses add_episode_to_series so the
+        # episode_ids / series_id / episode_number wiring matches every
+        # other "attach episode to series" path. add_episode_to_series
+        # mutates the in-memory script in place (same object reference) and
+        # persists both projects.json and series.json.
+        if series_id:
+            series = self.series_store.get(series_id)
+            if not series:
+                raise ValueError("Series not found")
+            existing = self.get_series_episodes(series_id)
+            max_ep = max([ep.episode_number for ep in existing if ep.episode_number] or [0])
+            self.add_episode_to_series(series_id, script.id, episode_number=max_ep + 1)
         return script
     
     def extract_preview(self, script_id: str, text: str) -> Script:
@@ -3784,6 +3805,163 @@ class ComicGenPipeline:
         """Save global library data with thread lock."""
         with self._save_lock:
             self._save_library_data_unlocked()
+
+    # ------------------------------------------------------------------
+    # Global Asset Library — CRUD + feed channels (LumenX Core shared pool)
+    # ------------------------------------------------------------------
+    # These methods are the single source of truth for mutating the
+    # project-independent library. Both the /library/assets endpoints and
+    # the Playground "录入资产库" flow call them, so the wiring stays
+    # consistent. The library is curated/opt-in (anti-bloat): nothing is
+    # auto-ingested here.
+
+    def _library_list_for_type(self, asset_type: str) -> List:
+        """Return the live list backing the given asset type in the global
+        library (so callers can append/iterate). Raises on unknown type."""
+        if asset_type == "character":
+            return self.library_store.characters
+        elif asset_type == "scene":
+            return self.library_store.scenes
+        elif asset_type == "prop":
+            return self.library_store.props
+        raise ValueError(f"Invalid asset type: {asset_type}")
+
+    def _find_library_asset(self, asset_type: str, asset_id: str):
+        """Locate a global library asset by (type, id). Raises ValueError
+        when the type is invalid or the id is absent."""
+        target_list = self._library_list_for_type(asset_type)
+        asset = next((a for a in target_list if a.id == asset_id), None)
+        if asset is None:
+            raise ValueError(f"Asset {asset_id} of type {asset_type} not found in library")
+        return asset
+
+    def list_library_assets(self) -> GlobalAssetLibrary:
+        """Return the global shared asset pool container (characters /
+        scenes / props). Mirrors get_series for the library scope."""
+        return self.library_store
+
+    def create_library_asset(self, asset_type: str, payload: Dict[str, Any]):
+        """Create a new global library asset of `asset_type`
+        ("character" | "scene" | "prop") from a plain payload dict, persist
+        it, and return the created asset object.
+
+        Mirrors the series quick-create endpoints
+        (create_series_character/scene/prop) but targets the
+        project-independent global pool. Tolerates a partial payload (used
+        by the Playground录入 flow, which calls this directly rather than
+        through a request model). Recognized payload keys: name,
+        description, image_url, persona (characters), voice_id
+        (characters)."""
+        from .models import Character, Scene, Prop, AssetUnit, ImageVariant
+        with self._save_lock:
+            payload = dict(payload or {})
+            name = payload.get("name") or "未命名"
+            description = payload.get("description") or ""
+            image_url = payload.get("image_url")
+            if asset_type == "character":
+                ref_sheet = AssetUnit()
+                if image_url:
+                    variant = ImageVariant(id=f"img_{uuid.uuid4().hex[:12]}", url=image_url)
+                    ref_sheet.image_variants.append(variant)
+                    ref_sheet.selected_image_id = variant.id
+                asset = Character(
+                    id=f"char_{uuid.uuid4().hex[:12]}",
+                    name=name,
+                    description=description,
+                    persona=payload.get("persona") or "",
+                    voice_id=payload.get("voice_id"),
+                    reference_sheet=ref_sheet,
+                )
+            elif asset_type == "scene":
+                asset = Scene(
+                    id=f"scene_{uuid.uuid4().hex[:12]}",
+                    name=name,
+                    description=description,
+                    image_url=image_url,
+                )
+            elif asset_type == "prop":
+                asset = Prop(
+                    id=f"prop_{uuid.uuid4().hex[:12]}",
+                    name=name,
+                    description=description,
+                    image_url=image_url,
+                )
+            else:
+                raise ValueError(f"Invalid asset type: {asset_type}")
+            self._library_list_for_type(asset_type).append(asset)
+            self._save_library_data_unlocked()
+            return asset
+
+    def update_library_asset(self, asset_type: str, asset_id: str, patch: Dict[str, Any]):
+        """Patch attributes of a global library asset and persist. Mirrors
+        update_series_asset_attributes — only sets keys that exist on the
+        asset, and never touches id/status (use create/delete to manage
+        those)."""
+        with self._save_lock:
+            asset = self._find_library_asset(asset_type, asset_id)
+            for key, value in (patch or {}).items():
+                if hasattr(asset, key) and key not in ("id", "status"):
+                    setattr(asset, key, value)
+            self._save_library_data_unlocked()
+            return asset
+
+    def delete_library_asset(self, asset_type: str, asset_id: str) -> None:
+        """Hard-delete a global library asset. (MVP: no reference-integrity
+        check — that's a documented follow-up, design Q2.) Raises
+        ValueError when the asset is absent."""
+        with self._save_lock:
+            target_list = self._library_list_for_type(asset_type)
+            if not any(a.id == asset_id for a in target_list):
+                raise ValueError(f"Asset {asset_id} of type {asset_type} not found in library")
+            kept = [a for a in target_list if a.id != asset_id]
+            if asset_type == "character":
+                self.library_store.characters = kept
+            elif asset_type == "scene":
+                self.library_store.scenes = kept
+            else:  # prop
+                self.library_store.props = kept
+            self._save_library_data_unlocked()
+
+    def promote_asset_to_library(self, source_kind: str, source_id: str, asset_type: str, asset_id: str):
+        """Deep-copy an asset from a Project (episode) or Series into the
+        global library with a fresh id, persist, and return the new asset.
+
+        Reuses the import_assets_from_series deepcopy + new-uuid pattern.
+        The source asset is left intact (D1 活引用: promotion is additive;
+        fork-on-use of the original is a documented follow-up, design Q3).
+        `source_kind` ∈ {"project", "series"}."""
+        import copy
+        if asset_type not in ("character", "scene", "prop"):
+            raise ValueError(f"Invalid asset type: {asset_type}")
+        with self._save_lock:
+            if source_kind == "series":
+                container = self.series_store.get(source_id)
+                if not container:
+                    raise ValueError("Source series not found")
+            elif source_kind == "project":
+                container = self.scripts.get(source_id)
+                if not container:
+                    raise ValueError("Source project not found")
+            else:
+                raise ValueError(f"Invalid source kind: {source_kind}")
+
+            if asset_type == "character":
+                src_list = container.characters
+            elif asset_type == "scene":
+                src_list = container.scenes
+            else:  # prop
+                src_list = container.props
+            source_asset = next((a for a in src_list if a.id == asset_id), None)
+            if source_asset is None:
+                raise ValueError(
+                    f"Asset {asset_id} of type {asset_type} not found in {source_kind} {source_id}"
+                )
+
+            new_asset = copy.deepcopy(source_asset)
+            new_asset.id = str(uuid.uuid4())
+            self._library_list_for_type(asset_type).append(new_asset)
+            self._save_library_data_unlocked()
+            return new_asset
 
     def create_series(self, title: str, description: str = "", workflow_mode: str = "i2v_legacy", content_mode: str = "scripted", default_generation_mode: str = "r2v") -> Series:
         """Create a new Series."""
