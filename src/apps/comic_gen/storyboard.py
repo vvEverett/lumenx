@@ -14,9 +14,15 @@ class StoryboardGenerator:
         self.model = WanxImageModel(self.config.get('model', {}))
         self.output_dir = self.config.get('output_dir', 'output/storyboard')
 
-    def generate_storyboard(self, script: Any) -> Any:
-        """Generates images for all frames in the storyboard."""
+    def generate_storyboard(self, script: Any, characters: List[Character] = None, scenes: List[Scene] = None) -> Any:
+        """Generates images for all frames in the storyboard.
+
+        ``characters`` / ``scenes`` accept the resolver-merged lists
+        (Episode → Series → Global). When omitted they fall back to the
+        script's own local lists, preserving prior behavior."""
         logger.info(f"Generating storyboard for script: {script.title}")
+        resolved_characters = characters if characters is not None else script.characters
+        resolved_scenes = scenes if scenes is not None else script.scenes
         
         total_frames = len(script.frames)
         for i, frame in enumerate(script.frames):
@@ -27,9 +33,9 @@ class StoryboardGenerator:
                 continue
                 
             # Find scene for this frame
-            scene = next((s for s in script.scenes if s.id == frame.scene_id), None)
+            scene = next((s for s in resolved_scenes if s.id == frame.scene_id), None)
             
-            self.generate_frame(frame, script.characters, scene)
+            self.generate_frame(frame, resolved_characters, scene)
             
         return script
 

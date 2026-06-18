@@ -8,7 +8,7 @@ import subprocess
 import threading
 import platform
 from urllib.parse import quote
-from .models import Script, GenerationStatus, VideoTask, Character, Scene, StoryboardFrame, Series, PromptConfig, ArtDirection
+from .models import Script, GenerationStatus, VideoTask, Character, Scene, StoryboardFrame, Series, PromptConfig, ArtDirection, GlobalAssetLibrary
 from .llm import ScriptProcessor
 from .assets import AssetGenerator
 from .storyboard import StoryboardGenerator
@@ -59,9 +59,12 @@ class ComicGenPipeline:
         
         self.data_file = "output/projects.json"
         self.series_data_file = "output/series.json"
+        self.library_data_file = "output/library_assets.json"
         self._save_lock = threading.RLock()  # Reentrant lock to prevent concurrent file writes
         self.scripts: Dict[str, Script] = self._load_data()
         self.series_store: Dict[str, Series] = self._load_series_data()
+        # Project-independent global asset library (lowest resolver layer).
+        self.library_store: GlobalAssetLibrary = self._load_library_data()
         self._repair_series_bindings()
 
         # Extraction preview cache: {project_id: (timestamp, Script)}
@@ -907,7 +910,7 @@ class ComicGenPipeline:
     ) -> Tuple[Optional[object], Optional[str]]:
         """Locate an asset by (id, type) in either the episode's local
         list OR the parent series' shared pool. Returns
-        (asset, source) where source ∈ {"script", "series"} so the
+        (asset, source) where source ∈ {"script", "series", "global"} so the
         caller can mutate the right object and save the right side.
 
         Episode-local always wins (the user explicitly forked this
@@ -928,27 +931,41 @@ class ComicGenPipeline:
             return local, "script"
         # Fall back to series shared pool if this episode belongs to
         # a series.
-        if not script.series_id:
-            return None, None
-        series = self.series_store.get(script.series_id)
-        if not series:
-            return None, None
+        if script.series_id:
+            series = self.series_store.get(script.series_id)
+            if series:
+                if asset_type == "character":
+                    sh_list = series.characters
+                elif asset_type == "scene":
+                    sh_list = series.scenes
+                else:  # prop
+                    sh_list = series.props
+                shared = next((a for a in sh_list if a.id == asset_id), None)
+                if shared is not None:
+                    return shared, "series"
+            # Series miss → fall through to the global library below.
+        # Fall back to the project-independent global asset library
+        # (lowest layer). Empty by default, so this is a no-op until
+        # the global pool is populated.
         if asset_type == "character":
-            sh_list = series.characters
+            gl_list = self.library_store.characters
         elif asset_type == "scene":
-            sh_list = series.scenes
+            gl_list = self.library_store.scenes
         else:  # prop
-            sh_list = series.props
-        shared = next((a for a in sh_list if a.id == asset_id), None)
-        if shared is not None:
-            return shared, "series"
+            gl_list = self.library_store.props
+        glob = next((a for a in gl_list if a.id == asset_id), None)
+        if glob is not None:
+            return glob, "global"
         return None, None
 
     def _save_after_asset_mutation(self, source: str) -> None:
         """Persist after mutating an asset; pick the right save path
-        based on which container the asset lives in (episode vs series)."""
+        based on which container the asset lives in (episode vs series
+        vs global library)."""
         if source == "series":
             self._save_series_data()
+        elif source == "global":
+            self._save_library_data()
         else:
             self._save_data()
 
@@ -1540,7 +1557,12 @@ class ComicGenPipeline:
         if not script:
             raise ValueError("Script not found")
             
-        script = self.storyboard_generator.generate_storyboard(script)
+        resolved = self.resolve_episode_assets(script)
+        script = self.storyboard_generator.generate_storyboard(
+            script,
+            characters=resolved["characters"],
+            scenes=resolved["scenes"],
+        )
         self._save_data()
         return script
 
@@ -1891,8 +1913,12 @@ class ComicGenPipeline:
             # Update frame with final prompt
             frame.image_prompt = final_prompt
             
+            # Resolve assets across Episode → Series → Global layers so
+            # shared/global characters & scenes are usable when rendering
+            # this frame (frame id references are left unchanged).
+            resolved = self.resolve_episode_assets(script)
             # Find scene for this frame
-            scene = next((s for s in script.scenes if s.id == frame.scene_id), None)
+            scene = next((s for s in resolved["scenes"] if s.id == frame.scene_id), None)
 
             # Get effective size from storyboard_aspect_ratio
             from .assets import ASPECT_RATIO_TO_SIZE
@@ -1907,9 +1933,9 @@ class ComicGenPipeline:
 
             # Call generator
             self.storyboard_generator.generate_frame(
-                frame, 
-                script.characters, 
-                scene, 
+                frame,
+                resolved["characters"],
+                scene,
                 ref_image_path=ref_image_path,
                 ref_image_paths=ref_image_paths,
                 prompt=final_prompt,
@@ -3730,6 +3756,35 @@ class ComicGenPipeline:
         with self._save_lock:
             self._save_series_data_unlocked()
 
+    # ============================================================
+    # Global Asset Library Storage (project-independent shared pool)
+    # ============================================================
+
+    def _load_library_data(self) -> GlobalAssetLibrary:
+        if not os.path.exists(self.library_data_file):
+            return GlobalAssetLibrary()
+        try:
+            with open(self.library_data_file, 'r') as f:
+                data = json.load(f)
+                return GlobalAssetLibrary(**data)
+        except Exception as e:
+            logger.error(f"Failed to load library data: {e}")
+            return GlobalAssetLibrary()
+
+    def _save_library_data_unlocked(self):
+        """Save global library data without acquiring the lock (caller must hold self._save_lock)."""
+        try:
+            os.makedirs(os.path.dirname(self.library_data_file) or ".", exist_ok=True)
+            with open(self.library_data_file, 'w') as f:
+                json.dump(self.library_store.model_dump(), f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to save library data: {e}")
+
+    def _save_library_data(self):
+        """Save global library data with thread lock."""
+        with self._save_lock:
+            self._save_library_data_unlocked()
+
     def create_series(self, title: str, description: str = "", workflow_mode: str = "i2v_legacy", content_mode: str = "scripted", default_generation_mode: str = "r2v") -> Series:
         """Create a new Series."""
         with self._save_lock:
@@ -4128,17 +4183,27 @@ class ComicGenPipeline:
         return episodes
 
     def resolve_episode_assets(self, episode: Script, series: Optional[Series] = None) -> Dict[str, List]:
-        """Merge Episode-local assets with Series shared assets.
-        Episode-local assets take priority (by ID) over Series assets."""
+        """Merge Episode-local assets with Series shared assets and the
+        project-independent global asset library. Priority by ID:
+        Episode > Series > Global (local always wins). The global library
+        is the lowest layer and applies to every project, with or without
+        a parent series. When the global library is empty this behaves
+        identically to the previous two-layer (Episode/Series) merge."""
         if not series:
             # Auto-lookup series if episode has series_id
             if episode.series_id:
                 series = self.series_store.get(episode.series_id)
         if not series:
+            # No parent series — episode-local assets sit on top of the
+            # global library (lowest layer). With an empty library this
+            # yields the episode's own assets (back-compat).
+            ep_char_ids = {c.id for c in episode.characters}
+            ep_scene_ids = {s.id for s in episode.scenes}
+            ep_prop_ids = {p.id for p in episode.props}
             return {
-                "characters": episode.characters,
-                "scenes": episode.scenes,
-                "props": episode.props,
+                "characters": list(episode.characters) + [c for c in self.library_store.characters if c.id not in ep_char_ids],
+                "scenes": list(episode.scenes) + [s for s in self.library_store.scenes if s.id not in ep_scene_ids],
+                "props": list(episode.props) + [p for p in self.library_store.props if p.id not in ep_prop_ids],
             }
         # Build lookup by ID for episode-local assets
         ep_char_ids = {c.id for c in episode.characters}
@@ -4148,6 +4213,17 @@ class ComicGenPipeline:
         merged_characters = list(episode.characters) + [c for c in series.characters if c.id not in ep_char_ids]
         merged_scenes = list(episode.scenes) + [s for s in series.scenes if s.id not in ep_scene_ids]
         merged_props = list(episode.props) + [p for p in series.props if p.id not in ep_prop_ids]
+
+        # Fold the global library underneath as the lowest layer — only
+        # ids absent from both the Episode and Series layers. No-op when
+        # the library is empty (back-compat).
+        merged_char_ids = {c.id for c in merged_characters}
+        merged_scene_ids = {s.id for s in merged_scenes}
+        merged_prop_ids = {p.id for p in merged_props}
+
+        merged_characters += [c for c in self.library_store.characters if c.id not in merged_char_ids]
+        merged_scenes += [s for s in self.library_store.scenes if s.id not in merged_scene_ids]
+        merged_props += [p for p in self.library_store.props if p.id not in merged_prop_ids]
 
         return {
             "characters": merged_characters,

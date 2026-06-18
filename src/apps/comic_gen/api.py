@@ -1108,7 +1108,7 @@ def get_project(script_id: str):
     """Retrieves a project by ID. When the project belongs to a
     Series, the response merges series-shared characters / scenes /
     props on top of the episode-local lists. Each item carries a
-    `source` field ("series" | "episode") so the frontend can
+    `source` field ("episode" | "series" | "global") so the frontend can
     visually distinguish where the asset lives and route writes
     appropriately (per A2 design decision — shared writes default to
     the series side; local writes stay episode-side; the helper
@@ -1156,6 +1156,32 @@ def get_project(script_id: str):
                     d = pr.model_dump()
                     d["source"] = "series"
                     payload["props"].append(d)
+
+    # Merge the project-independent global asset library underneath as
+    # the lowest layer. Any id not already present from the episode or
+    # series layers is appended with source="global" (read-time only —
+    # never written back to projects.json). When the library is empty
+    # this is a no-op and the response is byte-identical to before.
+    lib = pipeline.library_store
+    if lib.characters or lib.scenes or lib.props:
+        seen_char_ids = {c["id"] for c in payload["characters"]}
+        seen_scene_ids = {s["id"] for s in payload["scenes"]}
+        seen_prop_ids = {p["id"] for p in payload["props"]}
+        for ch in lib.characters:
+            if ch.id not in seen_char_ids:
+                d = ch.model_dump()
+                d["source"] = "global"
+                payload["characters"].append(d)
+        for sc in lib.scenes:
+            if sc.id not in seen_scene_ids:
+                d = sc.model_dump()
+                d["source"] = "global"
+                payload["scenes"].append(d)
+        for pr in lib.props:
+            if pr.id not in seen_prop_ids:
+                d = pr.model_dump()
+                d["source"] = "global"
+                payload["props"].append(d)
     return signed_response(payload)
 
 
