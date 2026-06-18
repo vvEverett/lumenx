@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Project } from "@/store/projectStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { getAssetUrl } from "@/lib/utils";
+import { coverGradient, GRAIN_URL } from "@/lib/atelierCover";
 
 interface ProjectCardProps {
     project: Project;
@@ -38,28 +39,6 @@ export function deriveCover(project: Project): string | undefined {
         }
     }
     return undefined;
-}
-
-// Fine film-grain texture (matches the Atelier mockup), layered over derived
-// covers via mix-blend overlay so a flat gradient gains a tactile, photographic feel.
-const GRAIN_URL =
-    "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
-
-// Deterministic typographic-cover palette for projects without an image. Each
-// entry blends a cinematic accent (teal / amber) into warm graphite so the serif
-// title stays legible; the entry is chosen by hashing the project id (falling back
-// to the title) so a given project keeps the same cover across renders.
-const COVER_GRADIENTS = [
-    "linear-gradient(150deg, var(--color-primary) -10%, var(--color-bg-inset) 72%)",
-    "linear-gradient(135deg, var(--color-accent) -15%, var(--color-bg-surface) 70%)",
-    "linear-gradient(160deg, var(--color-primary) -18%, var(--color-bg-elevated) 55%, var(--color-bg-inset) 100%)",
-    "linear-gradient(140deg, var(--color-bg-surface) 0%, var(--color-primary) 165%)",
-];
-
-function coverGradient(seed: string): string {
-    let h = 0;
-    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-    return COVER_GRADIENTS[h % COVER_GRADIENTS.length];
 }
 
 // Status is absent on the data model, so derive a coarse lifecycle state:
