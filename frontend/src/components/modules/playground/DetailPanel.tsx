@@ -13,7 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { playgroundApi } from '@/lib/api';
+import { playgroundApi, type PlaygroundGenerationResponse } from '@/lib/api';
 import { usePlaygroundStore, type PlaygroundGeneration } from './usePlaygroundStore';
 import { getPlaygroundMediaUrl } from './mediaUrls';
 
@@ -54,6 +54,30 @@ function formatTimestamp(dateStr: string): string {
   return `${yyyy}-${MM}-${dd} ${hh}:${mm}:${ss}`;
 }
 
+function toGeneration(resp: PlaygroundGenerationResponse): PlaygroundGeneration {
+  return {
+    id: resp.id,
+    mode: resp.mode as PlaygroundGeneration['mode'],
+    model_id: resp.model_id,
+    prompt: resp.prompt,
+    negative_prompt: resp.negative_prompt,
+    input_media: resp.input_media,
+    parameters: resp.parameters,
+    batch_size: resp.batch_size,
+    outputs: resp.outputs.map((o) => ({
+      id: o.id,
+      media_path: o.media_path,
+      media_type: o.media_type as 'image' | 'video',
+      thumbnail_path: o.thumbnail_path,
+      saved_to_library: o.saved_to_library,
+      library_path: o.library_path,
+    })),
+    status: resp.status as PlaygroundGeneration['status'],
+    error: resp.error,
+    created_at: resp.created_at,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -71,6 +95,7 @@ export default function DetailPanel({
   const [deleting, setDeleting] = useState(false);
   const [selectedOutputIndex, setSelectedOutputIndex] = useState(0);
   const updateGeneration = usePlaygroundStore((s) => s.updateGeneration);
+  const removeGeneration = usePlaygroundStore((s) => s.removeGeneration);
   const history = usePlaygroundStore((s) => s.history);
 
   // Always read the latest generation from store (so saved_to_library stays in sync)
@@ -149,9 +174,13 @@ export default function DetailPanel({
       const newSaved = !saved;
       if (newSaved) {
         await playgroundApi.saveToLibrary(generation.id, output.id);
+      } else {
+        await playgroundApi.unsaveFromLibrary(generation.id, output.id);
       }
       const updatedOutputs = generation.outputs.map((o) =>
-        o.id === output.id ? { ...o, saved_to_library: newSaved } : o
+        o.id === output.id
+          ? { ...o, saved_to_library: newSaved, library_path: newSaved ? o.library_path : undefined }
+          : o
       );
       updateGeneration({ ...generation, outputs: updatedOutputs });
     } catch (err) {
@@ -161,14 +190,46 @@ export default function DetailPanel({
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteOutput = async () => {
+    if (!output || deleting) return;
+    const mediaLabel = isVideo ? '视频' : '图片';
+    const message = generation.outputs.length > 1
+      ? `删除当前查看的这张${mediaLabel}？已收藏到资产库的副本会保留。`
+      : `删除这个生成结果？已收藏到资产库的副本会保留。`;
+    if (!window.confirm(message)) return;
+
+    setDeleting(true);
+    try {
+      const resp = await playgroundApi.deleteOutput(generation.id, output.id);
+      if (resp.generation) {
+        const updated = toGeneration(resp.generation);
+        updateGeneration(updated);
+        setSelectedOutputIndex((index) =>
+          Math.min(index, Math.max(updated.outputs.length - 1, 0))
+        );
+      } else {
+        removeGeneration(generation.id);
+        onClose();
+      }
+    } catch (err) {
+      console.error('[DetailPanel] Delete output failed:', err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteGeneration = async () => {
     if (deleting) return;
+    const count = generation.outputs.length;
+    if (!window.confirm(`删除本次生成的 ${count} 个结果？已收藏到资产库的副本会保留。`)) return;
+
     setDeleting(true);
     try {
       await playgroundApi.deleteGeneration(generation.id);
+      removeGeneration(generation.id);
       onClose();
     } catch (err) {
-      console.error('[DetailPanel] Delete failed:', err);
+      console.error('[DetailPanel] Delete generation failed:', err);
     } finally {
       setDeleting(false);
     }
@@ -363,13 +424,27 @@ export default function DetailPanel({
               </button>
             )}
             <button
-              onClick={handleDelete}
+              onClick={handleDeleteOutput}
               disabled={deleting}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-red-500/[0.06] border border-red-500/[0.12] text-red-400/80 text-sm font-medium hover:bg-red-500/[0.12] transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting
+                ? '删除中...'
+                : generation.outputs.length > 1
+                  ? `删除当前${isVideo ? '视频' : '图片'}`
+                  : '删除'}
             </button>
+            {generation.outputs.length > 1 && (
+              <button
+                onClick={handleDeleteGeneration}
+                disabled={deleting}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-red-500/[0.03] border border-red-500/[0.08] text-red-300/65 text-sm font-medium hover:bg-red-500/[0.10] hover:text-red-300 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                删除本次生成（{generation.outputs.length}个）
+              </button>
+            )}
           </div>
 
           {/* Section 3: Prompt */}

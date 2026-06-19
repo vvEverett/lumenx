@@ -1496,9 +1496,24 @@ export interface PlaygroundGenerationResponse {
     media_type: string;
     thumbnail_path?: string;
     saved_to_library: boolean;
+    library_path?: string;
   }>;
   status: string;
   error?: string;
+  created_at: string;
+}
+
+export interface PlaygroundLibraryItemResponse {
+  id: string;
+  generation_id: string;
+  output_id: string;
+  media_path: string;
+  original_media_path: string;
+  media_type: string;
+  thumbnail_path?: string;
+  category: string;
+  prompt: string;
+  model_id: string;
   created_at: string;
 }
 
@@ -1531,8 +1546,19 @@ export const playgroundApi = {
   deleteGeneration: (id: string) =>
     axios.delete(API_URL + "/playground/history/" + id).then(r => r.data),
 
+  deleteOutput: (generationId: string, outputId: string) =>
+    axios.delete<{ ok: boolean; generation: PlaygroundGenerationResponse | null }>(
+      API_URL + "/playground/history/" + generationId + "/outputs/" + outputId
+    ).then(r => r.data),
+
   saveToLibrary: (generationId: string, outputId: string, category?: string) =>
     axios.post(API_URL + "/playground/history/" + generationId + "/outputs/" + outputId + "/save-to-library", { category: category || "general" }).then(r => r.data),
+
+  unsaveFromLibrary: (generationId: string, outputId: string) =>
+    axios.delete(API_URL + "/playground/history/" + generationId + "/outputs/" + outputId + "/save-to-library").then(r => r.data),
+
+  getLibrary: (limit = 100, offset = 0) =>
+    axios.get<PlaygroundLibraryItemResponse[]>(API_URL + "/playground/library", { params: { limit, offset } }).then(r => r.data),
 
   getTemplates: () =>
     axios.get<PlaygroundTemplateResponse[]>(API_URL + "/playground/templates").then(r => r.data),

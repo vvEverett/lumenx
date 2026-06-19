@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Image, Film, Loader2 } from 'lucide-react';
+import { X, Check, Image as ImageIcon, Film, Loader2 } from 'lucide-react';
 import { API_URL, playgroundApi } from '@/lib/api';
 
 // ---------------------------------------------------------------------------
@@ -22,9 +22,11 @@ interface AssetItem {
   type: 'image' | 'video';
   thumbnail?: string;
   label: string;
+  source: SourceTab;
 }
 
 type FilterTab = 'all' | 'image' | 'video';
+type SourceTab = 'library' | 'history';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -75,6 +77,7 @@ export default function AssetPickerModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [activeSource, setActiveSource] = useState<SourceTab>('library');
   const [activeTab, setActiveTab] = useState<FilterTab>(
     accept === 'all' ? 'all' : accept
   );
@@ -87,38 +90,59 @@ export default function AssetPickerModal({
     setLoading(true);
     setError(null);
     try {
-      const history = await playgroundApi.getHistory(100, 0);
+      const [library, history] = await Promise.all([
+        playgroundApi.getLibrary(100, 0),
+        playgroundApi.getHistory(100, 0),
+      ]);
       const items: AssetItem[] = [];
-      const seen = new Set<string>();
+      const seenLibrary = new Set<string>();
+      const seenHistory = new Set<string>();
+
+      for (const item of library) {
+        if (!item.media_path || seenLibrary.has(item.media_path)) continue;
+        seenLibrary.add(item.media_path);
+
+        const isVideo = item.media_type === 'video' || isVideoPath(item.media_path);
+        items.push({
+          id: 'library-' + item.id,
+          path: item.media_path,
+          type: isVideo ? 'video' : 'image',
+          thumbnail: item.thumbnail_path || undefined,
+          label: getFileName(item.media_path),
+          source: 'library',
+        });
+      }
 
       for (const gen of history) {
         if (gen.status !== 'completed') continue;
         for (const output of gen.outputs) {
-          if (!output.media_path || seen.has(output.media_path)) continue;
-          seen.add(output.media_path);
+          if (!output.media_path || seenHistory.has(output.media_path)) continue;
+          seenHistory.add(output.media_path);
 
           const isVideo = isVideoPath(output.media_path);
           items.push({
-            id: output.id,
+            id: 'history-' + output.id,
             path: output.media_path,
             type: isVideo ? 'video' : 'image',
             thumbnail: output.thumbnail_path || undefined,
             label: getFileName(output.media_path),
+            source: 'history',
           });
         }
 
         // Also include input media from history entries
         if (gen.input_media) {
           for (const inputPath of gen.input_media) {
-            if (!inputPath || seen.has(inputPath)) continue;
-            seen.add(inputPath);
+            if (!inputPath || seenHistory.has(inputPath)) continue;
+            seenHistory.add(inputPath);
 
             const isVideo = isVideoPath(inputPath);
             items.push({
-              id: 'input-' + inputPath,
+              id: 'history-input-' + inputPath,
               path: inputPath,
               type: isVideo ? 'video' : 'image',
               label: getFileName(inputPath),
+              source: 'history',
             });
           }
         }
@@ -136,6 +160,7 @@ export default function AssetPickerModal({
   useEffect(() => {
     if (isOpen) {
       setSelected(null);
+      setActiveSource('library');
       fetchAssets();
     }
   }, [isOpen, fetchAssets]);
@@ -151,7 +176,7 @@ export default function AssetPickerModal({
 
   const filteredAssets = useMemo(() => {
     // First filter by what the caller accepts
-    let pool = assets;
+    let pool = assets.filter((a) => a.source === activeSource);
     if (accept !== 'all') {
       pool = pool.filter((a) => a.type === accept);
     }
@@ -160,7 +185,7 @@ export default function AssetPickerModal({
       pool = pool.filter((a) => a.type === activeTab);
     }
     return pool;
-  }, [assets, accept, activeTab]);
+  }, [assets, accept, activeSource, activeTab]);
 
   // -------------------------------------------------------------------------
   // Handlers
@@ -201,7 +226,7 @@ export default function AssetPickerModal({
     {
       key: 'image',
       label: '图片',
-      icon: <Image className="w-3.5 h-3.5" />,
+      icon: <ImageIcon className="w-3.5 h-3.5" />,
       show: accept === 'all' || accept === 'image',
     },
     {
@@ -213,6 +238,18 @@ export default function AssetPickerModal({
   ];
 
   const visibleTabs = tabs.filter((t) => t.show);
+  const sourceTabs: { key: SourceTab; label: string; count: number }[] = [
+    {
+      key: 'library',
+      label: '资产库',
+      count: assets.filter((a) => a.source === 'library').length,
+    },
+    {
+      key: 'history',
+      label: '生成历史',
+      count: assets.filter((a) => a.source === 'history').length,
+    },
+  ];
 
   // -------------------------------------------------------------------------
   // Render
@@ -266,6 +303,31 @@ export default function AssetPickerModal({
             </div>
 
             {/* Filter tabs */}
+            <div className="flex items-center gap-1.5 px-5 pb-3">
+              {sourceTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => {
+                    setActiveSource(tab.key);
+                    setSelected(null);
+                  }}
+                  className={`
+                    flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs
+                    transition-colors border
+                    ${
+                      activeSource === tab.key
+                        ? 'bg-[#646cff]/15 text-[#646cff] border-[#646cff]/30'
+                        : 'text-white/50 hover:text-white/70 hover:bg-white/[0.04] border-transparent'
+                    }
+                  `}
+                >
+                  {tab.label}
+                  <span className="font-mono text-[10px] opacity-60">{tab.count}</span>
+                </button>
+              ))}
+            </div>
+
             {visibleTabs.length > 1 && (
               <div className="flex items-center gap-1.5 px-5 pb-3">
                 {visibleTabs.map((tab) => (
@@ -316,12 +378,14 @@ export default function AssetPickerModal({
 
               {!loading && !error && filteredAssets.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 gap-2">
-                  <Image className="w-8 h-8 text-white/20" />
+                  <ImageIcon className="w-8 h-8 text-white/20" />
                   <span className="text-xs text-white/40">
-                    暂无可用素材
+                    {activeSource === 'library' ? '暂无收藏素材' : '暂无历史素材'}
                   </span>
                   <span className="text-[11px] text-white/25">
-                    在 Playground 中生成内容后，输出将出现在这里
+                    {activeSource === 'library'
+                      ? '收藏生成结果后会出现在这里'
+                      : '在 Playground 中生成内容后，输出将出现在这里'}
                   </span>
                 </div>
               )}

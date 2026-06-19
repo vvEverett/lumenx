@@ -73,7 +73,7 @@ def get_generation_status(generation_id: str):
 
 def delete_generation(generation_id: str):
     """Delete a generation record and its outputs."""
-    if not _storage.delete_generation(generation_id):
+    if not _service.delete_generation(generation_id):
         raise HTTPException(status_code=404, detail="Generation not found")
     return {"ok": True}
 
@@ -90,6 +90,30 @@ def save_to_library(
     return {"ok": True}
 
 
+def unsave_from_library(generation_id: str, output_id: str):
+    """Remove a specific generation output from the playground asset library."""
+    if not _service.unsave_from_library(generation_id, output_id):
+        raise HTTPException(status_code=404, detail="Generation or output not found")
+    return {"ok": True}
+
+
+def delete_generation_output(generation_id: str, output_id: str):
+    """Delete one output from a generation. Saved library copies are preserved."""
+    gen = _storage.get_generation(generation_id)
+    if not gen:
+        raise HTTPException(status_code=404, detail="Generation not found")
+    if not any(output.id == output_id for output in gen.outputs):
+        raise HTTPException(status_code=404, detail="Output not found")
+
+    updated = _service.delete_output(generation_id, output_id)
+    return {"ok": True, "generation": updated}
+
+
+def list_library(limit: int = 100, offset: int = 0):
+    """Return saved playground library items, newest first."""
+    return _storage.list_library(limit=limit, offset=offset)
+
+
 router.add_api_route("/history", list_history, methods=["GET"])
 router.add_api_route("/history/{generation_id}", get_generation, methods=["GET"])
 router.add_api_route(
@@ -103,6 +127,17 @@ router.add_api_route(
     save_to_library,
     methods=["POST"],
 )
+router.add_api_route(
+    "/history/{generation_id}/outputs/{output_id}/save-to-library",
+    unsave_from_library,
+    methods=["DELETE"],
+)
+router.add_api_route(
+    "/history/{generation_id}/outputs/{output_id}",
+    delete_generation_output,
+    methods=["DELETE"],
+)
+router.add_api_route("/library", list_library, methods=["GET"])
 
 # ---------------------------------------------------------------------------
 # Templates

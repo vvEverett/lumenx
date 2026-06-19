@@ -75,7 +75,14 @@ export default function ResultGallery() {
             updateGeneration({
               ...newGen,
               status: full.status as PlaygroundGeneration['status'],
-              outputs: full.outputs.map((o) => ({ id: o.id, media_path: o.media_path, media_type: o.media_type as 'image' | 'video', thumbnail_path: o.thumbnail_path, saved_to_library: o.saved_to_library })),
+              outputs: full.outputs.map((o) => ({
+                id: o.id,
+                media_path: o.media_path,
+                media_type: o.media_type as 'image' | 'video',
+                thumbnail_path: o.thumbnail_path,
+                saved_to_library: o.saved_to_library,
+                library_path: o.library_path,
+              })),
               error: full.error,
             });
           }
@@ -87,6 +94,10 @@ export default function ResultGallery() {
   }, [startGeneration, updateGeneration]);
 
   const handleDelete = useCallback(async (gen: PlaygroundGeneration) => {
+    const count = gen.outputs.length;
+    const label = count > 1 ? `本次生成的 ${count} 个结果` : '这个生成结果';
+    if (!window.confirm(`删除${label}？已收藏到资产库的副本会保留。`)) return;
+
     try {
       await playgroundApi.deleteGeneration(gen.id);
       usePlaygroundStore.getState().removeGeneration(gen.id);

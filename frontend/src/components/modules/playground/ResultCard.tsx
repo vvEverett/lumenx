@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Download, Video, Star, Copy, Check } from 'lucide-react';
+import { Download, Video, Star, Copy, Check, Trash2 } from 'lucide-react';
 import { playgroundApi } from '@/lib/api';
 import { usePlaygroundStore, type PlaygroundGeneration } from './usePlaygroundStore';
 import { getPlaygroundMediaUrl } from './mediaUrls';
@@ -116,7 +116,7 @@ function FailedCard({ generation, onRetry, onDelete }: { generation: PlaygroundG
   );
 }
 
-function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generation: PlaygroundGeneration; onGenerateVideo?: (path: string) => void; onOpenDetail?: (generation: PlaygroundGeneration) => void }) {
+function CompletedCard({ generation, onGenerateVideo, onOpenDetail, onDelete }: { generation: PlaygroundGeneration; onGenerateVideo?: (path: string) => void; onOpenDetail?: (generation: PlaygroundGeneration) => void; onDelete?: (generation: PlaygroundGeneration) => void }) {
   const { prompt, model_id, mode, outputs, created_at } = generation;
   const primaryOutput = outputs[0];
   const isVideo = primaryOutput?.media_type === 'video' || ['t2v', 'i2v', 'r2v', 'v2v'].includes(mode);
@@ -154,9 +154,13 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
       const newSaved = !saved;
       if (newSaved) {
         await playgroundApi.saveToLibrary(generation.id, primaryOutput.id);
+      } else {
+        await playgroundApi.unsaveFromLibrary(generation.id, primaryOutput.id);
       }
       const updatedOutputs = generation.outputs.map((o) =>
-        o.id === primaryOutput.id ? { ...o, saved_to_library: newSaved } : o
+        o.id === primaryOutput.id
+          ? { ...o, saved_to_library: newSaved, library_path: newSaved ? o.library_path : undefined }
+          : o
       );
       updateGeneration({ ...generation, outputs: updatedOutputs });
     } catch (err) {
@@ -245,10 +249,19 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
           <button
             onClick={handleSaveToLibrary}
             className={`w-7 h-7 rounded-full backdrop-blur-sm flex items-center justify-center transition ${saved ? 'bg-green-500/20' : 'bg-white/10 hover:bg-white/25'}`}
-            title={saved ? '已收藏' : '收藏'}
+            title={saved ? '取消收藏首张' : hasMultipleOutputs ? '收藏首张' : '收藏'}
           >
             <Star className={`w-3.5 h-3.5 ${saved ? 'text-green-400 fill-green-400' : 'text-white'}`} />
           </button>
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(generation); }}
+              className="w-7 h-7 rounded-full bg-red-500/15 backdrop-blur-sm flex items-center justify-center hover:bg-red-500/25 transition"
+              title={hasMultipleOutputs ? `删除本次生成（${outputs.length}个）` : '删除'}
+            >
+              <Trash2 className="w-3.5 h-3.5 text-red-300" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -351,5 +364,5 @@ export default function ResultCard({ generation, onGenerateVideo, onRetry, onOpe
   }
 
   // ─── COMPLETED STATE ────────────────────────────────────────────────────────
-  return <CompletedCard generation={generation} onGenerateVideo={onGenerateVideo} onOpenDetail={onOpenDetail} />;
+  return <CompletedCard generation={generation} onGenerateVideo={onGenerateVideo} onOpenDetail={onOpenDetail} onDelete={onDelete} />;
 }

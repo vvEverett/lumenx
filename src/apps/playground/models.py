@@ -18,6 +18,21 @@ class PlaygroundOutput(BaseModel):
     media_type: str = Field(..., description="Output media type: image or video")
     thumbnail_path: Optional[str] = Field(None, description="Thumbnail file path relative to output/")
     saved_to_library: bool = Field(False, description="Whether this output has been saved to the project library")
+    library_path: Optional[str] = Field(None, description="Copied asset-library file path relative to output/")
+
+
+class PlaygroundLibraryItem(BaseModel):
+    id: str = Field(..., description="Unique identifier (UUID)")
+    generation_id: str = Field(..., description="Source generation id")
+    output_id: str = Field(..., description="Source output id")
+    media_path: str = Field(..., description="Saved library media file path relative to output/")
+    original_media_path: str = Field(..., description="Original playground output path")
+    media_type: str = Field(..., description="Output media type: image or video")
+    thumbnail_path: Optional[str] = Field(None, description="Thumbnail file path relative to output/")
+    category: str = Field("general", description="Library category")
+    prompt: str = Field("", description="Source generation prompt")
+    model_id: str = Field("", description="Source model identifier")
+    created_at: str = Field(..., description="Creation timestamp in ISO 8601 format")
 
 
 class PlaygroundGeneration(BaseModel):

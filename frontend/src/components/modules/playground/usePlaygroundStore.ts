@@ -12,6 +12,7 @@ export interface PlaygroundOutput {
   media_type: 'image' | 'video';
   thumbnail_path?: string;
   saved_to_library: boolean;
+  library_path?: string;
 }
 
 export interface PlaygroundGeneration {

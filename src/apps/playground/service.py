@@ -14,6 +14,7 @@ from typing import Optional
 from .models import (
     GenerateRequest,
     PlaygroundGeneration,
+    PlaygroundLibraryItem,
     PlaygroundMode,
     PlaygroundOutput,
 )
@@ -27,6 +28,7 @@ logger = get_logger(__name__)
 # ---------------------------------------------------------------------------
 IMAGE_OUTPUT_DIR = os.path.join("output", "playground", "images")
 VIDEO_OUTPUT_DIR = os.path.join("output", "playground", "videos")
+LIBRARY_OUTPUT_DIR = os.path.join("output", "assets", "playground")
 
 
 class PlaygroundService:
@@ -113,27 +115,159 @@ class PlaygroundService:
             logger.warning("save_to_library: output %s not found in generation %s", output_id, generation_id)
             return False
 
-        # media_path is stored as e.g. "output/playground/images/t2i_xxx_0.png"
-        # Normalise: try as-is first, then strip leading "output/" and re-join
-        src_path = target_output.media_path
-        if not os.path.isfile(src_path):
-            alt = os.path.join("output", target_output.media_path)
-            if os.path.isfile(alt):
-                src_path = alt
-        if not os.path.isfile(src_path):
+        src_path = self._resolve_existing_local_path(target_output.media_path)
+        if not src_path:
             logger.error("save_to_library: source file not found: %s", target_output.media_path)
             return False
 
-        dest_dir = os.path.join("output", "assets", category)
+        dest_dir = os.path.join(LIBRARY_OUTPUT_DIR, category)
         os.makedirs(dest_dir, exist_ok=True)
 
-        dest_path = os.path.join(dest_dir, os.path.basename(src_path))
-        shutil.copy2(src_path, dest_path)
-        logger.info("Saved output %s to library: %s", output_id, dest_path)
+        existing_item = self.storage.get_library_item_by_source(generation_id, output_id)
+        dest_filename = f"{output_id}_{os.path.basename(src_path)}"
+        dest_path = existing_item.media_path if existing_item else os.path.join(dest_dir, dest_filename)
+        resolved_dest = self._resolve_local_output_path(dest_path)
+        if resolved_dest is None:
+            logger.error("save_to_library: invalid destination path: %s", dest_path)
+            return False
+
+        os.makedirs(os.path.dirname(resolved_dest), exist_ok=True)
+        if not os.path.isfile(resolved_dest):
+            shutil.copy2(src_path, resolved_dest)
+        logger.info("Saved output %s to library: %s", output_id, resolved_dest)
 
         target_output.saved_to_library = True
+        target_output.library_path = self._to_output_relative_path(resolved_dest)
+        library_item = PlaygroundLibraryItem(
+            id=existing_item.id if existing_item else str(uuid.uuid4()),
+            generation_id=generation_id,
+            output_id=output_id,
+            media_path=target_output.library_path,
+            original_media_path=target_output.media_path,
+            media_type=target_output.media_type,
+            thumbnail_path=target_output.thumbnail_path,
+            category=category,
+            prompt=gen.prompt,
+            model_id=gen.model_id,
+            created_at=existing_item.created_at if existing_item else datetime.now(timezone.utc).isoformat(),
+        )
+        self.storage.upsert_library_item(library_item)
         self.storage.update_generation(gen)
         return True
+
+    def unsave_from_library(self, generation_id: str, output_id: str) -> bool:
+        """Remove a generated output from the playground asset library."""
+        gen = self.storage.get_generation(generation_id)
+        if gen is None:
+            logger.warning("unsave_from_library: generation %s not found", generation_id)
+            return False
+
+        target_output: Optional[PlaygroundOutput] = None
+        for out in gen.outputs:
+            if out.id == output_id:
+                target_output = out
+                break
+        if target_output is None:
+            logger.warning("unsave_from_library: output %s not found in generation %s", output_id, generation_id)
+            return False
+
+        item = self.storage.get_library_item_by_source(generation_id, output_id)
+        if item:
+            removed = self.storage.delete_library_item(item.id)
+            if removed:
+                self._delete_local_output_file(removed.media_path)
+
+        target_output.saved_to_library = False
+        target_output.library_path = None
+        self.storage.update_generation(gen)
+        return True
+
+    def delete_generation(self, generation_id: str) -> bool:
+        """Delete a generation record and its original output files."""
+        gen = self.storage.get_generation(generation_id)
+        if gen is None:
+            return False
+
+        for output in gen.outputs:
+            self._delete_output_files(output)
+        return self.storage.delete_generation(generation_id)
+
+    def delete_output(self, generation_id: str, output_id: str) -> Optional[PlaygroundGeneration]:
+        """Delete one output from a generation. Returns updated generation, or None if emptied."""
+        gen = self.storage.get_generation(generation_id)
+        if gen is None:
+            return None
+
+        target_output: Optional[PlaygroundOutput] = None
+        kept_outputs = []
+        for output in gen.outputs:
+            if output.id == output_id:
+                target_output = output
+            else:
+                kept_outputs.append(output)
+
+        if target_output is None:
+            return gen
+
+        self._delete_output_files(target_output)
+        gen.outputs = kept_outputs
+
+        if not gen.outputs:
+            self.storage.delete_generation(generation_id)
+            return None
+
+        self.storage.update_generation(gen)
+        return gen
+
+    # ------------------------------------------------------------------
+    # Local file helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _is_remote_path(path: str) -> bool:
+        return path.startswith(("http://", "https://", "data:", "blob:"))
+
+    def _resolve_local_output_path(self, path: Optional[str]) -> Optional[str]:
+        """Resolve a path only if it stays inside the local output directory."""
+        if not path or self._is_remote_path(path):
+            return None
+
+        output_root = os.path.abspath("output")
+        candidates = [path] if os.path.isabs(path) else []
+        clean = path.lstrip("/").replace("\\", os.sep)
+        if not os.path.isabs(path):
+            candidates.append(clean)
+            if not clean.startswith("output" + os.sep) and clean != "output":
+                candidates.append(os.path.join("output", clean))
+
+        for candidate in candidates:
+            abs_path = os.path.abspath(candidate)
+            if abs_path == output_root or abs_path.startswith(output_root + os.sep):
+                return abs_path
+        return None
+
+    def _resolve_existing_local_path(self, path: Optional[str]) -> Optional[str]:
+        abs_path = self._resolve_local_output_path(path)
+        if abs_path and os.path.isfile(abs_path):
+            return abs_path
+        return None
+
+    @staticmethod
+    def _to_output_relative_path(abs_path: str) -> str:
+        return os.path.relpath(abs_path, os.path.abspath(".")).replace(os.sep, "/")
+
+    def _delete_local_output_file(self, path: Optional[str]) -> None:
+        abs_path = self._resolve_existing_local_path(path)
+        if not abs_path:
+            return
+        try:
+            os.remove(abs_path)
+        except OSError as exc:
+            logger.warning("Failed to delete local output file %s: %s", abs_path, exc)
+
+    def _delete_output_files(self, output: PlaygroundOutput) -> None:
+        self._delete_local_output_file(output.media_path)
+        self._delete_local_output_file(output.thumbnail_path)
 
     # ------------------------------------------------------------------
     # Image generation (t2i / i2i)
