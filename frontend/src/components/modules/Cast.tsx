@@ -33,6 +33,74 @@ import CastWorkbenchModal, { activePolls } from "./cast/CastWorkbenchModal";
 
 type AssetKind = "character" | "scene" | "prop";
 
+interface ImageVariantRecord {
+    id?: string;
+    url?: string;
+    is_favorited?: boolean;
+}
+
+interface ImageAssetRecord {
+    selected_id?: string | null;
+    variants?: ImageVariantRecord[];
+}
+
+interface AssetUnitRecord {
+    selected_image_id?: string | null;
+    image_variants?: ImageVariantRecord[];
+}
+
+interface CastCharacterRecord {
+    id: string;
+    name?: string;
+    description?: string;
+    persona?: string;
+    gender?: string;
+    voice_id?: string;
+    voice_name?: string;
+    reference_sheet?: AssetUnitRecord | null;
+    full_body?: AssetUnitRecord | null;
+    full_body_asset?: ImageAssetRecord | null;
+    three_view_asset?: ImageAssetRecord | null;
+    headshot_asset?: ImageAssetRecord | null;
+    full_body_image_url?: string | null;
+    three_view_image_url?: string | null;
+    headshot_image_url?: string | null;
+    image_url?: string | null;
+}
+
+interface CastSceneRecord {
+    id: string;
+    name?: string;
+    description?: string;
+    image_url?: string | null;
+    reference_image_url?: string | null;
+    image_asset?: ImageAssetRecord | null;
+}
+
+type CastPropRecord = CastSceneRecord;
+
+interface FrameRefs {
+    scene_id?: string | null;
+    character_ids?: string[];
+    prop_ids?: string[];
+}
+
+interface ApiErrorLike {
+    response?: { data?: { detail?: string } };
+    message?: string;
+}
+
+interface CharacterAppearanceData {
+    character?: { name?: string; persona?: string };
+    total_frames?: number;
+    appearances?: Array<{
+        episode_id: string;
+        episode_number?: number | null;
+        episode_title?: string;
+        frame_count: number;
+    }>;
+}
+
 interface CastItem {
     id: string;
     name: string;
@@ -49,27 +117,50 @@ interface CastItem {
  * schema is `full_body / three_views / head_shot`. Read with fallback
  * so existing data keeps rendering during migration.
  */
-function resolveCharacterImage(c: any): string | undefined {
+function resolveCharacterImage(c: CastCharacterRecord): string | undefined {
     // New unified field (v2, not yet populated)
     const sheet = c?.reference_sheet?.image_variants?.find(
-        (v: any) => v.id === c.reference_sheet.selected_image_id,
+        (v) => v.id === c.reference_sheet?.selected_image_id,
     )?.url;
     if (sheet) return sheet;
     // Legacy AssetUnit v2: full_body selected variant
     const fullBody = c?.full_body?.image_variants?.find(
-        (v: any) => v.id === c.full_body.selected_image_id,
+        (v) => v.id === c.full_body?.selected_image_id,
     )?.url;
     if (fullBody) return fullBody;
+    const legacyFullBody = c?.full_body_asset?.variants?.find(
+        (v) => v.id === c.full_body_asset?.selected_id,
+    )?.url;
+    if (legacyFullBody) return legacyFullBody;
+    const legacyThreeView = c?.three_view_asset?.variants?.find(
+        (v) => v.id === c.three_view_asset?.selected_id,
+    )?.url;
+    if (legacyThreeView) return legacyThreeView;
+    const legacyHeadshot = c?.headshot_asset?.variants?.find(
+        (v) => v.id === c.headshot_asset?.selected_id,
+    )?.url;
+    if (legacyHeadshot) return legacyHeadshot;
     // Legacy v1 url fields
-    return c?.full_body_image_url || c?.three_view_image_url || c?.headshot_image_url || c?.image_url;
+    return c?.full_body_image_url || c?.three_view_image_url || c?.headshot_image_url || c?.image_url || undefined;
 }
 
-function resolveSceneImage(s: any): string | undefined {
-    return s?.image_url || s?.reference_image_url;
+function resolveSceneImage(s: CastSceneRecord): string | undefined {
+    const selected = s?.image_asset?.variants?.find(
+        (v) => v.id === s.image_asset?.selected_id,
+    )?.url;
+    return selected || s?.image_url || s?.reference_image_url || undefined;
 }
 
-function resolvePropImage(p: any): string | undefined {
-    return p?.image_url || p?.reference_image_url;
+function resolvePropImage(p: CastPropRecord): string | undefined {
+    const selected = p?.image_asset?.variants?.find(
+        (v) => v.id === p.image_asset?.selected_id,
+    )?.url;
+    return selected || p?.image_url || p?.reference_image_url || undefined;
+}
+
+function getApiErrorMessage(err: unknown, fallback: string): string {
+    const maybeError = err as ApiErrorLike;
+    return maybeError?.response?.data?.detail || maybeError?.message || fallback;
 }
 
 export default function Cast() {
@@ -111,7 +202,7 @@ export default function Cast() {
         const characterCounts = new Map<string, number>();
         const sceneCounts = new Map<string, number>();
         const propCounts = new Map<string, number>();
-        const frames: any[] = currentProject?.frames ?? [];
+        const frames = (currentProject?.frames ?? []) as FrameRefs[];
         for (const f of frames) {
             if (f?.scene_id) sceneCounts.set(f.scene_id, (sceneCounts.get(f.scene_id) ?? 0) + 1);
             for (const cid of f?.character_ids ?? []) {
@@ -121,11 +212,11 @@ export default function Cast() {
                 propCounts.set(pid, (propCounts.get(pid) ?? 0) + 1);
             }
         }
-        const characterPool: any[] = currentProject?.characters ?? [];
-        const scenePool: any[] = currentProject?.scenes ?? [];
-        const propPool: any[] = currentProject?.props ?? [];
+        const characterPool = (currentProject?.characters ?? []) as CastCharacterRecord[];
+        const scenePool = (currentProject?.scenes ?? []) as CastSceneRecord[];
+        const propPool = (currentProject?.props ?? []) as CastPropRecord[];
 
-        const characters: CastItem[] = characterPool.map((c: any) => {
+        const characters: CastItem[] = characterPool.map((c) => {
             const imageUrl = resolveCharacterImage(c);
             return {
                 id: c.id,
@@ -138,7 +229,7 @@ export default function Cast() {
             };
         }).sort((a, b) => b.appearances - a.appearances || a.name.localeCompare(b.name));
 
-        const scenes: CastItem[] = scenePool.map((s: any) => {
+        const scenes: CastItem[] = scenePool.map((s) => {
             const imageUrl = resolveSceneImage(s);
             return {
                 id: s.id,
@@ -150,7 +241,7 @@ export default function Cast() {
             };
         }).sort((a, b) => b.appearances - a.appearances || a.name.localeCompare(b.name));
 
-        const props: CastItem[] = propPool.map((p: any) => {
+        const props: CastItem[] = propPool.map((p) => {
             const imageUrl = resolvePropImage(p);
             return {
                 id: p.id,
@@ -348,8 +439,8 @@ function AddCastPlaceholderModal({
         try {
             const result = await api.uploadFile(file);
             setImageUrl(result.url || "");
-        } catch (err: any) {
-            setError(err?.response?.data?.detail || err?.message || "Upload failed");
+        } catch (err) {
+            setError(getApiErrorMessage(err, "Upload failed"));
         } finally {
             setUploading(false);
         }
@@ -378,8 +469,8 @@ function AddCastPlaceholderModal({
             onCreated();
             reset();
             onClose();
-        } catch (err: any) {
-            setError(err?.response?.data?.detail || err?.message || "Create failed");
+        } catch (err) {
+            setError(getApiErrorMessage(err, "Create failed"));
         } finally {
             setSubmitting(false);
         }
@@ -696,7 +787,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
     // Look up full character to read voice_id / voice_name (CastItem is a
     // read-only aggregation, doesn't carry voice fields).
     const character = item.kind === "character"
-        ? currentProject?.characters?.find((c: any) => c.id === item.id)
+        ? ((currentProject?.characters ?? []) as CastCharacterRecord[]).find((c) => c.id === item.id)
         : null;
     const voiceId: string | undefined = character?.voice_id;
     const voiceName: string | undefined = character?.voice_name;
@@ -961,7 +1052,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
 
 function CharacterHistoryPopover({ seriesId, characterId, onClose }: { seriesId: string; characterId: string; onClose: () => void }) {
     const t = useTranslations("cast");
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<CharacterAppearanceData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -969,7 +1060,7 @@ function CharacterHistoryPopover({ seriesId, characterId, onClose }: { seriesId:
         let cancelled = false;
         api.getCharacterAppearances(seriesId, characterId)
             .then(d => { if (!cancelled) setData(d); })
-            .catch(err => { if (!cancelled) setError(err?.response?.data?.detail || err?.message || "Load failed"); })
+            .catch(err => { if (!cancelled) setError(getApiErrorMessage(err, "Load failed")); })
             .finally(() => { if (!cancelled) setLoading(false); });
         return () => { cancelled = true; };
     }, [seriesId, characterId]);
@@ -1006,7 +1097,7 @@ function CharacterHistoryPopover({ seriesId, characterId, onClose }: { seriesId:
                             {t("totalAppearances", { count: data?.total_frames ?? 0, episodes: data?.appearances?.length ?? 0 })}
                         </p>
                         <div className="space-y-1.5 max-h-72 overflow-y-auto custom-scrollbar">
-                            {(data?.appearances || []).map((app: any) => (
+                            {(data?.appearances || []).map((app) => (
                                 <div key={app.episode_id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-glass-border bg-glass">
                                     <div className="min-w-0 flex-1">
                                         <p className="text-sm font-medium text-foreground truncate">

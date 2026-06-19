@@ -546,24 +546,15 @@ class ComicGenPipeline:
                 if script.style_prompt:
                     effective_positive_prompt += f", {script.style_prompt}"
         
-        asset_list = []
-        target_asset = None
-        
-        if asset_type == "character":
-            asset_list = script.characters
-        elif asset_type == "scene":
-            asset_list = script.scenes
-        elif asset_type == "prop":
-            asset_list = script.props
-        else:
+        if asset_type not in ("character", "scene", "prop"):
             raise ValueError(f"Invalid asset_type: {asset_type}")
-        
-        target_asset = next((a for a in asset_list if a.id == asset_id), None)
+
+        target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
         if not target_asset:
             raise ValueError(f"{asset_type.capitalize()} {asset_id} not found")
-        
+
         target_asset.status = GenerationStatus.PROCESSING
-        self._save_data()
+        self._save_after_asset_mutation(source)
         
         try:
             # Generate with Art Direction style injected
@@ -597,7 +588,7 @@ class ComicGenPipeline:
             target_asset.status = GenerationStatus.FAILED
             raise e
         finally:
-            self._save_data()
+            self._save_after_asset_mutation(source)
         
         return script
 
@@ -612,18 +603,13 @@ class ComicGenPipeline:
         if not script:
             raise ValueError("Script not found")
         
-        # Find the asset and set to PROCESSING
-        asset_list = []
-        if asset_type == "character":
-            asset_list = script.characters
-        elif asset_type == "scene":
-            asset_list = script.scenes
-        elif asset_type == "prop":
-            asset_list = script.props
-        else:
+        # Find the asset and set to PROCESSING. Cast's project payload can
+        # include series-shared assets, so route through the same resolver
+        # used by mutating asset endpoints.
+        if asset_type not in ("character", "scene", "prop"):
             raise ValueError(f"Invalid asset_type: {asset_type}")
-        
-        target_asset = next((a for a in asset_list if a.id == asset_id), None)
+
+        target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
         if not target_asset:
             raise ValueError(f"{asset_type.capitalize()} {asset_id} not found")
         
@@ -654,7 +640,7 @@ class ComicGenPipeline:
             }
         }
         
-        self._save_data()
+        self._save_after_asset_mutation(source)
         return script, task_id
 
     def process_asset_generation_task(self, task_id: str):
@@ -3425,107 +3411,238 @@ class ComicGenPipeline:
         return self.scripts.get(script_id)
 
     def _select_variant_in_asset(self, image_asset: Any, variant_id: str) -> Any:
-        """Helper to select a variant in an ImageAsset. Returns the selected variant if found."""
+        """Select a variant in an ImageAsset and return it if found."""
         if not image_asset or not image_asset.variants:
             return None
-            
+
         for variant in image_asset.variants:
             if variant.id == variant_id:
                 image_asset.selected_id = variant_id
                 return variant
         return None
 
+    def _select_variant_in_unit(self, asset_unit: Any, variant_id: str) -> Any:
+        """Select a static-image variant in an AssetUnit and return it if found."""
+        if not asset_unit or not asset_unit.image_variants:
+            return None
+
+        for variant in asset_unit.image_variants:
+            if variant.id == variant_id:
+                asset_unit.selected_image_id = variant_id
+                asset_unit.image_updated_at = time.time()
+                return variant
+        return None
+
+    def _selected_variant_url_in_asset(self, image_asset: Any) -> Optional[str]:
+        if not image_asset or not image_asset.selected_id or not image_asset.variants:
+            return None
+        selected = next(
+            (v for v in image_asset.variants if v.id == image_asset.selected_id),
+            None,
+        )
+        return selected.url if selected else None
+
+    def _selected_variant_url_in_unit(self, asset_unit: Any) -> Optional[str]:
+        if not asset_unit or not asset_unit.selected_image_id or not asset_unit.image_variants:
+            return None
+        selected = next(
+            (v for v in asset_unit.image_variants if v.id == asset_unit.selected_image_id),
+            None,
+        )
+        return selected.url if selected else None
+
+    def _sync_character_reference_urls(self, character: Any) -> None:
+        """Keep legacy URL fields aligned with the selected image containers."""
+        ref_url = self._selected_variant_url_in_unit(getattr(character, "reference_sheet", None))
+        full_body_url = (
+            self._selected_variant_url_in_asset(getattr(character, "full_body_asset", None))
+            or self._selected_variant_url_in_unit(getattr(character, "full_body", None))
+        )
+        three_view_url = (
+            self._selected_variant_url_in_asset(getattr(character, "three_view_asset", None))
+            or self._selected_variant_url_in_unit(getattr(character, "three_views", None))
+        )
+        headshot_url = (
+            self._selected_variant_url_in_asset(getattr(character, "headshot_asset", None))
+            or self._selected_variant_url_in_unit(getattr(character, "head_shot", None))
+        )
+
+        character.full_body_image_url = full_body_url
+        character.three_view_image_url = three_view_url
+        character.headshot_image_url = headshot_url
+        character.avatar_url = headshot_url
+        character.image_url = ref_url or full_body_url or three_view_url or headshot_url
+
+    def _select_character_variant(self, character: Any, variant_id: str, generation_type: str = None) -> Any:
+        def select_reference_sheet():
+            variant = self._select_variant_in_unit(
+                getattr(character, "reference_sheet", None),
+                variant_id,
+            )
+            if variant:
+                character.image_url = variant.url
+            return variant
+
+        def select_full_body():
+            legacy_variant = self._select_variant_in_asset(
+                getattr(character, "full_body_asset", None),
+                variant_id,
+            )
+            unit_variant = self._select_variant_in_unit(
+                getattr(character, "full_body", None),
+                variant_id,
+            )
+            variant = legacy_variant or unit_variant
+            if variant:
+                character.full_body_image_url = variant.url
+                if not self._selected_variant_url_in_unit(getattr(character, "reference_sheet", None)):
+                    character.image_url = variant.url
+            return variant
+
+        def select_three_view():
+            legacy_variant = self._select_variant_in_asset(
+                getattr(character, "three_view_asset", None),
+                variant_id,
+            )
+            unit_variant = self._select_variant_in_unit(
+                getattr(character, "three_views", None),
+                variant_id,
+            )
+            variant = legacy_variant or unit_variant
+            if variant:
+                character.three_view_image_url = variant.url
+            return variant
+
+        def select_headshot():
+            legacy_variant = self._select_variant_in_asset(
+                getattr(character, "headshot_asset", None),
+                variant_id,
+            )
+            unit_variant = self._select_variant_in_unit(
+                getattr(character, "head_shot", None),
+                variant_id,
+            )
+            variant = legacy_variant or unit_variant
+            if variant:
+                character.headshot_image_url = variant.url
+                character.avatar_url = variant.url
+            return variant
+
+        normalized_type = (generation_type or "").strip()
+        if normalized_type == "reference_sheet":
+            return select_reference_sheet()
+        if normalized_type == "full_body":
+            return select_full_body()
+        if normalized_type in ("three_view", "three_views"):
+            return select_three_view()
+        if normalized_type in ("headshot", "head_shot"):
+            return select_headshot()
+
+        for selector in (
+            select_reference_sheet,
+            select_full_body,
+            select_three_view,
+            select_headshot,
+        ):
+            variant = selector()
+            if variant:
+                return variant
+        return None
+
     def _delete_variant_in_asset(self, image_asset: Any, variant_id: str) -> bool:
-        """Helper to delete a variant in an ImageAsset. Returns True if found and deleted."""
+        """Delete a variant from an ImageAsset. Returns True if deleted."""
         if not image_asset or not image_asset.variants:
             return False
-            
+
         initial_len = len(image_asset.variants)
         image_asset.variants = [v for v in image_asset.variants if v.id != variant_id]
-        
+
         if len(image_asset.variants) < initial_len:
-            # If we deleted the selected one, select the last one or None
             if image_asset.selected_id == variant_id:
-                if image_asset.variants:
-                    image_asset.selected_id = image_asset.variants[-1].id
-                else:
-                    image_asset.selected_id = None
+                image_asset.selected_id = image_asset.variants[-1].id if image_asset.variants else None
             return True
         return False
+
+    def _delete_variant_in_unit(self, asset_unit: Any, variant_id: str) -> bool:
+        """Delete a static-image variant from an AssetUnit. Returns True if deleted."""
+        if not asset_unit or not asset_unit.image_variants:
+            return False
+
+        initial_len = len(asset_unit.image_variants)
+        asset_unit.image_variants = [v for v in asset_unit.image_variants if v.id != variant_id]
+
+        if len(asset_unit.image_variants) < initial_len:
+            if asset_unit.selected_image_id == variant_id:
+                asset_unit.selected_image_id = asset_unit.image_variants[-1].id if asset_unit.image_variants else None
+            asset_unit.image_updated_at = time.time()
+            return True
+        return False
+
+    def _delete_character_variant(self, character: Any, variant_id: str) -> bool:
+        deleted = False
+        deleted = self._delete_variant_in_unit(getattr(character, "reference_sheet", None), variant_id) or deleted
+        deleted = self._delete_variant_in_asset(getattr(character, "full_body_asset", None), variant_id) or deleted
+        deleted = self._delete_variant_in_unit(getattr(character, "full_body", None), variant_id) or deleted
+        deleted = self._delete_variant_in_asset(getattr(character, "three_view_asset", None), variant_id) or deleted
+        deleted = self._delete_variant_in_unit(getattr(character, "three_views", None), variant_id) or deleted
+        deleted = self._delete_variant_in_asset(getattr(character, "headshot_asset", None), variant_id) or deleted
+        deleted = self._delete_variant_in_unit(getattr(character, "head_shot", None), variant_id) or deleted
+        if deleted:
+            self._sync_character_reference_urls(character)
+        return deleted
 
     def select_asset_variant(self, script_id: str, asset_id: str, asset_type: str, variant_id: str, generation_type: str = None) -> Script:
         """Selects a specific variant for an asset."""
         script = self.scripts.get(script_id)
         if not script:
             raise ValueError("Script not found")
-            
-        target_asset = None
+
+        source = "script"
         if asset_type == "character":
-            target_asset = next((c for c in script.characters if c.id == asset_id), None)
-            if target_asset:
-                # If generation_type is specified, only select from that specific asset
-                if generation_type == "full_body":
-                    variant = self._select_variant_in_asset(target_asset.full_body_asset, variant_id)
-                    if variant:
-                        target_asset.full_body_image_url = variant.url
-                        target_asset.image_url = variant.url  # Legacy sync
-                elif generation_type == "three_view":
-                    variant = self._select_variant_in_asset(target_asset.three_view_asset, variant_id)
-                    if variant:
-                        target_asset.three_view_image_url = variant.url
-                elif generation_type == "headshot":
-                    variant = self._select_variant_in_asset(target_asset.headshot_asset, variant_id)
-                    if variant:
-                        target_asset.headshot_image_url = variant.url
-                        target_asset.avatar_url = variant.url  # Sync avatar
-                else:
-                    # Legacy fallback: search all assets (for backward compatibility)
-                    variant = self._select_variant_in_asset(target_asset.full_body_asset, variant_id)
-                    if variant:
-                        target_asset.full_body_image_url = variant.url
-                        target_asset.image_url = variant.url
-                    
-                    if not variant:
-                        variant = self._select_variant_in_asset(target_asset.three_view_asset, variant_id)
-                        if variant:
-                            target_asset.three_view_image_url = variant.url
-                    
-                    if not variant:
-                        variant = self._select_variant_in_asset(target_asset.headshot_asset, variant_id)
-                        if variant:
-                            target_asset.headshot_image_url = variant.url
-                            target_asset.avatar_url = variant.url
-                        
+            target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
+            if not target_asset:
+                raise ValueError(f"Character {asset_id} not found")
+            variant = self._select_character_variant(target_asset, variant_id, generation_type)
+            if not variant:
+                raise ValueError(f"Variant {variant_id} not found")
+
         elif asset_type == "scene":
-            target_asset = next((s for s in script.scenes if s.id == asset_id), None)
-            if target_asset:
-                variant = self._select_variant_in_asset(target_asset.image_asset, variant_id)
-                if variant:
-                    target_asset.image_url = variant.url
+            target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
+            if not target_asset:
+                raise ValueError(f"Scene {asset_id} not found")
+            variant = self._select_variant_in_asset(target_asset.image_asset, variant_id)
+            if not variant:
+                raise ValueError(f"Variant {variant_id} not found")
+            target_asset.image_url = variant.url
 
         elif asset_type == "prop":
-            target_asset = next((p for p in script.props if p.id == asset_id), None)
-            if target_asset:
-                variant = self._select_variant_in_asset(target_asset.image_asset, variant_id)
-                if variant:
-                    target_asset.image_url = variant.url
+            target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
+            if not target_asset:
+                raise ValueError(f"Prop {asset_id} not found")
+            variant = self._select_variant_in_asset(target_asset.image_asset, variant_id)
+            if not variant:
+                raise ValueError(f"Variant {variant_id} not found")
+            target_asset.image_url = variant.url
 
         elif asset_type == "storyboard_frame":
             target_asset = next((f for f in script.frames if f.id == asset_id), None)
-            if target_asset:
-                # Check rendered_image_asset
-                variant = self._select_variant_in_asset(target_asset.rendered_image_asset, variant_id)
-                if variant:
-                    target_asset.rendered_image_url = variant.url
-                    target_asset.image_url = variant.url # Main image is rendered one
-                
-                # Also check image_asset (sketch)?
-                if not variant:
-                    variant = self._select_variant_in_asset(target_asset.image_asset, variant_id)
-                    # If sketch, maybe don't update main image_url if rendered exists?
-                    # For now, let's assume we only select rendered variants for frames usually.
-        
-        self._save_data()
+            if not target_asset:
+                raise ValueError(f"Storyboard frame {asset_id} not found")
+            variant = self._select_variant_in_asset(target_asset.rendered_image_asset, variant_id)
+            if variant:
+                target_asset.rendered_image_url = variant.url
+                target_asset.image_url = variant.url
+            if not variant:
+                variant = self._select_variant_in_asset(target_asset.image_asset, variant_id)
+            if not variant:
+                raise ValueError(f"Variant {variant_id} not found")
+        else:
+            raise ValueError(f"Invalid asset_type: {asset_type}")
+
+        if asset_type == "storyboard_frame":
+            self._save_data()
+        else:
+            self._save_after_asset_mutation(source)
         return script
 
     def delete_asset_variant(self, script_id: str, asset_id: str, asset_type: str, variant_id: str) -> Script:
@@ -3533,66 +3650,52 @@ class ComicGenPipeline:
         script = self.scripts.get(script_id)
         if not script:
             raise ValueError("Script not found")
-            
-        target_asset = None
-        if asset_type == "character":
-            target_asset = next((c for c in script.characters if c.id == asset_id), None)
-            if target_asset:
-                if self._delete_variant_in_asset(target_asset.full_body_asset, variant_id):
-                    # Sync legacy if needed
-                    if target_asset.full_body_asset.selected_id:
-                        selected = next((v for v in target_asset.full_body_asset.variants if v.id == target_asset.full_body_asset.selected_id), None)
-                        target_asset.image_url = selected.url if selected else None
-                    else:
-                        target_asset.image_url = None
-                
-                elif self._delete_variant_in_asset(target_asset.three_view_asset, variant_id):
-                    if target_asset.three_view_asset.selected_id:
-                        selected = next((v for v in target_asset.three_view_asset.variants if v.id == target_asset.three_view_asset.selected_id), None)
-                        target_asset.three_view_image_url = selected.url if selected else None
-                    else:
-                        target_asset.three_view_image_url = None
 
-                elif self._delete_variant_in_asset(target_asset.headshot_asset, variant_id):
-                    if target_asset.headshot_asset.selected_id:
-                        selected = next((v for v in target_asset.headshot_asset.variants if v.id == target_asset.headshot_asset.selected_id), None)
-                        target_asset.headshot_image_url = selected.url if selected else None
-                    else:
-                        target_asset.headshot_image_url = None
+        source = "script"
+        if asset_type == "character":
+            target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
+            if not target_asset:
+                raise ValueError(f"Character {asset_id} not found")
+            if not self._delete_character_variant(target_asset, variant_id):
+                raise ValueError(f"Variant {variant_id} not found")
 
         elif asset_type == "scene":
-            target_asset = next((s for s in script.scenes if s.id == asset_id), None)
-            if target_asset and self._delete_variant_in_asset(target_asset.image_asset, variant_id):
-                if target_asset.image_asset.selected_id:
-                    selected = next((v for v in target_asset.image_asset.variants if v.id == target_asset.image_asset.selected_id), None)
-                    target_asset.image_url = selected.url if selected else None
-                else:
-                    target_asset.image_url = None
+            target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
+            if not target_asset:
+                raise ValueError(f"Scene {asset_id} not found")
+            if not self._delete_variant_in_asset(target_asset.image_asset, variant_id):
+                raise ValueError(f"Variant {variant_id} not found")
+            target_asset.image_url = self._selected_variant_url_in_asset(target_asset.image_asset)
 
         elif asset_type == "prop":
-            target_asset = next((p for p in script.props if p.id == asset_id), None)
-            if target_asset and self._delete_variant_in_asset(target_asset.image_asset, variant_id):
-                if target_asset.image_asset.selected_id:
-                    selected = next((v for v in target_asset.image_asset.variants if v.id == target_asset.image_asset.selected_id), None)
-                    target_asset.image_url = selected.url if selected else None
-                else:
-                    target_asset.image_url = None
+            target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
+            if not target_asset:
+                raise ValueError(f"Prop {asset_id} not found")
+            if not self._delete_variant_in_asset(target_asset.image_asset, variant_id):
+                raise ValueError(f"Variant {variant_id} not found")
+            target_asset.image_url = self._selected_variant_url_in_asset(target_asset.image_asset)
 
         elif asset_type == "storyboard_frame":
             target_asset = next((f for f in script.frames if f.id == asset_id), None)
-            if target_asset:
-                if self._delete_variant_in_asset(target_asset.rendered_image_asset, variant_id):
-                    if target_asset.rendered_image_asset.selected_id:
-                        selected = next((v for v in target_asset.rendered_image_asset.variants if v.id == target_asset.rendered_image_asset.selected_id), None)
-                        target_asset.rendered_image_url = selected.url if selected else None
-                        target_asset.image_url = selected.url if selected else None
-                    else:
-                        target_asset.rendered_image_url = None
-                        # Don't clear image_url if it might fall back to sketch? 
-                        # For now, clear it if rendered is cleared.
-                        target_asset.image_url = None
+            if not target_asset:
+                raise ValueError(f"Storyboard frame {asset_id} not found")
+            deleted = self._delete_variant_in_asset(target_asset.rendered_image_asset, variant_id)
+            if deleted:
+                target_asset.rendered_image_url = self._selected_variant_url_in_asset(
+                    target_asset.rendered_image_asset,
+                )
+                target_asset.image_url = target_asset.rendered_image_url
+            if not deleted:
+                deleted = self._delete_variant_in_asset(target_asset.image_asset, variant_id)
+            if not deleted:
+                raise ValueError(f"Variant {variant_id} not found")
+        else:
+            raise ValueError(f"Invalid asset_type: {asset_type}")
 
-        self._save_data()
+        if asset_type == "storyboard_frame":
+            self._save_data()
+        else:
+            self._save_after_asset_mutation(source)
         return script
 
     def update_model_settings(self, script_id: str, t2i_model: str = None, i2i_model: str = None, i2v_model: str = None, r2v_model: str = None, character_aspect_ratio: str = None, scene_aspect_ratio: str = None, prop_aspect_ratio: str = None, storyboard_aspect_ratio: str = None, image_model: str = None) -> Script:
@@ -3633,48 +3736,94 @@ class ComicGenPipeline:
                 return True
         return False
 
+    def _set_unit_variant_favorite(self, asset_unit: Any, variant_id: str, is_favorited: bool) -> bool:
+        """Set favorite status on an AssetUnit static-image variant."""
+        if not asset_unit or not asset_unit.image_variants:
+            return False
+        for v in asset_unit.image_variants:
+            if v.id == variant_id:
+                v.is_favorited = is_favorited
+                return True
+        return False
+
+    def _set_character_variant_favorite(
+        self,
+        character: Any,
+        variant_id: str,
+        is_favorited: bool,
+        generation_type: str = None,
+    ) -> bool:
+        normalized_type = (generation_type or "").strip()
+        if normalized_type == "reference_sheet":
+            return self._set_unit_variant_favorite(character.reference_sheet, variant_id, is_favorited)
+        if normalized_type == "full_body":
+            return (
+                self._set_variant_favorite(character.full_body_asset, variant_id, is_favorited)
+                or self._set_unit_variant_favorite(character.full_body, variant_id, is_favorited)
+            )
+        if normalized_type in ("three_view", "three_views"):
+            return (
+                self._set_variant_favorite(character.three_view_asset, variant_id, is_favorited)
+                or self._set_unit_variant_favorite(character.three_views, variant_id, is_favorited)
+            )
+        if normalized_type in ("headshot", "head_shot"):
+            return (
+                self._set_variant_favorite(character.headshot_asset, variant_id, is_favorited)
+                or self._set_unit_variant_favorite(character.head_shot, variant_id, is_favorited)
+            )
+        return (
+            self._set_unit_variant_favorite(character.reference_sheet, variant_id, is_favorited)
+            or self._set_variant_favorite(character.full_body_asset, variant_id, is_favorited)
+            or self._set_unit_variant_favorite(character.full_body, variant_id, is_favorited)
+            or self._set_variant_favorite(character.three_view_asset, variant_id, is_favorited)
+            or self._set_unit_variant_favorite(character.three_views, variant_id, is_favorited)
+            or self._set_variant_favorite(character.headshot_asset, variant_id, is_favorited)
+            or self._set_unit_variant_favorite(character.head_shot, variant_id, is_favorited)
+        )
+
     def toggle_variant_favorite(self, script_id: str, asset_id: str, asset_type: str, variant_id: str, is_favorited: bool, generation_type: str = None) -> Script:
         """Toggles the favorite status of a variant."""
         script = self.scripts.get(script_id)
         if not script:
             raise ValueError("Script not found")
-        
+
         found = False
+        source = "script"
         if asset_type == "character":
-            target_asset = next((c for c in script.characters if c.id == asset_id), None)
+            target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
             if target_asset:
-                if generation_type == "full_body":
-                    found = self._set_variant_favorite(target_asset.full_body_asset, variant_id, is_favorited)
-                elif generation_type == "three_view":
-                    found = self._set_variant_favorite(target_asset.three_view_asset, variant_id, is_favorited)
-                elif generation_type == "headshot":
-                    found = self._set_variant_favorite(target_asset.headshot_asset, variant_id, is_favorited)
-                else:
-                    # Try all character assets
-                    found = self._set_variant_favorite(target_asset.full_body_asset, variant_id, is_favorited) or \
-                            self._set_variant_favorite(target_asset.three_view_asset, variant_id, is_favorited) or \
-                            self._set_variant_favorite(target_asset.headshot_asset, variant_id, is_favorited)
-        
+                found = self._set_character_variant_favorite(
+                    target_asset,
+                    variant_id,
+                    is_favorited,
+                    generation_type,
+                )
+
         elif asset_type == "scene":
-            target_asset = next((s for s in script.scenes if s.id == asset_id), None)
+            target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
             if target_asset:
                 found = self._set_variant_favorite(target_asset.image_asset, variant_id, is_favorited)
-        
+
         elif asset_type == "prop":
-            target_asset = next((p for p in script.props if p.id == asset_id), None)
+            target_asset, source = self._find_asset_with_source(script, asset_id, asset_type)
             if target_asset:
                 found = self._set_variant_favorite(target_asset.image_asset, variant_id, is_favorited)
-        
+
         elif asset_type == "storyboard_frame":
             target_asset = next((f for f in script.frames if f.id == asset_id), None)
             if target_asset:
                 found = self._set_variant_favorite(target_asset.rendered_image_asset, variant_id, is_favorited) or \
                         self._set_variant_favorite(target_asset.image_asset, variant_id, is_favorited)
+        else:
+            raise ValueError(f"Invalid asset_type: {asset_type}")
         
         if not found:
             raise ValueError(f"Variant {variant_id} not found")
 
-        self._save_data()
+        if asset_type == "storyboard_frame":
+            self._save_data()
+        else:
+            self._save_after_asset_mutation(source)
         return script
 
     # ============================================================

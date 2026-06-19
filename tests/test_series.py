@@ -11,6 +11,7 @@ from unittest.mock import patch, MagicMock
 
 from src.apps.comic_gen.models import (
     Series, Script, Character, Scene, Prop, PromptConfig, ModelSettings,
+    GenerationStatus, ImageVariant,
 )
 from src.apps.comic_gen.pipeline import ComicGenPipeline
 
@@ -137,6 +138,60 @@ class TestSeriesCRUD:
     def test_update_series_not_found(self, pipeline):
         with pytest.raises(ValueError, match="Series not found"):
             pipeline.update_series("missing", {"title": "X"})
+
+
+class TestCastReferenceVariants:
+    def test_select_character_reference_sheet_variant_updates_primary_image(self, pipeline):
+        char = _make_character(id="char-1")
+        char.reference_sheet.image_variants = [
+            ImageVariant(id="ref-a", url="assets/characters/ref-a.png"),
+            ImageVariant(id="ref-b", url="assets/characters/ref-b.png"),
+        ]
+        char.reference_sheet.selected_image_id = "ref-a"
+        char.image_url = "assets/characters/ref-a.png"
+        script = _make_script(id="episode-1", characters=[char])
+        pipeline.scripts[script.id] = script
+
+        pipeline.select_asset_variant(script.id, char.id, "character", "ref-b")
+
+        assert char.reference_sheet.selected_image_id == "ref-b"
+        assert char.image_url == "assets/characters/ref-b.png"
+
+    def test_series_shared_reference_sheet_variant_mutations_route_to_series(self, pipeline):
+        series = Series(
+            id="series-1",
+            title="Series",
+            created_at=time.time(),
+            updated_at=time.time(),
+        )
+        shared_char = _make_character(id="shared-char")
+        shared_char.reference_sheet.image_variants = [
+            ImageVariant(id="ref-a", url="assets/characters/shared-a.png"),
+            ImageVariant(id="ref-b", url="assets/characters/shared-b.png"),
+        ]
+        shared_char.reference_sheet.selected_image_id = "ref-a"
+        shared_char.image_url = "assets/characters/shared-a.png"
+        series.characters.append(shared_char)
+        pipeline.series_store[series.id] = series
+
+        script = _make_script(id="episode-1", series_id=series.id, characters=[])
+        pipeline.scripts[script.id] = script
+
+        pipeline.select_asset_variant(script.id, shared_char.id, "character", "ref-b")
+        pipeline.toggle_variant_favorite(script.id, shared_char.id, "character", "ref-b", True)
+        _, task_id = pipeline.create_asset_generation_task(
+            script.id,
+            shared_char.id,
+            "character",
+            generation_type="reference_sheet",
+        )
+
+        assert script.characters == []
+        assert shared_char.reference_sheet.selected_image_id == "ref-b"
+        assert shared_char.image_url == "assets/characters/shared-b.png"
+        assert shared_char.reference_sheet.image_variants[1].is_favorited is True
+        assert shared_char.status == GenerationStatus.PROCESSING
+        assert pipeline.asset_generation_tasks[task_id]["asset_id"] == shared_char.id
 
     def test_delete_series_clears_episodes(self, pipeline):
         s = pipeline.create_series("ToDelete")

@@ -1077,24 +1077,8 @@ def update_env_config(config: EnvConfig):
 
 
 
-@app.get("/projects/{script_id}")
-def get_project(script_id: str):
-    """Retrieves a project by ID. When the project belongs to a
-    Series, the response merges series-shared characters / scenes /
-    props on top of the episode-local lists. Each item carries a
-    `source` field ("series" | "episode") so the frontend can
-    visually distinguish where the asset lives and route writes
-    appropriately (per A2 design decision — shared writes default to
-    the series side; local writes stay episode-side; the helper
-    `_find_asset_with_source` in pipeline routes mutations correctly).
-
-    Response model dropped from `Script` because the `source` field
-    is a presentation-layer concern (never persisted, derived from
-    container membership at read time)."""
-    script = pipeline.get_script(script_id)
-    if not script:
-        raise HTTPException(status_code=404, detail="Project not found")
-
+def _project_payload_with_series_assets(script):
+    """Build the frontend project shape, including series-shared assets."""
     payload = script.model_dump()
 
     # Episode-local entries always carry source="episode".
@@ -1130,6 +1114,28 @@ def get_project(script_id: str):
                     d = pr.model_dump()
                     d["source"] = "series"
                     payload["props"].append(d)
+    return payload
+
+
+@app.get("/projects/{script_id}")
+def get_project(script_id: str):
+    """Retrieves a project by ID. When the project belongs to a
+    Series, the response merges series-shared characters / scenes /
+    props on top of the episode-local lists. Each item carries a
+    `source` field ("series" | "episode") so the frontend can
+    visually distinguish where the asset lives and route writes
+    appropriately (per A2 design decision — shared writes default to
+    the series side; local writes stay episode-side; the helper
+    `_find_asset_with_source` in pipeline routes mutations correctly).
+
+    Response model dropped from `Script` because the `source` field
+    is a presentation-layer concern (never persisted, derived from
+    container membership at read time)."""
+    script = pipeline.get_script(script_id)
+    if not script:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    payload = _project_payload_with_series_assets(script)
     return signed_response(payload)
 
 
@@ -2103,8 +2109,8 @@ def generate_single_asset(script_id: str, request: GenerateAssetRequest, backgro
         # Add background processing
         background_tasks.add_task(pipeline.process_asset_generation_task, task_id)
         
-        # Return script with task_id for frontend polling
-        response_data = script.model_dump() if hasattr(script, 'model_dump') else script.dict()
+        # Return project-shaped payload with task_id for frontend polling.
+        response_data = _project_payload_with_series_assets(script)
         response_data["_task_id"] = task_id
         return signed_response(response_data)
 
@@ -2272,7 +2278,7 @@ def select_asset_variant(script_id: str, request: SelectVariantRequest):
             request.variant_id,
             request.generation_type
         )
-        return signed_response(updated_script)
+        return signed_response(_project_payload_with_series_assets(updated_script))
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
@@ -2293,7 +2299,7 @@ def delete_asset_variant(script_id: str, request: DeleteVariantRequest):
             request.asset_type,
             request.variant_id
         )
-        return signed_response(updated_script)
+        return signed_response(_project_payload_with_series_assets(updated_script))
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
@@ -2319,7 +2325,7 @@ def toggle_variant_favorite(script_id: str, request: FavoriteVariantRequest):
             request.is_favorited,
             request.generation_type
         )
-        return signed_response(updated_script)
+        return signed_response(_project_payload_with_series_assets(updated_script))
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
