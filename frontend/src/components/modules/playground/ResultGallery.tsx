@@ -174,7 +174,7 @@ export default function ResultGallery() {
     return (
       <div className="flex flex-col flex-1 overflow-hidden min-w-0 items-center justify-center">
         <Sparkles className="w-12 h-12 text-text-muted opacity-40 mb-4" />
-        <p className="font-['Space_Grotesk',sans-serif] atelier-display text-base text-foreground mb-1">
+        <p className="font-display atelier-display text-base text-foreground mb-1">
           {t('results.emptyTitle')}
         </p>
         <p className="text-xs text-text-muted">{t('results.emptyBody')}</p>
@@ -191,7 +191,7 @@ export default function ResultGallery() {
             {t('results.eyebrow')}
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-semibold tracking-tight text-foreground font-['Space_Grotesk',sans-serif] atelier-display">
+            <span className="text-2xl font-semibold tracking-tight text-foreground font-display atelier-display">
               {t('results.title')}
             </span>
             <span className="font-mono text-[0.625rem] bg-elevated text-text-secondary rounded px-[6px] py-[1px]">

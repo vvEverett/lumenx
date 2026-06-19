@@ -58,7 +58,7 @@ function FailedCard({ generation, onRetry, onDelete }: { generation: PlaygroundG
   };
 
   return (
-    <div className="rounded-2xl border border-status-failed-border bg-glass overflow-hidden">
+    <div className="rounded-[20px] border border-status-failed-border bg-glass overflow-hidden">
       <div
         className="relative overflow-hidden bg-elevated flex flex-col items-center justify-center cursor-pointer"
         style={{ aspectRatio: expanded ? undefined : '16/9', minHeight: expanded ? 120 : undefined }}
@@ -181,7 +181,7 @@ function CompletedCard({ generation, onGenerateVideo, onOpenDetail }: { generati
 
   return (
     <div
-      className={`group rounded-2xl border bg-glass atelier-asset-card overflow-hidden transition cursor-pointer ${saved ? 'border-status-starred-border ring-1 ring-status-starred-border' : 'border-glass-border hover:border-foreground/30'}`}
+      className={`group rounded-[20px] border bg-glass atelier-asset-card overflow-hidden transition cursor-pointer ${saved ? 'border-status-starred-border ring-1 ring-status-starred-border' : 'border-glass-border hover:border-foreground/30'}`}
       onClick={() => onOpenDetail?.(generation)}
     >
       {/* Media area */}
@@ -293,7 +293,7 @@ export default function ResultCard({ generation, onGenerateVideo, onRetry, onOpe
   // ─── PROCESSING STATE ───────────────────────────────────────────────────────
   if (status === 'pending' || status === 'processing') {
     return (
-      <div className="rounded-2xl border border-glass-border bg-glass atelier-asset-card overflow-hidden">
+      <div className="rounded-[20px] border border-glass-border bg-glass atelier-asset-card overflow-hidden">
         {/* Media area */}
         <div className="relative overflow-hidden bg-elevated" style={{ aspectRatio: '16/9' }}>
           {/* Skeleton shimmer */}

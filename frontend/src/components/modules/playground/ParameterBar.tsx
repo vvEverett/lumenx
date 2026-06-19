@@ -134,7 +134,7 @@ function PillToggle({
           onClick={() => onChange(true)}
           className={`flex-1 rounded-full px-3 py-1.5 text-[0.6875rem] font-medium text-center cursor-pointer transition-all ${
             value
-              ? 'bg-surface text-foreground shadow-[0_2px_8px_rgba(0,0,0,0.4)] atelier-pill-tab-active'
+              ? 'bg-primary text-on-accent shadow-[var(--glow-primary)]'
               : 'text-text-muted hover:text-foreground hover:bg-hover-bg'
           }`}
         >
@@ -145,7 +145,7 @@ function PillToggle({
           onClick={() => onChange(false)}
           className={`flex-1 rounded-full px-3 py-1.5 text-[0.6875rem] font-medium text-center cursor-pointer transition-all ${
             !value
-              ? 'bg-surface text-foreground shadow-[0_2px_8px_rgba(0,0,0,0.4)] atelier-pill-tab-active'
+              ? 'bg-primary text-on-accent shadow-[var(--glow-primary)]'
               : 'text-text-muted hover:text-foreground hover:bg-hover-bg'
           }`}
         >
@@ -327,7 +327,7 @@ export default function ParameterBar() {
             onClick={() => setBatchSize(n)}
             className={`flex-1 rounded-full px-3 py-1.5 font-mono text-[0.6875rem] font-medium cursor-pointer transition-all text-center ${
               batchSize === n
-                ? 'text-foreground bg-surface shadow-[0_2px_8px_rgba(0,0,0,0.4)] atelier-pill-tab-active'
+                ? 'bg-primary text-on-accent shadow-[var(--glow-primary)]'
                 : 'text-text-muted hover:text-foreground hover:bg-hover-bg'
             }`}
           >
@@ -433,7 +433,7 @@ export default function ParameterBar() {
                       onClick={() => updateParam('duration', n)}
                       className={`flex-1 rounded-full px-3 py-1.5 font-mono text-[0.6875rem] font-medium cursor-pointer transition-all text-center ${
                         durationValue === n
-                          ? 'text-foreground bg-surface shadow-[0_2px_8px_rgba(0,0,0,0.4)] atelier-pill-tab-active'
+                          ? 'bg-primary text-on-accent shadow-[var(--glow-primary)]'
                           : 'text-text-muted hover:text-foreground hover:bg-hover-bg'
                       }`}
                     >

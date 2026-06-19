@@ -205,7 +205,7 @@ export default function DetailPanel({
       />
 
       {/* Container */}
-      <div className="fixed inset-4 md:inset-8 z-50 bg-surface border border-glass-border rounded-2xl shadow-2xl flex overflow-hidden">
+      <div className="fixed inset-4 md:inset-8 z-50 bg-surface border border-glass-border rounded-[20px] shadow-2xl flex overflow-hidden">
         {/* ─── LEFT SIDE (Media) ─────────────────────────────────────────── */}
         <div className="relative w-[60%] h-full bg-surface flex items-center justify-center">
           {mediaUrl ? (
@@ -350,9 +350,9 @@ export default function DetailPanel({
                 {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
-            <div className="max-h-40 overflow-y-auto rounded-lg bg-glass border border-glass-border p-3">
-              <p className="text-[0.75rem] text-foreground/80 leading-relaxed whitespace-pre-wrap break-words">
-                {generation.prompt || '(empty)'}
+            <div className="max-h-40 overflow-y-auto pr-1">
+              <p className="font-display italic text-[0.9375rem] text-text-secondary leading-relaxed whitespace-pre-wrap break-words">
+                {generation.prompt ? `“${generation.prompt}”` : '(empty)'}
               </p>
             </div>
           </div>
