@@ -219,7 +219,7 @@ export default function PlaygroundPage() {
       {/* ═══ SPLIT LAYOUT ═══ */}
       <div className="flex flex-1 overflow-hidden min-h-0">
         {/* ─── LEFT: INPUT PANEL ─── */}
-        <aside className="flex w-[420px] shrink-0 flex-col gap-3 overflow-y-auto border-r border-glass-border bg-surface-inset px-4 py-4 scrollbar-thin">
+        <aside className="flex w-[420px] shrink-0 flex-col gap-3 overflow-y-auto border-r border-glass-border px-4 py-4 scrollbar-thin">
           {/* Mode */}
           <section className="glass-panel atelier-card rounded-[20px] px-5 py-5">
             <div className="mb-3 font-mono text-[0.625rem] font-medium uppercase tracking-[0.18em] text-text-muted">
@@ -274,7 +274,7 @@ export default function PlaygroundPage() {
           <div className="flex-1" />
 
           {/* Generate CTA (sticky) */}
-          <div className="sticky bottom-0 -mx-4 -mb-4 border-t border-glass-border bg-surface-inset px-4 pb-4 pt-4">
+          <div className="sticky bottom-0 -mx-4 -mb-4 border-t border-glass-border bg-transparent backdrop-blur-md px-4 pb-4 pt-4">
             <button
               type="button"
               onClick={handleGenerate}
