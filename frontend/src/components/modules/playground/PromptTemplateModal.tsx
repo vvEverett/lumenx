@@ -140,7 +140,7 @@ export default function PromptTemplateModal() {
     <>
       <div
         aria-hidden="true"
-        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-overlay backdrop-blur-md"
         onClick={() => setShowTemplateModal(false)}
       />
 
@@ -150,7 +150,7 @@ export default function PromptTemplateModal() {
           role="dialog"
           aria-modal="true"
           tabIndex={-1}
-          className="pointer-events-auto w-[560px] max-h-[85vh] bg-elevated border border-glass-border rounded-2xl shadow-2xl flex flex-col overflow-hidden outline-none"
+          className="pointer-events-auto w-[560px] max-h-[85vh] bg-elevated border border-glass-border rounded-[20px] shadow-2xl flex flex-col overflow-hidden outline-none"
         >
           {/* Header */}
           <div className="px-6 py-5 border-b border-glass-border flex items-center justify-between shrink-0">
@@ -159,7 +159,7 @@ export default function PromptTemplateModal() {
                 <BookmarkPlus size={16} className="text-primary" />
               </div>
               <div>
-                <h2 className="text-[0.9375rem] font-semibold text-foreground">{t("template.title")}</h2>
+                <h2 className="font-display atelier-display text-[1.375rem] font-semibold tracking-tight text-foreground">{t("template.title")}</h2>
                 <p className="text-[0.625rem] text-text-muted mt-0.5">{t("template.subtitle")}</p>
               </div>
             </div>
@@ -172,36 +172,38 @@ export default function PromptTemplateModal() {
             </button>
           </div>
 
-          {/* Filter tabs */}
-          <div className="px-6 pt-4 pb-2 flex gap-1.5 shrink-0">
-            {[{ value: "all" as const, labelKey: "template.filterAll" as const }, ...CATEGORIES].map((c) => (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() => setFilterCat(c.value)}
-                className={[
-                  "px-3 py-1.5 rounded-md text-[0.6875rem] font-medium transition-all border",
-                  filterCat === c.value
-                    ? "text-primary bg-primary/15 border-primary/30"
-                    : "text-text-muted hover:text-foreground hover:bg-hover-bg border-transparent",
-                ].join(" ")}
-              >
-                {t(c.labelKey)}
-                {c.value !== "all" && (
-                  <span className="ml-1.5 text-[0.5625rem] text-text-muted">
-                    {templates.filter((x) => x.category === c.value).length}
-                  </span>
-                )}
-              </button>
-            ))}
+          {/* Filter tabs — Line B segmented pill */}
+          <div className="px-6 pt-4 pb-2 shrink-0">
+            <div className="flex gap-[2px] p-[3px] bg-surface-inset rounded-full atelier-pill-tabs">
+              {[{ value: "all" as const, labelKey: "template.filterAll" as const }, ...CATEGORIES].map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setFilterCat(c.value)}
+                  className={[
+                    "flex-1 rounded-full px-3 py-1.5 text-[0.6875rem] font-medium text-center cursor-pointer transition-all",
+                    filterCat === c.value
+                      ? "bg-primary text-on-accent"
+                      : "text-text-muted hover:text-foreground hover:bg-hover-bg",
+                  ].join(" ")}
+                >
+                  {t(c.labelKey)}
+                  {c.value !== "all" && (
+                    <span className="ml-1.5 text-[0.5625rem] opacity-60">
+                      {templates.filter((x) => x.category === c.value).length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Template list */}
           <div className="flex-1 overflow-y-auto px-6 py-3 min-h-0 space-y-2">
             {filtered.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Sparkles size={28} className="text-text-muted mb-3" />
-                <p className="text-[0.8125rem] text-text-muted mb-1">
+                <Sparkles size={28} className="text-text-muted/60 mb-3" />
+                <p className="font-display italic text-[0.9375rem] text-text-secondary mb-1.5 leading-relaxed">
                   {filterCat === "all"
                     ? t("template.emptyAll")
                     : t("template.emptyFiltered", { category: t(categoryMeta(filterCat).labelKey) })}
@@ -215,7 +217,7 @@ export default function PromptTemplateModal() {
               return (
                 <div
                   key={tpl.id}
-                  className="group p-4 rounded-xl bg-glass border border-border-subtle hover:border-foreground/30 hover:bg-hover-bg transition-all"
+                  className="group p-4 rounded-[20px] bg-glass atelier-asset-card border border-glass-border hover:border-foreground/30 transition-all"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
@@ -230,7 +232,7 @@ export default function PromptTemplateModal() {
                           </span>
                         )}
                       </div>
-                      <p className="text-[0.6875rem] text-text-muted line-clamp-2 leading-[1.6]">{tpl.prompt}</p>
+                      <p className="font-display italic text-[0.8125rem] text-text-secondary line-clamp-2 leading-[1.6]">{tpl.prompt}</p>
                     </div>
 
                     {/* Actions — visible on hover */}
@@ -319,23 +321,23 @@ export default function PromptTemplateModal() {
                     value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                     placeholder={t("template.namePlaceholder")}
-                    className="flex-1 h-9 px-3 text-[0.8125rem] bg-glass border border-glass-border rounded-lg text-foreground placeholder:text-text-muted outline-none focus:border-primary/40 transition-colors"
+                    className="flex-1 h-9 px-3 text-[0.8125rem] bg-surface-inset border border-glass-border rounded-[14px] text-foreground placeholder:text-text-muted outline-none focus:border-foreground/30 transition-colors"
                     autoFocus
                   />
                 </div>
 
                 {/* Category pills */}
-                <div className="flex gap-0 p-[2px] bg-glass rounded-lg border border-border-subtle">
+                <div className="flex gap-[2px] p-[3px] bg-surface-inset rounded-full atelier-pill-tabs">
                   {CATEGORIES.map((c) => (
                     <button
                       key={c.value}
                       type="button"
                       onClick={() => setForm((f) => ({ ...f, category: c.value as CategoryValue }))}
                       className={[
-                        "flex-1 py-[6px] rounded-md text-[0.6875rem] font-medium text-center cursor-pointer transition-all",
+                        "flex-1 py-[6px] rounded-full text-[0.6875rem] font-medium text-center cursor-pointer transition-all",
                         form.category === c.value
                           ? "bg-primary text-on-accent"
-                          : "text-text-muted hover:text-foreground",
+                          : "text-text-muted hover:text-foreground hover:bg-hover-bg",
                       ].join(" ")}
                     >
                       {t(c.labelKey)}
@@ -349,7 +351,7 @@ export default function PromptTemplateModal() {
                   onChange={(e) => setForm((f) => ({ ...f, prompt: e.target.value }))}
                   placeholder={t("template.promptPlaceholder")}
                   rows={5}
-                  className="w-full min-h-[120px] px-3 py-2.5 text-[0.8125rem] leading-relaxed bg-glass border border-glass-border rounded-lg text-foreground placeholder:text-text-muted outline-none focus:border-primary/40 transition-colors resize-y"
+                  className="w-full min-h-[120px] px-3 py-2.5 text-[0.8125rem] leading-relaxed bg-surface-inset border border-glass-border rounded-[14px] text-foreground placeholder:text-text-muted outline-none focus:border-foreground/30 transition-colors resize-y"
                 />
 
                 {/* Submit */}

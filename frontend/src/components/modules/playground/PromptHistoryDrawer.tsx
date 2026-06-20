@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { X, Copy, BookmarkPlus, Search } from 'lucide-react';
+import { X, Copy, BookmarkPlus, Search, History } from 'lucide-react';
 import { usePlaygroundStore } from './usePlaygroundStore';
 
 // ---------------------------------------------------------------------------
@@ -138,24 +138,24 @@ export default function PromptHistoryDrawer() {
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className="fixed right-0 top-0 h-full w-[400px] bg-elevated border-l border-glass-border shadow-2xl flex flex-col transition-transform duration-250 ease-out"
+        className="fixed right-0 top-0 h-full w-[420px] bg-elevated border-l border-glass-border shadow-2xl flex flex-col transition-transform duration-250 ease-out"
         style={{ transform: visible ? 'translateX(0)' : 'translateX(100%)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ─────────────────────────────────────────────────── */}
-        <div className="px-5 py-4 border-b border-border-subtle flex items-center justify-between shrink-0">
-          <h2 className="text-sm font-medium text-foreground">{t('history.title')}</h2>
+        <div className="px-6 py-5 border-b border-border-subtle flex items-center justify-between shrink-0">
+          <h2 className="font-display atelier-display text-[1.375rem] font-semibold tracking-tight text-foreground">{t('history.title')}</h2>
           <button
             type="button"
             onClick={handleClose}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-text-muted hover:text-foreground hover:bg-hover-bg transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-foreground hover:bg-hover-bg transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* ── Search ─────────────────────────────────────────────────── */}
-        <div className="px-5 py-3 shrink-0">
+        <div className="px-6 py-3 shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" />
             <input
@@ -163,16 +163,17 @@ export default function PromptHistoryDrawer() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('history.searchPlaceholder')}
-              className="w-full bg-glass border border-glass-border rounded-lg pl-9 pr-3 py-2 text-xs text-foreground/80 placeholder:text-text-muted outline-none focus:border-foreground/[0.12] transition-colors"
+              className="w-full bg-surface-inset border border-glass-border rounded-[14px] pl-9 pr-3 py-2.5 text-xs text-foreground/80 placeholder:text-text-muted outline-none focus:border-foreground/30 transition-colors"
             />
           </div>
         </div>
 
         {/* ── List ───────────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto px-5 py-2">
+        <div className="flex-1 overflow-y-auto px-6 py-2">
           {filtered.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-xs text-text-muted">
+            <div className="flex flex-col items-center justify-center h-full text-center px-6">
+              <History className="w-7 h-7 text-text-muted/50 mb-3" />
+              <p className="font-display italic text-[0.9375rem] text-text-secondary leading-relaxed">
                 {search.trim() ? t('history.noMatch') : t('history.empty')}
               </p>
             </div>
@@ -181,14 +182,14 @@ export default function PromptHistoryDrawer() {
               <div
                 key={`${entry.created_at}-${idx}`}
                 className={[
-                  'py-3',
+                  'py-4',
                   idx < filtered.length - 1
                     ? 'border-b border-border-subtle'
                     : '',
                 ].join(' ')}
               >
-                {/* Prompt text */}
-                <p className="text-[0.75rem] text-foreground/80 leading-relaxed line-clamp-3 mb-2">
+                {/* Prompt text — Fraunces italic, the author's voice */}
+                <p className="font-display italic text-[0.9375rem] text-text-secondary leading-relaxed line-clamp-3 mb-2.5">
                   {entry.prompt}
                 </p>
 
