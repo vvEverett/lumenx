@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { createPortal } from 'react-dom';
 import { X, Copy, BookmarkPlus, Search, History } from 'lucide-react';
 import { usePlaygroundStore } from './usePlaygroundStore';
 
@@ -125,9 +126,9 @@ export default function PromptHistoryDrawer() {
     [setPrompt, setShowTemplateModal, handleClose],
   );
 
-  if (!showHistoryDrawer) return null;
+  if (!showHistoryDrawer || typeof window === 'undefined') return null;
 
-  return (
+  return createPortal(
     // Transparent click-catcher — closes on outside click WITHOUT a dark scrim,
     // so the workspace behind stays fully visible (history is a side panel, not
     // a takeover modal).
@@ -236,5 +237,5 @@ export default function PromptHistoryDrawer() {
         </div>
       </div>
     </div>
-  );
+  , document.body);
 }
