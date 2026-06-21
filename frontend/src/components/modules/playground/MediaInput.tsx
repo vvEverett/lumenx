@@ -3,7 +3,7 @@
 import { useRef, useState, useCallback } from 'react';
 import { ImagePlus, Film, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { playgroundApi } from '@/lib/api';
+import { API_URL, playgroundApi } from '@/lib/api';
 import { usePlaygroundStore, type PlaygroundMode } from './usePlaygroundStore';
 import AssetPickerModal from './AssetPickerModal';
 
@@ -85,6 +85,15 @@ function getFileName(path: string): string {
 
 function isVideoPath(path: string): boolean {
   return /\.(mp4|mov|webm|avi|mkv)$/i.test(path);
+}
+
+// Resolve a stored media path to a browser-loadable URL. Local `output/...` paths
+// are served via the backend /files static mount; absolute (http(s)/blob/data) and
+// root-relative (/files/...) URLs pass through untouched. The raw path is still kept
+// in store state + the generate payload — only the <img>/<video> src is resolved.
+function resolveMediaSrc(path: string): string {
+  if (/^(https?:|blob:|data:|\/)/i.test(path)) return path;
+  return `${API_URL}/files/${path.replace(/^output\//, '')}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -317,13 +326,13 @@ export default function MediaInput() {
             >
               {isVideoPath(path) ? (
                 <video
-                  src={path}
+                  src={resolveMediaSrc(path)}
                   className="w-full h-full object-cover"
                   muted
                 />
               ) : (
                 <img
-                  src={path}
+                  src={resolveMediaSrc(path)}
                   alt=""
                   className="w-full h-full object-cover"
                 />
