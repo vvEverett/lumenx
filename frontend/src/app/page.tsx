@@ -309,7 +309,7 @@ function CreateSeriesDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () 
 }
 
 // ── New Project Tile (Line B dashed add card) ──
-function NewProjectTile({ onClick }: { onClick: () => void }) {
+function NewProjectTile({ onClick, episode = false }: { onClick: () => void; episode?: boolean }) {
   const t = useTranslations("workspace");
   return (
     <button
@@ -319,7 +319,7 @@ function NewProjectTile({ onClick }: { onClick: () => void }) {
       <span className="w-[54px] h-[54px] rounded-full grid place-items-center bg-surface shadow-sm group-hover:text-primary transition-all">
         <Plus size={24} />
       </span>
-      <span className="text-[0.9375rem] font-semibold">{t("newProject")}</span>
+      <span className="text-[0.9375rem] font-semibold">{episode ? t("newEpisode") : t("newProject")}</span>
       <span className="font-mono text-[0.59375rem] uppercase tracking-wider text-text-muted">
         {t("fromScript") || "从脚本开始"}
       </span>
@@ -937,7 +937,7 @@ export default function Home() {
                             <span className="w-8 h-8 rounded-lg grid place-items-center bg-surface group-hover:text-primary transition-colors flex-shrink-0">
                               <Plus size={15} />
                             </span>
-                            <span className="text-[0.8125rem] font-semibold">{t("newProject")}</span>
+                            <span className="text-[0.8125rem] font-semibold">{t("newEpisode")}</span>
                           </button>
                         )}
                       </div>
@@ -952,7 +952,7 @@ export default function Home() {
                             <ProjectCard project={ep} onDelete={deleteProject} />
                           </div>
                         ))}
-                        {!wsFiltering && <NewProjectTile onClick={() => { setDialogSeries({ id: s.id, title: s.title }); setIsDialogOpen(true); }} />}
+                        {!wsFiltering && <NewProjectTile episode onClick={() => { setDialogSeries({ id: s.id, title: s.title }); setIsDialogOpen(true); }} />}
                       </div>
                     )}
                   </section>

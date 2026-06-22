@@ -436,6 +436,7 @@
     "addEpisode": "添加集数",
     "newSeries": "新建系列",
     "newProject": "新建独立项目",
+    "newEpisode": "新建一集",
     "seriesTitle": "系列标题",
     "seriesTitlePlaceholder": "例如：我的漫剧系列",
     "description": "描述（可选）",

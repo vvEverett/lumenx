@@ -436,6 +436,7 @@
     "addEpisode": "Add Episode",
     "newSeries": "New Series",
     "newProject": "New Standalone Project",
+    "newEpisode": "New Episode",
     "seriesTitle": "Series Title",
     "seriesTitlePlaceholder": "e.g. My Comic Series",
     "description": "Description (optional)",
