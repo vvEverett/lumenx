@@ -1092,10 +1092,10 @@ export default function SettingsPage() {
       {/* Head: eyebrow(当前分类) + 「设置」标题 + 横向 Tab —— 取代竖向子栏 */}
       <header className="flex-shrink-0 border-b border-glass-border px-5 md:px-10 pt-6 pb-4 relative z-10">
         <div className="max-w-6xl mx-auto w-full">
-        <div className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-text-muted">
-          SETTINGS · <span className="text-primary">{CATEGORY_TITLE[active]}</span>
+        <div className="font-mono text-[0.625rem] font-medium uppercase tracking-[0.2em] text-text-muted">
+          SETTINGS · <span className="text-primary font-semibold">{CATEGORY_TITLE[active]}</span>
         </div>
-        <h1 className="font-display atelier-display text-[1.5rem] md:text-[2rem] leading-none font-semibold text-foreground mt-2 tracking-tight">
+        <h1 className="font-display atelier-display text-[1.625rem] md:text-[2.125rem] font-semibold text-foreground mt-2 tracking-tight">
           {t("title")}
         </h1>
         <nav className="flex flex-wrap gap-1 mt-5" role="tablist" aria-label={t("tabsAria")} onKeyDown={rovingKeyDown}>

@@ -305,15 +305,15 @@ export default function AssetLibraryPage() {
       {/* Header */}
       <header className="px-4 md:px-7 pt-5 md:pt-6 pb-3 flex items-end gap-5">
         <div className="flex-1 min-w-0">
-          <div className="font-mono text-[0.59375rem] uppercase tracking-[0.22em] text-text-muted">
-            ASSET LIBRARY · <span className="text-primary font-semibold atelier-eyebrow-accent">{t("gallery") || "画廊"}</span>
+          <div className="font-mono text-[0.625rem] font-medium uppercase tracking-[0.2em] text-text-muted">
+            ASSET LIBRARY · <span className="text-primary font-semibold">{t("gallery") || "画廊"}</span>
           </div>
           <h1 className="text-[1.625rem] md:text-[2.125rem] font-display atelier-display font-semibold text-foreground leading-tight tracking-tight mt-1">
             {t("title")}
           </h1>
         </div>
         <div className="flex items-center gap-2.5 pb-1">
-          <span className="font-mono text-[0.75rem] text-text-muted tracking-wide uppercase">
+          <span className="font-mono text-[0.6875rem] text-text-muted tracking-[0.1em] uppercase">
             {t("assetCount", { count: visibleCount })}
           </span>
           <button

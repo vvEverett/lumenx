@@ -706,8 +706,8 @@ export default function Home() {
         {/* Page header — eyebrow + Fraunces title + actions */}
         <header className="px-4 md:px-7 pt-5 md:pt-6 pb-3 flex flex-col md:flex-row md:items-end gap-3 md:gap-5">
           <div className="flex-1 min-w-0">
-            <div className="font-mono text-[0.59375rem] uppercase tracking-[0.22em] text-text-muted">
-              WORKSPACE · <span className="text-primary font-semibold atelier-eyebrow-accent">{t("gallery") || "画廊"}</span>
+            <div className="font-mono text-[0.625rem] font-medium uppercase tracking-[0.2em] text-text-muted">
+              WORKSPACE · <span className="text-primary font-semibold">{t("gallery") || "画廊"}</span>
             </div>
             <h1 className="text-[1.625rem] md:text-[2.125rem] font-display atelier-display font-semibold text-foreground leading-tight tracking-tight mt-1">
               {t("title")}
