@@ -40,7 +40,6 @@ models:
     ui:
       selection_group: i2v
       visible_in: [project_settings, series_settings, video_sidebar, global_settings]
-      recommended: true
       order: 90
       badges: [new]
     duration:

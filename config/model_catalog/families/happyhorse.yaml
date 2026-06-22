@@ -47,7 +47,7 @@ models:
           selection_group: i2v
           visible_in: [project_settings, series_settings, video_sidebar, global_settings]
           order: 120
-          badges: [recommended]
+          recommended: true
         duration:
           type: slider
           min: 3
@@ -74,6 +74,7 @@ models:
           selection_group: r2v
           visible_in: [project_settings, series_settings, video_sidebar, global_settings]
           order: 80
+          recommended: true
         duration:
           type: slider
           min: 3
@@ -104,6 +105,7 @@ models:
     ui:
       selection_group: i2v
       visible_in: []
+      recommended: true
     params:
       resolution:
         options: [720p, 1080p]
@@ -125,6 +127,7 @@ models:
     ui:
       selection_group: i2v
       visible_in: []
+      recommended: true
     params:
       resolution:
         options: [720p, 1080p]

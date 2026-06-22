@@ -38,7 +38,6 @@ models:
     ui:
       selection_group: image
       visible_in: [project_settings, series_settings, global_settings]
-      recommended: true
       order: 100
       badges: [new]
     params:

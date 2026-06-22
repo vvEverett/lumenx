@@ -2214,7 +2214,7 @@
           "new"
         ],
         "order": 95,
-        "recommended": false,
+        "recommended": true,
         "selection_group": "image",
         "visible_in": [
           "project_settings",
@@ -2292,11 +2292,9 @@
         }
       },
       "ui": {
-        "badges": [
-          "recommended"
-        ],
+        "badges": [],
         "order": 120,
-        "recommended": false,
+        "recommended": true,
         "selection_group": "i2v",
         "visible_in": [
           "project_settings",
@@ -2377,7 +2375,7 @@
       "ui": {
         "badges": [],
         "order": 80,
-        "recommended": false,
+        "recommended": true,
         "selection_group": "r2v",
         "visible_in": [
           "project_settings",
@@ -2448,7 +2446,7 @@
       "ui": {
         "badges": [],
         "order": 0,
-        "recommended": false,
+        "recommended": true,
         "selection_group": "i2v",
         "visible_in": []
       }
@@ -2514,7 +2512,7 @@
       "ui": {
         "badges": [],
         "order": 0,
-        "recommended": false,
+        "recommended": true,
         "selection_group": "i2v",
         "visible_in": []
       }
@@ -2619,7 +2617,7 @@
           "proxy-capable"
         ],
         "order": 100,
-        "recommended": true,
+        "recommended": false,
         "selection_group": "i2v",
         "visible_in": [
           "project_settings",
@@ -3121,7 +3119,7 @@
           "new"
         ],
         "order": 90,
-        "recommended": true,
+        "recommended": false,
         "selection_group": "i2v",
         "visible_in": [
           "project_settings",
@@ -3274,7 +3272,7 @@
           "new"
         ],
         "order": 100,
-        "recommended": true,
+        "recommended": false,
         "selection_group": "image",
         "visible_in": [
           "project_settings",
@@ -4795,7 +4793,7 @@
           "latest"
         ],
         "order": 80,
-        "recommended": true,
+        "recommended": false,
         "selection_group": "i2v",
         "visible_in": [
           "project_settings",
@@ -4966,7 +4964,7 @@
           "latest"
         ],
         "order": 120,
-        "recommended": true,
+        "recommended": false,
         "selection_group": "image",
         "visible_in": [
           "project_settings",
@@ -5261,7 +5259,7 @@
           "new"
         ],
         "order": 95,
-        "recommended": false,
+        "recommended": true,
         "selection_group": "image",
         "visible_in": [
           "project_settings",
@@ -5335,7 +5333,7 @@
       "ui": {
         "badges": [],
         "order": 0,
-        "recommended": false,
+        "recommended": true,
         "selection_group": "i2v",
         "visible_in": []
       }
@@ -5417,11 +5415,9 @@
         }
       },
       "ui": {
-        "badges": [
-          "recommended"
-        ],
+        "badges": [],
         "order": 120,
-        "recommended": false,
+        "recommended": true,
         "selection_group": "i2v",
         "visible_in": [
           "project_settings",
@@ -5510,7 +5506,7 @@
       "ui": {
         "badges": [],
         "order": 80,
-        "recommended": false,
+        "recommended": true,
         "selection_group": "r2v",
         "visible_in": [
           "project_settings",
@@ -5585,7 +5581,7 @@
       "ui": {
         "badges": [],
         "order": 0,
-        "recommended": false,
+        "recommended": true,
         "selection_group": "i2v",
         "visible_in": []
       }
@@ -5702,7 +5698,7 @@
           "proxy-capable"
         ],
         "order": 100,
-        "recommended": true,
+        "recommended": false,
         "selection_group": "i2v",
         "visible_in": [
           "project_settings",
@@ -6256,7 +6252,7 @@
           "new"
         ],
         "order": 90,
-        "recommended": true,
+        "recommended": false,
         "selection_group": "i2v",
         "visible_in": [
           "project_settings",
@@ -6427,7 +6423,7 @@
           "new"
         ],
         "order": 100,
-        "recommended": true,
+        "recommended": false,
         "selection_group": "image",
         "visible_in": [
           "project_settings",
@@ -8168,7 +8164,7 @@
           "latest"
         ],
         "order": 120,
-        "recommended": true,
+        "recommended": false,
         "selection_group": "image",
         "visible_in": [
           "project_settings",
@@ -8272,7 +8268,7 @@
           "latest"
         ],
         "order": 80,
-        "recommended": true,
+        "recommended": false,
         "selection_group": "i2v",
         "visible_in": [
           "project_settings",
