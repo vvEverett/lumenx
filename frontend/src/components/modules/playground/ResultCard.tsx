@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Download, Video, Star, Copy, Check, Replace } from 'lucide-react';
+import { Download, Video, Star, Copy, Check, Replace, Crown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { API_URL, playgroundApi } from '@/lib/api';
 import { usePlaygroundStore, type PlaygroundGeneration } from './usePlaygroundStore';
@@ -134,6 +134,9 @@ function CompletedCard({ generation, outputIndex, onGenerateVideo, onOpenDetail 
   const mediaUrl = output?.media_path ? getMediaUrl(output.media_path) : null;
   const updateGeneration = usePlaygroundStore((s) => s.updateGeneration);
   const useResultAsReference = usePlaygroundStore((s) => s.useResultAsReference);
+  const featuredByGen = usePlaygroundStore((s) => s.featuredByGen);
+  const toggleFeatured = usePlaygroundStore((s) => s.toggleFeatured);
+  const featured = output ? featuredByGen[generation.id] === output.id : false;
 
   const handleDownload = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -204,11 +207,24 @@ function CompletedCard({ generation, outputIndex, onGenerateVideo, onOpenDetail 
           <div className="atelier-proj-halation pointer-events-none absolute inset-0 z-[1]" />
         )}
 
-        {/* Video badge top-left */}
-        {isVideo && (
-          <span className="absolute top-2 left-2 z-[2] font-mono text-[0.5625rem] bg-black/60 text-foreground/80 backdrop-blur-sm rounded px-[6px] py-[2px] uppercase">
-            {MODE_LABELS[mode] || mode}
-          </span>
+        {/* Top-left badges: featured (best-of-batch) + video mode */}
+        {(featured || isVideo) && (
+          <div className="absolute top-2 left-2 z-[3] flex items-center gap-1.5">
+            {featured && (
+              <span
+                className="inline-flex items-center gap-1 font-mono text-[0.5625rem] uppercase tracking-[0.08em] bg-status-starred-bg text-status-starred-fg border border-status-starred-border rounded px-[6px] py-[2px] backdrop-blur-sm"
+                title={t('card.featured')}
+              >
+                <Crown className="w-2.5 h-2.5 fill-status-starred-solid" />
+                {t('card.featured')}
+              </span>
+            )}
+            {isVideo && (
+              <span className="font-mono text-[0.5625rem] bg-black/60 text-foreground/80 backdrop-blur-sm rounded px-[6px] py-[2px] uppercase">
+                {MODE_LABELS[mode] || mode}
+              </span>
+            )}
+          </div>
         )}
 
         {/* Saved pill top-right */}
@@ -243,6 +259,13 @@ function CompletedCard({ generation, outputIndex, onGenerateVideo, onOpenDetail 
               <Video className="w-3.5 h-3.5 text-foreground" />
             </button>
           )}
+          <button
+            onClick={(e) => { e.stopPropagation(); if (output) toggleFeatured(generation.id, output.id); }}
+            className={`w-7 h-7 rounded-full backdrop-blur-sm flex items-center justify-center transition ${featured ? 'bg-status-starred-bg' : 'bg-elevated hover:bg-hover-bg'}`}
+            title={t('card.featured')}
+          >
+            <Crown className={`w-3.5 h-3.5 ${featured ? 'text-status-starred-solid fill-status-starred-solid' : 'text-foreground'}`} />
+          </button>
           <button
             onClick={handleSaveToLibrary}
             className={`w-7 h-7 rounded-full backdrop-blur-sm flex items-center justify-center transition ${saved ? 'bg-status-starred-bg' : 'bg-elevated hover:bg-hover-bg'}`}

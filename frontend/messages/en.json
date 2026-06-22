@@ -1596,6 +1596,7 @@
     "card": {
       "saveToLibrary": "Save to library",
       "saved": "Saved",
+      "featured": "Featured",
       "useAsReference": "Use as reference",
       "download": "Download",
       "generateVideo": "Generate video",

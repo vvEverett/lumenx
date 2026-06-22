@@ -6,6 +6,7 @@ import {
   X,
   Download,
   Star,
+  Crown,
   Video,
   RotateCcw,
   Trash2,
@@ -79,6 +80,8 @@ export default function DetailPanel({
   const [deleting, setDeleting] = useState(false);
   const updateGeneration = usePlaygroundStore((s) => s.updateGeneration);
   const history = usePlaygroundStore((s) => s.history);
+  const featuredByGen = usePlaygroundStore((s) => s.featuredByGen);
+  const toggleFeatured = usePlaygroundStore((s) => s.toggleFeatured);
 
   // Always read the latest generation from store (so saved_to_library stays in sync)
   const generation = history.find((g) => g.id === generationProp.id) ?? generationProp;
@@ -87,6 +90,7 @@ export default function DetailPanel({
   // Determine media — focus the clicked output of a batch, else the first.
   const output =
     generation.outputs.find((o) => o.id === focusOutputId) ?? generation.outputs[0];
+  const featured = output ? featuredByGen[generation.id] === output.id : false;
   const isVideo =
     output?.media_type === 'video' ||
     ['t2v', 'i2v', 'r2v', 'v2v'].includes(generation.mode);
@@ -388,6 +392,22 @@ export default function DetailPanel({
                 {saving ? t('detail.saving') : saved ? t('detail.savedCancel') : t('detail.saveToLibrary')}
               </button>
             ) : null}
+
+            {/* Featured (best-of-batch) toggle — amber only when active */}
+            {output && (
+              <button
+                onClick={() => toggleFeatured(generation.id, output.id)}
+                className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition border ${
+                  featured
+                    ? 'bg-status-starred-bg border-status-starred-border text-status-starred-fg'
+                    : 'bg-surface-inset border-glass-border text-text-secondary hover:text-foreground hover:bg-hover-bg'
+                }`}
+                title={t('card.featured')}
+              >
+                <Crown className={`w-4 h-4 ${featured ? 'fill-status-starred-solid' : ''}`} />
+                {t('card.featured')}
+              </button>
+            )}
 
             {/* Secondary row: Download + Generate Video (neutral ghosts) */}
             {(mediaUrl || (!isVideo && output?.media_path && onGenerateVideo)) && (

@@ -1,6 +1,31 @@
 import { create } from 'zustand';
 
 // ---------------------------------------------------------------------------
+// Featured (best-of-batch) persistence — client-side localStorage only.
+// Map of generationId -> the one outputId marked "featured" within that batch.
+// ---------------------------------------------------------------------------
+
+const FEATURED_LS_KEY = 'lumenx:playground:featured';
+
+function loadFeatured(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(FEATURED_LS_KEY) || '{}') as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+function saveFeatured(map: Record<string, string>): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(FEATURED_LS_KEY, JSON.stringify(map));
+  } catch {
+    /* ignore quota / serialization errors */
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -76,6 +101,11 @@ interface PlaygroundState {
   favoriteTemplateIds: string[];
   toggleTemplateFavorite: (id: string) => void;
   isTemplateFavorited: (id: string) => boolean;
+
+  // Featured output per generation (best-of-batch); one per batch, localStorage-persisted
+  featuredByGen: Record<string, string>;
+  toggleFeatured: (genId: string, outputId: string) => void;
+  isFeatured: (genId: string, outputId: string) => boolean;
 
   // Actions — input setters
   setMode: (mode: PlaygroundMode) => void;
@@ -168,6 +198,17 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
     }
   },
   isTemplateFavorited: (id) => get().favoriteTemplateIds.includes(id),
+
+  // -- Featured output (best-of-batch, one per generation) -------------------
+  featuredByGen: loadFeatured(),
+  toggleFeatured: (genId, outputId) => {
+    const next = { ...get().featuredByGen };
+    if (next[genId] === outputId) delete next[genId];
+    else next[genId] = outputId;
+    saveFeatured(next);
+    set({ featuredByGen: next });
+  },
+  isFeatured: (genId, outputId) => get().featuredByGen[genId] === outputId,
 
   // =========================================================================
   // Actions
