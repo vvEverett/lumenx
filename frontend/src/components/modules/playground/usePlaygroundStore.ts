@@ -15,6 +15,8 @@ export interface PlaygroundOutput {
   library_path?: string;
 }
 
+export type PlaygroundParameterValue = string | number | boolean | null | undefined;
+
 export interface PlaygroundGeneration {
   id: string;
   mode: PlaygroundMode;
@@ -22,12 +24,18 @@ export interface PlaygroundGeneration {
   prompt: string;
   negative_prompt?: string;
   input_media: string[];
-  parameters: Record<string, any>;
+  parameters: Record<string, PlaygroundParameterValue>;
   batch_size: number;
   outputs: PlaygroundOutput[];
   status: 'pending' | 'processing' | 'completed' | 'failed';
   error?: string;
   created_at: string;
+}
+
+export interface PlaygroundInputMediaInfo {
+  mediaType?: 'image' | 'video' | 'audio' | 'unknown';
+  width?: number;
+  height?: number;
 }
 
 export interface PlaygroundTemplate {
@@ -38,7 +46,7 @@ export interface PlaygroundTemplate {
   negative_prompt?: string;
   default_mode?: PlaygroundMode;
   default_model_id?: string;
-  default_parameters: Record<string, any>;
+  default_parameters: Record<string, PlaygroundParameterValue>;
   created_at: string;
   updated_at: string;
 }
@@ -54,7 +62,8 @@ interface PlaygroundState {
   prompt: string;
   negativePrompt: string;
   inputMedia: string[];
-  parameters: Record<string, any>;
+  inputMediaInfo: Record<string, PlaygroundInputMediaInfo>;
+  parameters: Record<string, PlaygroundParameterValue>;
   batchSize: number;
 
   // Model preferences (mode -> last used modelId)
@@ -85,7 +94,8 @@ interface PlaygroundState {
   setPrompt: (prompt: string) => void;
   setNegativePrompt: (neg: string) => void;
   setInputMedia: (media: string[]) => void;
-  setParameters: (params: Record<string, any>) => void;
+  setInputMediaInfo: (path: string, info: PlaygroundInputMediaInfo) => void;
+  setParameters: (params: Record<string, PlaygroundParameterValue>) => void;
   setBatchSize: (size: number) => void;
   setShowAdvancedParams: (show: boolean) => void;
   setShowTemplateModal: (show: boolean) => void;
@@ -133,6 +143,7 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
   prompt: DEFAULT_PROMPT,
   negativePrompt: '',
   inputMedia: [],
+  inputMediaInfo: {},
   parameters: {},
   batchSize: DEFAULT_BATCH_SIZE,
 
@@ -192,7 +203,25 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 
   setNegativePrompt: (negativePrompt) => set({ negativePrompt }),
 
-  setInputMedia: (inputMedia) => set({ inputMedia }),
+  setInputMedia: (inputMedia) =>
+    set((s) => {
+      const kept = new Set(inputMedia);
+      const inputMediaInfo = Object.fromEntries(
+        Object.entries(s.inputMediaInfo).filter(([path]) => kept.has(path))
+      );
+      return { inputMedia, inputMediaInfo };
+    }),
+
+  setInputMediaInfo: (path, info) =>
+    set((s) => ({
+      inputMediaInfo: {
+        ...s.inputMediaInfo,
+        [path]: {
+          ...s.inputMediaInfo[path],
+          ...info,
+        },
+      },
+    })),
 
   setParameters: (parameters) => set({ parameters }),
 
@@ -317,6 +346,7 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
       prompt: DEFAULT_PROMPT,
       negativePrompt: '',
       inputMedia: [],
+      inputMediaInfo: {},
       parameters: {},
       batchSize: DEFAULT_BATCH_SIZE,
     }),

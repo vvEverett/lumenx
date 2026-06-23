@@ -238,9 +238,9 @@ export default function DetailPanel({
   // Build parameter entries
   const paramEntries: [string, string][] = [];
   const params = generation.parameters || {};
-  if (params.size) paramEntries.push(['Size', params.size]);
-  if (params.resolution) paramEntries.push(['Resolution', params.resolution]);
-  if (params.aspect_ratio) paramEntries.push(['Aspect Ratio', params.aspect_ratio]);
+  if (params.size) paramEntries.push(['Size', String(params.size)]);
+  if (params.resolution) paramEntries.push(['Resolution', String(params.resolution)]);
+  if (params.aspect_ratio) paramEntries.push(['Aspect Ratio', String(params.aspect_ratio)]);
   if (params.duration) paramEntries.push(['Duration', `${params.duration}s`]);
   if (generation.batch_size > 1)
     paramEntries.push(['Batch Size', String(generation.batch_size)]);

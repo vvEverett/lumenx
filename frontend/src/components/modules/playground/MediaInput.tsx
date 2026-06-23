@@ -6,6 +6,7 @@ import { playgroundApi } from '@/lib/api';
 import { usePlaygroundStore, type PlaygroundMode } from './usePlaygroundStore';
 import AssetPickerModal from './AssetPickerModal';
 import { getPlaygroundFileName, getPlaygroundMediaUrl } from './mediaUrls';
+import { useLightbox } from '@/components/shared/preview/LightboxProvider';
 
 // ---------------------------------------------------------------------------
 // Mode config
@@ -79,12 +80,15 @@ export default function MediaInput() {
   const mode = usePlaygroundStore((s) => s.mode);
   const modelId = usePlaygroundStore((s) => s.modelId);
   const inputMedia = usePlaygroundStore((s) => s.inputMedia);
+  const inputMediaInfo = usePlaygroundStore((s) => s.inputMediaInfo);
   const setInputMedia = usePlaygroundStore((s) => s.setInputMedia);
+  const setInputMediaInfo = usePlaygroundStore((s) => s.setInputMediaInfo);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [showAssetPicker, setShowAssetPicker] = useState(false);
+  const { open: openLightbox } = useLightbox();
 
   const isSeedance = modelId.startsWith('seedance');
 
@@ -184,6 +188,28 @@ export default function MediaInput() {
 
   const handleAssetSelect = (path: string) => {
     setInputMedia([...inputMedia, path]);
+  };
+
+  const handleImageLoad = (
+    path: string,
+    event: React.SyntheticEvent<HTMLImageElement>
+  ) => {
+    const img = event.currentTarget;
+    if (!img.naturalWidth || !img.naturalHeight) return;
+    setInputMediaInfo(path, {
+      mediaType: 'image',
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+    });
+  };
+
+  const handlePreview = (path: string, previewSrc = path) => {
+    if (isVideoPath(path)) return;
+    openLightbox({
+      src: previewSrc,
+      alt: getPlaygroundFileName(path),
+      kind: 'image',
+    });
   };
 
   // Don't render for t2v mode (no input media needed)
@@ -312,12 +338,30 @@ export default function MediaInput() {
         <div className="flex flex-wrap gap-2">
           {inputMedia.map((path, index) => {
             const mediaUrl = getPlaygroundMediaUrl(path) ?? path;
+            const isVideo = isVideoPath(path);
+            const info = inputMediaInfo[path];
+            const resolution = info?.width && info?.height
+              ? `${info.width}×${info.height}`
+              : null;
             return (
               <div
                 key={path + index}
-                className="group relative w-20 h-[60px] rounded-lg overflow-hidden bg-white/[0.04] border border-white/[0.06]"
+                role={isVideo ? undefined : 'button'}
+                tabIndex={isVideo ? undefined : 0}
+                onClick={() => handlePreview(path, mediaUrl)}
+                onKeyDown={(event) => {
+                  if (isVideo) return;
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handlePreview(path, mediaUrl);
+                  }
+                }}
+                className={`group relative w-20 h-[60px] rounded-lg overflow-hidden bg-white/[0.04] border border-white/[0.06] ${
+                  isVideo ? '' : 'cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#646cff]/60'
+                }`}
+                title={resolution ? `${getPlaygroundFileName(path)} · ${resolution}` : getPlaygroundFileName(path)}
               >
-                {isVideoPath(path) ? (
+                {isVideo ? (
                   <video
                     src={mediaUrl}
                     className="w-full h-full object-cover"
@@ -328,13 +372,23 @@ export default function MediaInput() {
                     src={mediaUrl}
                     alt=""
                     className="w-full h-full object-cover"
+                    onLoad={(event) => handleImageLoad(path, event)}
                   />
+                )}
+
+                {resolution && !isVideo && (
+                  <div className="absolute top-0.5 left-0.5 rounded bg-black/65 px-1 py-0.5 font-mono text-[8px] leading-none text-white/75">
+                    {resolution}
+                  </div>
                 )}
 
                 {/* Remove button on hover */}
                 <button
                   type="button"
-                  onClick={() => handleRemove(index)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleRemove(index);
+                  }}
                   className="
                     absolute top-0.5 right-0.5
                     w-4 h-4 rounded-full

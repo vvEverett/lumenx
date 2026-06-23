@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { usePlaygroundStore } from './usePlaygroundStore';
-import { getModelParams, getModelDuration } from './playgroundModels';
+import { getModelParams, getModelDuration, getModelDisplayInfo } from './playgroundModels';
 import { ChevronDown, Check } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -14,6 +14,14 @@ const BATCH_OPTIONS = [1, 2, 4] as const;
 
 const FALLBACK_RATIOS = ['16:9', '9:16', '1:1'];
 const FALLBACK_RESOLUTIONS = ['720P', '1080P'];
+const EMPTY_OPTIONS: string[] = [];
+
+type ParamOption = string | {
+  value: string;
+  label: string;
+  key?: string;
+  sourcePath?: string;
+};
 
 // ---------------------------------------------------------------------------
 // ParamDropdown — custom styled dropdown (replaces native <select>)
@@ -35,14 +43,16 @@ function ParamDropdown({
   label,
   value,
   options,
+  selectedOptionKey,
   onChange,
   disabled,
   formatOption,
 }: {
   label: string;
   value: string;
-  options: string[];
-  onChange: (v: string) => void;
+  options: ParamOption[];
+  selectedOptionKey?: string | null;
+  onChange: (v: string, option: ParamOption) => void;
   disabled?: boolean;
   formatOption?: (opt: string) => string;
 }) {
@@ -61,6 +71,19 @@ function ParamDropdown({
   }, [open]);
 
   const display = formatOption ?? ((o: string) => o);
+  const getValue = (option: ParamOption) => typeof option === 'string' ? option : option.value;
+  const getLabel = (option: ParamOption) => typeof option === 'string'
+    ? display(option)
+    : option.label;
+  const getKey = (option: ParamOption) => typeof option === 'string'
+    ? option
+    : option.key ?? option.value;
+  const selectedOption = (
+    selectedOptionKey
+      ? options.find((option) => getKey(option) === selectedOptionKey)
+      : null
+  ) ?? options.find((option) => getValue(option) === value);
+  const selectedLabel = selectedOption ? getLabel(selectedOption) : display(value);
 
   return (
     <div className="flex flex-col gap-[6px]">
@@ -76,27 +99,31 @@ function ParamDropdown({
               : 'hover:border-white/[0.15]'
           }`}
         >
-          <span>{display(value)}</span>
+          <span>{selectedLabel}</span>
           {!disabled && <ChevronDown className={`w-3 h-3 text-white/40 transition-transform ${open ? 'rotate-180' : ''}`} />}
         </button>
 
         {open && (
           <div className="absolute top-full mt-1 w-full bg-[#141416] border border-white/[0.08] rounded-lg shadow-xl z-30 max-h-48 overflow-y-auto">
-            {options.map((opt) => (
+            {options.map((opt) => {
+              const optionValue = getValue(opt);
+              const isSelected = selectedOption === opt;
+              return (
               <div
-                key={opt}
+                key={getKey(opt)}
                 onClick={() => {
-                  onChange(opt);
+                  onChange(optionValue, opt);
                   setOpen(false);
                 }}
                 className="px-3 py-2 text-xs flex items-center justify-between hover:bg-white/[0.06] cursor-pointer"
               >
-                <span className={opt === value ? 'text-white' : 'text-white/60'}>
-                  {display(opt)}
+                <span className={isSelected ? 'text-white' : 'text-white/60'}>
+                  {getLabel(opt)}
                 </span>
-                {opt === value && <Check className="w-3 h-3 text-[#646cff]" />}
+                {isSelected && <Check className="w-3 h-3 text-[#646cff]" />}
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -230,18 +257,24 @@ function DurationStepper({
 export default function ParameterBar() {
   const mode = usePlaygroundStore((s) => s.mode);
   const modelId = usePlaygroundStore((s) => s.modelId);
+  const inputMedia = usePlaygroundStore((s) => s.inputMedia);
+  const inputMediaInfo = usePlaygroundStore((s) => s.inputMediaInfo);
   const parameters = usePlaygroundStore((s) => s.parameters);
   const batchSize = usePlaygroundStore((s) => s.batchSize);
   const setParameters = usePlaygroundStore((s) => s.setParameters);
   const setBatchSize = usePlaygroundStore((s) => s.setBatchSize);
 
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [selectedSizeOptionKey, setSelectedSizeOptionKey] = useState<string | null>(null);
+  const [selectedSizeReferencePath, setSelectedSizeReferencePath] = useState<string | null>(null);
 
   const isVideoMode = VIDEO_MODES.has(mode);
 
   // Read model-specific params and duration from catalog
-  const modelParams = getModelParams(modelId);
-  const modelDuration = getModelDuration(modelId);
+  const modelParams = useMemo(() => getModelParams(modelId), [modelId]);
+  const modelDuration = useMemo(() => getModelDuration(modelId), [modelId]);
+  const modelInfo = useMemo(() => getModelDisplayInfo(modelId), [modelId]);
+  const isWanImageModel = !isVideoMode && modelInfo?.family === 'wan';
 
   // Derive options with fallbacks — IMAGE uses size, VIDEO uses resolution/ratio
   const hasSize = !!modelParams?.size;
@@ -249,8 +282,39 @@ export default function ParameterBar() {
   const hasRatio = !!modelParams?.ratio;
   const hasQuality = !!modelParams?.quality;
 
-  const sizeOptions = modelParams?.size?.options ?? [];
+  const sizeOptions = modelParams?.size?.options ?? EMPTY_OPTIONS;
   const sizeDefault = modelParams?.size?.default ?? sizeOptions[0] ?? '1024*1024';
+  const imageSizeOptions = useMemo<ParamOption[]>(() => {
+    if (!hasSize || !isWanImageModel || inputMedia.length === 0) return sizeOptions;
+
+    const referenceOptions = inputMedia
+      .map((path, index): ParamOption | null => {
+        const info = inputMediaInfo[path];
+        if (!info?.width || !info?.height || info.mediaType === 'video' || info.mediaType === 'audio') {
+          return null;
+        }
+
+        const labelSize = `${info.width}×${info.height}`;
+        return {
+          value: `${info.width}*${info.height}`,
+          label: `${labelSize} (Ref ${index + 1})`,
+          key: `reference:${path}:${info.width}x${info.height}`,
+          sourcePath: path,
+        };
+      })
+      .filter((option): option is ParamOption => option !== null);
+
+    return [...sizeOptions, ...referenceOptions];
+  }, [hasSize, inputMedia, inputMediaInfo, isWanImageModel, sizeOptions]);
+  const imageSizeValues = imageSizeOptions.map((option) => typeof option === 'string' ? option : option.value);
+  const imageSizeValidationKey = imageSizeValues.join('|');
+  const selectedSizeReferenceStillAvailable = selectedSizeReferencePath
+    ? imageSizeOptions.some((option) => (
+      typeof option !== 'string'
+      && option.sourcePath === selectedSizeReferencePath
+      && option.key === selectedSizeOptionKey
+    ))
+    : true;
   const ratioOptions = modelParams?.ratio?.options ?? FALLBACK_RATIOS;
   const ratioDefault = modelParams?.ratio?.default ?? ratioOptions[0];
   const resolutionOptions = modelParams?.resolution?.options ?? FALLBACK_RESOLUTIONS;
@@ -266,11 +330,11 @@ export default function ParameterBar() {
 
   // When model changes, reset params whose current value is not in the new model's options
   useEffect(() => {
-    const patches: Record<string, any> = {};
+    const patches: Record<string, string | number | boolean | null | undefined> = {};
 
     if (hasSize) {
       const cur = parameters.size as string | undefined;
-      if (cur && !sizeOptions.includes(cur)) patches.size = sizeDefault;
+      if (cur && !imageSizeValues.includes(cur)) patches.size = sizeDefault;
     }
     if (hasRatio) {
       const cur = parameters.aspect_ratio as string | undefined;
@@ -300,10 +364,32 @@ export default function ParameterBar() {
 
     if (Object.keys(patches).length > 0) setParameters({ ...parameters, ...patches });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modelId]);
+  }, [modelId, imageSizeValidationKey]);
 
-  const updateParam = (key: string, value: any) => {
+  useEffect(() => {
+    if (!selectedSizeReferencePath || selectedSizeReferenceStillAvailable) return;
+
+    setSelectedSizeOptionKey(null);
+    setSelectedSizeReferencePath(null);
+    setParameters({ ...parameters, size: sizeDefault });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSizeReferencePath, selectedSizeReferenceStillAvailable, sizeDefault]);
+
+  const updateParam = (key: string, value: string | number | boolean | null | undefined) => {
     setParameters({ ...parameters, [key]: value });
+  };
+
+  const updateSizeParam = (value: string, option: ParamOption) => {
+    updateParam('size', value);
+
+    if (typeof option === 'string') {
+      setSelectedSizeOptionKey(null);
+      setSelectedSizeReferencePath(null);
+      return;
+    }
+
+    setSelectedSizeOptionKey(option.key ?? null);
+    setSelectedSizeReferencePath(option.sourcePath ?? null);
   };
 
   // Duration state (video only)
@@ -347,8 +433,9 @@ export default function ParameterBar() {
               <ParamDropdown
                 label="图像尺寸"
                 value={(parameters.size as string) ?? sizeDefault}
-                options={sizeOptions}
-                onChange={(v) => updateParam('size', v)}
+                options={imageSizeOptions}
+                selectedOptionKey={selectedSizeOptionKey}
+                onChange={updateSizeParam}
                 formatOption={formatImageSize}
               />
             )}
@@ -475,7 +562,7 @@ export default function ParameterBar() {
                     type="number"
                     placeholder="随机"
                     className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2.5 text-xs text-white font-mono w-full outline-none focus:border-white/[0.15] transition placeholder:text-white/20"
-                    value={parameters.seed ?? ''}
+                    value={typeof parameters.seed === 'number' || typeof parameters.seed === 'string' ? parameters.seed : ''}
                     onChange={(e) => {
                       const val = e.target.value;
                       updateParam('seed', val === '' ? undefined : parseInt(val) || undefined);
