@@ -87,7 +87,9 @@ class WanxImageModel(ImageGenModel):
         kwargs.pop('model_name', None)
         
         # Determine reference image limit based on model
-        if final_model_name.startswith('wan2.7-image') or final_model_name.startswith('qwen-image'):
+        if final_model_name.startswith('qwen-image'):
+            ref_limit = 3
+        elif final_model_name.startswith('wan2.7-image'):
             ref_limit = 9
         elif final_model_name == 'wan2.6-image':
             ref_limit = 4
@@ -109,8 +111,21 @@ class WanxImageModel(ImageGenModel):
             elif final_model_name == 'wan2.6-image':
                 # wan2.6-image for I2I (requires reference images)
                 image_url = self._generate_wan26_image_http(prompt, size, n, negative_prompt, all_ref_paths)
-            elif final_model_name.startswith('wan2.7-image') or final_model_name.startswith('qwen-image'):
-                # Wan2.7-image / Qwen-image via DashScope async HTTP API
+            elif final_model_name.startswith('qwen-image'):
+                # Qwen Image uses the DashScope synchronous multimodal-generation API.
+                image_url = self._generate_qwen_image_http(
+                    prompt=prompt,
+                    model_name=final_model_name,
+                    size=size,
+                    n=n,
+                    negative_prompt=negative_prompt,
+                    ref_image_paths=all_ref_paths,
+                    seed=kwargs.pop('seed', None),
+                    prompt_extend=kwargs.pop('prompt_extend', True),
+                    watermark=kwargs.pop('watermark', False),
+                )
+            elif final_model_name.startswith('wan2.7-image'):
+                # Wan2.7-image via DashScope async HTTP API
                 image_url = self._generate_dashscope_image_http(
                     prompt=prompt,
                     model_name=final_model_name,
@@ -194,7 +209,7 @@ class WanxImageModel(ImageGenModel):
 
         if negative_prompt:
             payload["parameters"]["negative_prompt"] = negative_prompt
-        if seed:
+        if seed is not None:
             payload["parameters"]["seed"] = seed
 
         logger.info(f"Calling {model_name} HTTP API (async)...")
@@ -274,6 +289,97 @@ class WanxImageModel(ImageGenModel):
                 raise RuntimeError(f"{model_name} task {task_status}: {poll_result}")
 
         raise RuntimeError(f"{model_name} task timed out after {max_wait_time}s")
+
+    def _generate_qwen_image_http(
+        self,
+        prompt: str,
+        model_name: str,
+        size: str = "1280*1280",
+        n: int = 1,
+        negative_prompt: str = None,
+        ref_image_paths: list = None,
+        seed: int = None,
+        prompt_extend: bool = True,
+        watermark: bool = False,
+    ) -> str:
+        """Generate image using Qwen Image via DashScope synchronous multimodal API."""
+        base = get_provider_base_url("DASHSCOPE")
+        url = f"{base}/api/v1/services/aigc/multimodal-generation/generation"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
+        content = []
+        if ref_image_paths:
+            for path in ref_image_paths[:3]:
+                image_input = self._resolve_wan26_reference_image(path, model_name=model_name)
+                if image_input:
+                    content.append({"image": image_input})
+
+        if ref_image_paths and not content:
+            raise RuntimeError(
+                f"{model_name} requires at least one usable reference image for I2I. "
+                "Please provide a valid local image, public URL, data URI, or configure OSS."
+            )
+
+        content.append({"text": prompt})
+
+        payload = {
+            "model": model_name,
+            "input": {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": content,
+                    }
+                ]
+            },
+            "parameters": {
+                "prompt_extend": prompt_extend,
+                "watermark": watermark,
+                "n": n,
+                "size": size,
+            },
+        }
+
+        if negative_prompt:
+            payload["parameters"]["negative_prompt"] = negative_prompt
+        if seed is not None:
+            payload["parameters"]["seed"] = seed
+
+        logger.info(f"Calling {model_name} HTTP API (sync multimodal)...")
+        logger.info(f"Payload: {payload}")
+
+        response = requests.post(url, headers=headers, json=payload, timeout=300)
+
+        logger.info(f"Response status: {response.status_code}")
+        logger.info(f"Response body: {response.text[:500]}...")
+
+        if response.status_code != 200:
+            try:
+                error_data = response.json() if response.text else {}
+            except ValueError:
+                error_data = {}
+            error_msg = error_data.get('message', response.text)
+            raise RuntimeError(f"{model_name} API failed: {error_msg}")
+
+        result = response.json()
+        choices = result.get('output', {}).get('choices', [])
+        if not choices:
+            raise RuntimeError(f"No choices in response: {result}")
+
+        first_choice = choices[0]
+        content = first_choice.get('message', {}).get('content', [])
+        if not content:
+            raise RuntimeError(f"No content in choice: {first_choice}")
+
+        image_url = content[0].get('image')
+        if not image_url:
+            raise RuntimeError(f"No image URL in content: {content}")
+
+        return image_url
 
     def _generate_wan26_http(self, prompt: str, size: str, n: int, negative_prompt: str = None) -> str:
         """Generate image using Wan 2.6 T2I via HTTP API (synchronous)."""
