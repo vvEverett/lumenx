@@ -1503,6 +1503,11 @@ export interface PlaygroundGenerationResponse {
   created_at: string;
 }
 
+export interface PlaygroundHistoryPageResponse {
+  items: PlaygroundGenerationResponse[];
+  total: number;
+}
+
 export interface PlaygroundLibraryItemResponse {
   id: string;
   generation_id: string;
@@ -1536,6 +1541,16 @@ export const playgroundApi = {
 
   getHistory: (limit = 50, offset = 0) =>
     axios.get<PlaygroundGenerationResponse[]>(API_URL + "/playground/history", { params: { limit, offset } }).then(r => r.data),
+
+  getHistoryPage: (limit = 50, offset = 0): Promise<PlaygroundHistoryPageResponse> =>
+    axios.get<PlaygroundGenerationResponse[]>(API_URL + "/playground/history", { params: { limit, offset } }).then((r) => {
+      const totalHeader = r.headers['x-total-count'];
+      const total = Number(Array.isArray(totalHeader) ? totalHeader[0] : totalHeader);
+      return {
+        items: r.data,
+        total: Number.isFinite(total) ? total : r.data.length,
+      };
+    }),
 
   getGeneration: (id: string) =>
     axios.get<PlaygroundGenerationResponse>(API_URL + "/playground/history/" + id).then(r => r.data),

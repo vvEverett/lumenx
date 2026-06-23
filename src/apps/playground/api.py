@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, File
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Response, UploadFile, File
 
 from .models import (
     CreateTemplateRequest,
@@ -45,8 +45,9 @@ router.add_api_route("/generate", generate, methods=["POST"])
 # ---------------------------------------------------------------------------
 
 
-def list_history(limit: int = 50, offset: int = 0):
+def list_history(response: Response, limit: int = 50, offset: int = 0):
     """Return paginated generation history, newest first."""
+    response.headers["X-Total-Count"] = str(_storage.count_history())
     return _storage.list_history(limit=limit, offset=offset)
 
 

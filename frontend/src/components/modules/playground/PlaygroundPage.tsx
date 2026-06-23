@@ -72,8 +72,8 @@ export default function PlaygroundPage() {
   const inputMedia = usePlaygroundStore((s) => s.inputMedia);
   const parameters = usePlaygroundStore((s) => s.parameters);
   const batchSize = usePlaygroundStore((s) => s.batchSize);
-  const history = usePlaygroundStore((s) => s.history);
-  const setHistory = usePlaygroundStore((s) => s.setHistory);
+  const historyTotal = usePlaygroundStore((s) => s.historyTotal);
+  const setHistoryPage = usePlaygroundStore((s) => s.setHistoryPage);
   const setTemplates = usePlaygroundStore((s) => s.setTemplates);
   const startGeneration = usePlaygroundStore((s) => s.startGeneration);
   const updateGeneration = usePlaygroundStore((s) => s.updateGeneration);
@@ -83,8 +83,8 @@ export default function PlaygroundPage() {
   // ─── Fetch initial data on mount ───────────────────────────────────────────
 
   useEffect(() => {
-    playgroundApi.getHistory().then((items) => {
-      setHistory(items.map(toGeneration));
+    playgroundApi.getHistoryPage(50, 0).then(({ items, total }) => {
+      setHistoryPage(items.map(toGeneration), total);
     }).catch((err) => {
       console.error('[Playground] Failed to fetch history:', err);
     });
@@ -183,7 +183,7 @@ export default function PlaygroundPage() {
 
   // ─── Derived values ────────────────────────────────────────────────────────
 
-  const resultCount = history.length;
+  const resultCount = historyTotal;
   const showMediaInput = MODES_WITH_MEDIA.includes(mode) || MODES_WITH_OPTIONAL_MEDIA.includes(mode);
   const canGenerate = prompt.trim().length > 0;
   const generateLabel = batchSize > 1 ? `生成 ×${batchSize}` : '生成';

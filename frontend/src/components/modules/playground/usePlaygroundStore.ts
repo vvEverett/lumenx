@@ -62,6 +62,7 @@ interface PlaygroundState {
 
   // History
   history: PlaygroundGeneration[];
+  historyTotal: number;
 
   // Templates
   templates: PlaygroundTemplate[];
@@ -97,6 +98,8 @@ interface PlaygroundState {
 
   // Actions — history
   setHistory: (history: PlaygroundGeneration[]) => void;
+  setHistoryPage: (history: PlaygroundGeneration[], total: number) => void;
+  appendHistoryPage: (history: PlaygroundGeneration[], total: number) => void;
   appendToHistory: (gen: PlaygroundGeneration) => void;
 
   // Actions — templates
@@ -138,6 +141,7 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 
   // -- History ---------------------------------------------------------------
   history: [],
+  historyTotal: 0,
 
   // -- Templates -------------------------------------------------------------
   templates: [],
@@ -203,10 +207,14 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
   // -- Generation lifecycle --------------------------------------------------
 
   startGeneration: (gen) => {
-    const { activeGenerationIds, history } = get();
+    const { activeGenerationIds, history, historyTotal } = get();
+    const alreadyInHistory = history.some((item) => item.id === gen.id);
     set({
       activeGenerationIds: [...activeGenerationIds, gen.id],
-      history: [gen, ...history],
+      history: alreadyInHistory ? history : [gen, ...history],
+      historyTotal: alreadyInHistory
+        ? historyTotal
+        : Math.max(historyTotal, history.length) + 1,
       isGenerating: true,
     });
   },
@@ -227,10 +235,14 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
   },
 
   removeGeneration: (id) => {
-    const { history, activeGenerationIds } = get();
+    const { history, activeGenerationIds, historyTotal } = get();
     const updatedActive = activeGenerationIds.filter((gid) => gid !== id);
+    const existedInHistory = history.some((h) => h.id === id);
     set({
       history: history.filter((h) => h.id !== id),
+      historyTotal: existedInHistory
+        ? Math.max(0, Math.max(historyTotal, history.length) - 1)
+        : historyTotal,
       activeGenerationIds: updatedActive,
       isGenerating: updatedActive.length > 0,
     });
@@ -238,9 +250,28 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 
   // -- History ---------------------------------------------------------------
 
-  setHistory: (history) => set({ history }),
+  setHistory: (history) => set({ history, historyTotal: history.length }),
 
-  appendToHistory: (gen) => set((s) => ({ history: [gen, ...s.history] })),
+  setHistoryPage: (history, total) => set({ history, historyTotal: total }),
+
+  appendHistoryPage: (history, total) => set((s) => {
+    const seenIds = new Set(s.history.map((item) => item.id));
+    const newItems = history.filter((item) => !seenIds.has(item.id));
+    return {
+      history: [...s.history, ...newItems],
+      historyTotal: total,
+    };
+  }),
+
+  appendToHistory: (gen) => set((s) => {
+    const alreadyInHistory = s.history.some((item) => item.id === gen.id);
+    return {
+      history: alreadyInHistory ? s.history : [gen, ...s.history],
+      historyTotal: alreadyInHistory
+        ? s.historyTotal
+        : Math.max(s.historyTotal, s.history.length) + 1,
+    };
+  }),
 
   // -- Templates -------------------------------------------------------------
 

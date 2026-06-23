@@ -13,6 +13,9 @@ interface GalleryViewProps {
   generations: PlaygroundGeneration[];
   onOpenDetail: (gen: PlaygroundGeneration) => void;
   onRetry?: (gen: PlaygroundGeneration) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -36,9 +39,13 @@ export default function GalleryView({
   generations,
   onOpenDetail,
   onRetry,
+  onLoadMore,
+  hasMore = false,
+  isLoadingMore = false,
 }: GalleryViewProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedOutputIndex, setSelectedOutputIndex] = useState(0);
+  const thumbnailScrollerRef = useRef<HTMLDivElement>(null);
   const thumbnailStripRef = useRef<HTMLDivElement>(null);
   const selectedGenerationId = generations[selectedIndex]?.id;
 
@@ -87,6 +94,23 @@ export default function GalleryView({
       onOpenDetail(generations[selectedIndex]);
     }
   }, [generations, selectedIndex, onOpenDetail]);
+
+  const handleThumbnailScroll = useCallback(() => {
+    const strip = thumbnailScrollerRef.current;
+    if (!strip || !hasMore || isLoadingMore) return;
+
+    const remaining = strip.scrollWidth - strip.scrollLeft - strip.clientWidth;
+    if (remaining < 220) {
+      onLoadMore?.();
+    }
+  }, [hasMore, isLoadingMore, onLoadMore]);
+
+  useEffect(() => {
+    if (!hasMore || isLoadingMore) return;
+    if (selectedIndex >= Math.max(generations.length - 5, 0)) {
+      onLoadMore?.();
+    }
+  }, [generations.length, hasMore, isLoadingMore, onLoadMore, selectedIndex]);
 
   if (generations.length === 0) {
     return (
@@ -222,7 +246,11 @@ export default function GalleryView({
       </div>
 
       {/* Thumbnail strip */}
-      <div className="h-20 shrink-0 px-4 py-2 border-t border-white/[0.06] overflow-x-auto">
+      <div
+        ref={thumbnailScrollerRef}
+        onScroll={handleThumbnailScroll}
+        className="h-20 shrink-0 px-4 py-2 border-t border-white/[0.06] overflow-x-auto"
+      >
         <div
           ref={thumbnailStripRef}
           className="flex gap-2 h-full items-center"
@@ -284,6 +312,11 @@ export default function GalleryView({
               </button>
             );
           })}
+          {isLoadingMore && (
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.04]">
+              <div className="h-4 w-4 rounded-full border-2 border-white/10 border-t-[#646cff] animate-spin" />
+            </div>
+          )}
         </div>
       </div>
     </div>

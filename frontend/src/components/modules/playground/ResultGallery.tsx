@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Sparkles, Grid3x3, GalleryHorizontal } from 'lucide-react';
 import { usePlaygroundStore, type PlaygroundGeneration } from './usePlaygroundStore';
-import { playgroundApi } from '@/lib/api';
+import { playgroundApi, type PlaygroundGenerationResponse } from '@/lib/api';
 import ResultCard from './ResultCard';
 import GalleryView from './GalleryView';
 import DetailPanel from './DetailPanel';
 
 type FilterType = 'all' | 'image' | 'video';
 
+const HISTORY_PAGE_SIZE = 50;
+const LOAD_MORE_THRESHOLD_PX = 360;
 const VIDEO_MODES = new Set(['t2v', 'i2v', 'r2v', 'v2v']);
 
 function formatSessionLabel(dateStr: string): string {
@@ -33,11 +35,72 @@ function formatSessionLabel(dateStr: string): string {
   return `${month}/${day} · ${hh}:${mm}`;
 }
 
+function toGeneration(resp: PlaygroundGenerationResponse): PlaygroundGeneration {
+  return {
+    id: resp.id,
+    mode: resp.mode as PlaygroundGeneration['mode'],
+    model_id: resp.model_id,
+    prompt: resp.prompt,
+    negative_prompt: resp.negative_prompt,
+    input_media: resp.input_media,
+    parameters: resp.parameters,
+    batch_size: resp.batch_size,
+    outputs: resp.outputs.map((o) => ({
+      id: o.id,
+      media_path: o.media_path,
+      media_type: o.media_type as 'image' | 'video',
+      thumbnail_path: o.thumbnail_path,
+      saved_to_library: o.saved_to_library,
+      library_path: o.library_path,
+    })),
+    status: resp.status as PlaygroundGeneration['status'],
+    error: resp.error,
+    created_at: resp.created_at,
+  };
+}
+
 export default function ResultGallery() {
-  const { history, startGeneration, updateGeneration } = usePlaygroundStore();
+  const {
+    history,
+    historyTotal,
+    appendHistoryPage,
+    startGeneration,
+    updateGeneration,
+  } = usePlaygroundStore();
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'gallery'>('grid');
   const [detailGen, setDetailGen] = useState<PlaygroundGeneration | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const gridScrollRef = useRef<HTMLDivElement>(null);
+
+  const hasMoreHistory = history.length < historyTotal;
+
+  const loadMoreHistory = useCallback(async () => {
+    if (isLoadingMore || !hasMoreHistory) return;
+
+    setIsLoadingMore(true);
+    try {
+      const { items, total } = await playgroundApi.getHistoryPage(
+        HISTORY_PAGE_SIZE,
+        history.length,
+      );
+      appendHistoryPage(items.map(toGeneration), total);
+    } catch (err) {
+      console.error('[Playground] Failed to load more history:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [appendHistoryPage, hasMoreHistory, history.length, isLoadingMore]);
+
+  const handleGridScroll = useCallback(() => {
+    const el = gridScrollRef.current;
+    if (!el || isLoadingMore || !hasMoreHistory) return;
+
+    const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (remaining < LOAD_MORE_THRESHOLD_PX) {
+      void loadMoreHistory();
+    }
+  }, [hasMoreHistory, isLoadingMore, loadMoreHistory]);
 
   const handleRetry = useCallback(async (gen: PlaygroundGeneration) => {
     try {
@@ -165,6 +228,23 @@ export default function ResultGallery() {
     { key: 'video', label: '视频' },
   ];
 
+  useEffect(() => {
+    if (viewMode !== 'grid') return;
+
+    const el = gridScrollRef.current;
+    if (!el || isLoadingMore || !hasMoreHistory) return;
+    if (el.scrollHeight <= el.clientHeight + LOAD_MORE_THRESHOLD_PX) {
+      void loadMoreHistory();
+    }
+  }, [
+    activeFilter,
+    filtered.length,
+    hasMoreHistory,
+    isLoadingMore,
+    loadMoreHistory,
+    viewMode,
+  ]);
+
   if (history.length === 0) {
     return (
       <div className="flex flex-col flex-1 overflow-hidden min-w-0 items-center justify-center">
@@ -184,7 +264,7 @@ export default function ResultGallery() {
             生成结果
           </span>
           <span className="font-mono text-[10px] bg-white/[0.06] text-white/50 rounded px-[6px] py-[1px]">
-            {filtered.length}
+            {historyTotal}
           </span>
         </div>
 
@@ -238,9 +318,16 @@ export default function ResultGallery() {
           generations={dataItems}
           onOpenDetail={setDetailGen}
           onRetry={handleRetry}
+          onLoadMore={loadMoreHistory}
+          hasMore={hasMoreHistory}
+          isLoadingMore={isLoadingMore}
         />
       ) : (
-        <div className="flex-1 overflow-y-auto p-6">
+        <div
+          ref={gridScrollRef}
+          onScroll={handleGridScroll}
+          className="flex-1 overflow-y-auto p-6"
+        >
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4 content-start">
             {itemsWithDividers.map((item) => {
               if (item.type === 'divider') {
@@ -262,11 +349,16 @@ export default function ResultGallery() {
                   key={item.data.id}
                   generation={item.data}
                   onRetry={handleRetry}
-          onDelete={handleDelete}
+                  onDelete={handleDelete}
                   onOpenDetail={setDetailGen}
                 />
               );
             })}
+            {isLoadingMore && (
+              <div className="col-span-full flex items-center justify-center py-4">
+                <div className="h-5 w-5 rounded-full border-2 border-white/10 border-t-[#646cff] animate-spin" />
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -136,6 +136,10 @@ class PlaygroundStorage:
         ordered = list(reversed(self._history))
         return ordered[offset : offset + limit]
 
+    def count_history(self) -> int:
+        """Return total number of generation history records."""
+        return len(self._history)
+
     def update_generation(self, gen: PlaygroundGeneration) -> None:
         """Replace an existing generation record (matched by id) and persist."""
         for i, existing in enumerate(self._history):
