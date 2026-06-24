@@ -17,7 +17,7 @@
  * is delegated via onGenerate(payload) so the host (StoryboardR2V)
  * can manage tasks, queue, and shot-state updates.
  */
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Dices, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { I2VModelConfig, DurationConfig, ModelParamSupport } from "@/lib/modelCatalog";
@@ -87,6 +87,7 @@ export default function ParamsSection({
     const t = useTranslations("storyboardR2V");
     const [open, setOpen] = usePanelSectionState(shotId, "params", true);
     const [advOpen, setAdvOpen] = usePanelSectionState(shotId, "params-advanced", false);
+    const [modelOpen, setModelOpen] = useState(false);
 
     const activeModel: I2VModelConfig | undefined = useMemo(
         () => modelList.find((m) => m.id === params.model) ?? modelList[0],
@@ -161,28 +162,47 @@ export default function ParamsSection({
             ) : undefined}
         >
             <div className="space-y-3">
-                {/* Model picker — pills wrap. */}
+                {/* Model picker — dropdown (scales past a pill wall). */}
                 <ParamRow label="Model">
-                    <div className="flex flex-wrap gap-1.5">
-                        {modelList.map((m) => {
-                            const active = params.model === m.id;
-                            return (
-                                <button
-                                    key={m.id}
-                                    type="button"
-                                    onClick={() => handleModelChange(m.id)}
-                                    title={m.description}
-                                    aria-pressed={active}
-                                    className={`min-h-[28px] rounded-full border px-2.5 py-1 font-mono text-chrome-sm font-medium transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${
-                                        active
-                                            ? "border-primary/55 bg-primary/15 text-primary"
-                                            : "border-glass-border bg-black/20 text-text-secondary hover:border-foreground/30 hover:text-foreground"
-                                    }`}
-                                >
-                                    {m.name}
-                                </button>
-                            );
-                        })}
+                    <div className="relative">
+                        <button
+                            type="button"
+                            onClick={() => setModelOpen(v => !v)}
+                            aria-expanded={modelOpen}
+                            title={activeModel?.description}
+                            className="inline-flex min-h-[28px] items-center gap-2 rounded-md border border-border-subtle bg-surface-inset px-3 py-1.5 font-mono text-chrome-sm font-medium text-foreground transition-colors duration-fast ease-out-quart hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                        >
+                            <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[var(--glow-primary)]" />
+                            <span className="truncate">{activeModel?.name ?? params.model}</span>
+                            <svg className={`h-3.5 w-3.5 shrink-0 text-text-muted transition-transform duration-fast ${modelOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9}>
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </button>
+                        {modelOpen && (
+                            <>
+                                <div className="fixed inset-0 z-40" onClick={() => setModelOpen(false)} aria-hidden="true" />
+                                <div className="absolute left-0 top-full z-50 mt-1 min-w-[12rem] max-h-60 overflow-y-auto rounded-md border border-border-subtle bg-elevated p-1 shadow-[var(--shadow-lift)]">
+                                    {modelList.map((m) => {
+                                        const active = params.model === m.id;
+                                        return (
+                                            <button
+                                                key={m.id}
+                                                type="button"
+                                                onClick={() => { handleModelChange(m.id); setModelOpen(false); }}
+                                                title={m.description}
+                                                aria-pressed={active}
+                                                className={`flex w-full items-center gap-2 rounded px-2.5 py-1.5 text-left font-mono text-chrome-sm transition-colors duration-fast ease-out-quart hover:bg-hover-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${
+                                                    active ? "bg-primary/10 text-primary" : "text-text-secondary hover:text-foreground"
+                                                }`}
+                                            >
+                                                <span className={`h-1 w-1 shrink-0 rounded-full ${active ? "bg-primary" : "bg-transparent"}`} />
+                                                <span className="truncate">{m.name}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </ParamRow>
 
