@@ -469,7 +469,7 @@ export default function StoryboardR2V() {
             } else if (stats.no_voice > 0 && stats.skipped === 0) {
                 toast.warning(`${stats.no_voice} 条对白的角色尚未绑定语音`);
             } else if (stats.skipped > 0) {
-                toast.success("所有对白音频已是最新");
+                toast.success(t("dialogueAllUpToDate"));
             } else {
                 toast.warning("未找到可生成的对白");
             }
@@ -477,7 +477,7 @@ export default function StoryboardR2V() {
             if (updated?.frames) updateProject(currentProject.id, { frames: updated.frames });
         } catch (e) {
             debugLog.error("Studio", "batch dialogue audio failed", e);
-            toast.error("对白批量生成失败，请重试");
+            toast.error(t("batchDialogueFailed"));
         } finally {
             setBannerState("summary");
             setDialogueProgress(null);
@@ -550,9 +550,9 @@ export default function StoryboardR2V() {
                 const videoTasks: any[] = (updated as any).video_tasks ?? [];
                 setShots(updated.frames.map((frame: any) => frameToShotNode(frame, videoTasks, defaultMode)));
             }
-            toast.success("精修完成");
+            toast.success(t("refineDoneToast"));
         } catch (err) {
-            toast.error("精修失败");
+            toast.error(t("refineFailedToast"));
             debugLog.warn("Studio", "single frame refine failed", err);
         }
     }, [currentProject, updateProject]);
@@ -1013,8 +1013,8 @@ export default function StoryboardR2V() {
             }
         } catch (error: any) {
             debugLog.error("Studio", "Failed to generate video for shot:", error);
-            const detail = error?.response?.data?.detail || error?.message || "未知错误";
-            toast.error(`视频生成失败：${String(detail).slice(0, 150)}`);
+            const detail = error?.response?.data?.detail || error?.message || t("unknownErrorFallback");
+            toast.error(t("videoGenFailedToast", { detail: String(detail).slice(0, 150) }));
             setShots(prev => prev.map((s, i) =>
                 i === index ? { ...s, videoStatus: "failed" } : s
             ));
@@ -1051,7 +1051,7 @@ export default function StoryboardR2V() {
                 let errMsg: string;
                 if (hasTags) {
                     const unresolved = getUnresolvedAssetNames(shot.prompt);
-                    errMsg = `引用的「${unresolved.join("、")}」尚未生成图片，请先到素材步骤生成。`;
+                    errMsg = t("unresolvedRefImages", { refs: unresolved.join("、") });
                 } else {
                     const r2vModelId = params?.model ?? videoConfig.r2vModel;
                     const r2vModel = VIDEO_R2V_MODELS.find(m => m.id === r2vModelId);
@@ -1204,7 +1204,7 @@ export default function StoryboardR2V() {
                     };
                 }));
             } else {
-                toast.error("视频生成失败：任务提交未成功，请检查参数后重试");
+                toast.error(t("videoGenSubmitFailedToast"));
                 setShots(prev => prev.map((s, i) =>
                     i === index ? { ...s, videoStatus: "failed" as const } : s
                 ));
@@ -1212,11 +1212,11 @@ export default function StoryboardR2V() {
         } catch (error: any) {
             debugLog.error("Studio", "Batch generate failed for shot:", error);
             const status = error?.response?.status;
-            const detail = error?.response?.data?.detail || error?.message || "未知错误";
+            const detail = error?.response?.data?.detail || error?.message || t("unknownErrorFallback");
             if (status === 400 && typeof detail === "string") {
                 setShotErrors(prev => ({ ...prev, [shot.id]: detail }));
             }
-            toast.error(`视频生成失败：${String(detail).slice(0, 150)}`);
+            toast.error(t("videoGenFailedToast", { detail: String(detail).slice(0, 150) }));
             setShots(prev => prev.map((s, i) =>
                 i === index ? { ...s, videoStatus: "failed" as const } : s
             ));
