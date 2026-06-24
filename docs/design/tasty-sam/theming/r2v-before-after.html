@@ -73,31 +73,31 @@
     <div class="sec-sub">同一项目的左栏步骤导航。Before 只有序号；After 每步加三态点 + 状态标签 + 软门槛锁。</div>
     <div class="pair">
       <div class="shot shot-tall">
-        <div class="shot-lab bef">Before · pre-r2v-refactor <span class="commit">4eb3bab</span></div>
-        <img src="review-assets/r2v-rail-before.png" alt="rail before">
+        <div class="shot-lab bef">Before · :3009 pre-r2v-refactor <span class="commit">4eb3bab</span></div>
+        <img src="review-assets/r2v-rail-before.png" alt="rail before — no status">
       </div>
       <div class="shot shot-tall">
-        <div class="shot-lab aft">After · HEAD <span class="commit">2e21688</span></div>
-        <img src="review-assets/r2v-rail-after.png" alt="rail after">
+        <div class="shot-lab aft">After · :3008 HEAD <span class="commit">2e21688</span></div>
+        <img src="review-assets/r2v-rail-after.png" alt="rail after — status dots/labels">
       </div>
     </div>
-    <div class="delta"><b>Δ</b> Cast 步现显 <code>● 5 角色 · 5 已绑定</code>；Storyboard <code>● 60 镜</code>；Assembly <code>待合成</code>（有镜头 → 可合成；无镜头则 🔒 软门槛「待分镜完成」，仍可点）；底部项目卡显示真实标题 + EP.01（取代「Project Alpha / v0.1.0」桩）。</div>
+    <div class="delta"><b>DOM 实测：</b>Before <code>railStatus=false</code>（只序号）；After <code>railStatus=true</code>。Cast 显 <code>● 5 角色 · 5 已绑定</code>；Storyboard <code>● 60 镜</code>；Assembly <code>待合成</code>；底部项目卡真实标题 + EP.01（取代「Project Alpha」桩）。两图来自 :3009（老代码独立 dev server）与 :3008（新代码），非 HMR。</div>
   </div>
 
   <div class="sec" id="sb">
-    <div class="sec-h">② R2V 分镜台 · 模型下拉 + 生成条（Stage 6 / 10）</div>
-    <div class="sec-sub">同一项目第 4 步「Storyboard」的镜头面板。Before 模型是一排 pills、无生成摘要；After 模型下拉 + 常驻生成摘要。</div>
+    <div class="sec-h">② R2V 分镜台 · 模型下拉 + 生成条（Stage 6 / 10）· 全部展开</div>
+    <div class="sec-sub">同一项目第 4 步「Storyboard」，点了「全部展开」让每个镜头面板都打开 —— 模型选择器的差异最直观。Before 每个镜头一排 pills；After 每个镜头一个下拉。</div>
     <div class="pair">
       <div class="shot">
-        <div class="shot-lab bef">Before · pre-r2v-refactor <span class="commit">4eb3bab</span></div>
-        <img src="review-assets/r2v-sb-before.png" alt="storyboard before">
+        <div class="shot-lab bef">Before · :3009 pre-r2v-refactor <span class="commit">4eb3bab</span></div>
+        <img src="review-assets/r2v-sb-before.png" alt="storyboard before — pill-walls">
       </div>
       <div class="shot">
-        <div class="shot-lab aft">After · HEAD <span class="commit">6ff0485 + 3ab5dd3</span></div>
-        <img src="review-assets/r2v-sb-after.png" alt="storyboard after">
+        <div class="shot-lab aft">After · :3008 HEAD <span class="commit">6ff0485 + 3ab5dd3</span></div>
+        <img src="review-assets/r2v-sb-after.png" alt="storyboard after — dropdowns">
       </div>
     </div>
-    <div class="delta"><b>Δ 模型选择器</b>：pill-wall（<code>flex-wrap</code>，模型多则换行成墙）→ tonal 下拉框（触发器 = 模型名 + teal 点 + chevron）。<b>Δ 生成条</b>：常驻摘要 <code>● HappyHorse R2V · 4s</code>（model · duration），面板折叠时也可见将用什么生成。<b>Δ 平静默认</b>：面板默认折叠在「调整」后（早已实现，未改）。</div>
+    <div class="delta"><b>DOM 实测（puppeteer 在实时 DOM 上量）：</b>Before <code>dropdownCount=0</code>、<code>genSum=none</code>；After <code>dropdownCount=60</code>（60 个镜头各一个下拉）、<code>genSum="HappyHorse R2V · 4s"</code>。<b>Δ 模型选择器</b>：pill-wall（<code>flex-wrap</code>）→ tonal 下拉框。<b>Δ 生成条</b>：常驻 <code>● HappyHorse R2V · 4s</code> 摘要。两图来自不同 dev server（:3009 老代码 / :3008 新代码），非 HMR，无时序竞争。</div>
   </div>
 
   <div class="sec" id="summary">
