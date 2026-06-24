@@ -103,7 +103,7 @@ export default function CandidateThumb({
                     isCompareSelected
                         ? "border-status-starred-border ring-2 ring-status-starred-bg"
                         : isActive
-                            ? "border-primary ring-1 ring-primary/40 shadow-[0_0_12px_-2px_rgba(100,108,255,0.55)]"
+                            ? "border-primary ring-1 ring-primary/40 shadow-[var(--glow-primary)]"
                             : isCompleted
                                 ? "border-glass-border hover:border-primary/45"
                                 : isFailed
@@ -179,7 +179,7 @@ export default function CandidateThumb({
                             aria-hidden="true"
                             className={`grid h-[22px] w-[22px] place-items-center rounded-full border transition-all duration-fast ease-out-quart active:scale-90 ${
                                 isActive
-                                    ? "border-primary bg-primary/85 text-white shadow-[0_0_10px_-2px_rgba(100,108,255,0.7)]"
+                                    ? "border-primary bg-primary/85 text-white shadow-[var(--glow-primary)]"
                                     : "border-foreground/15 bg-black/55 text-foreground/80 opacity-0 group-hover:opacity-100 hover:text-primary"
                             }`}
                         >

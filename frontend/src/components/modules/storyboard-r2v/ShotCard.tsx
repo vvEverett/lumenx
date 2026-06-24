@@ -574,7 +574,7 @@ export default function ShotCard({
                         {shot.isVideoPinned && shot.videoUrl && onUnpinVideo ? (
                             <div className="group/pin absolute top-1.5 right-1.5 z-10 flex items-center gap-1">
                                 <span
-                                    className="inline-flex items-center gap-1 rounded-full border border-primary/55 bg-primary/20 backdrop-blur-sm px-2 py-[2px] font-mono text-[0.59375rem] uppercase tracking-[0.14em] text-primary shadow-[0_0_10px_-2px_rgba(100,108,255,0.55)]"
+                                    className="inline-flex items-center gap-1 rounded-full border border-primary/55 bg-primary/20 backdrop-blur-sm px-2 py-[2px] font-mono text-[0.59375rem] uppercase tracking-[0.14em] text-primary shadow-[var(--glow-primary)]"
                                     title={t("activeTakePinnedTooltip")}
                                 >
                                     <Pin size={9} aria-hidden="true" strokeWidth={2.2} fill="currentColor" />
@@ -929,7 +929,7 @@ export default function ShotCard({
                                         ? t("needFirstFrameTooltip")
                                         : t("needPromptInputTooltip"))
                                     : t("genVideoCandidatesTooltip", { count: generateCount })}
-                                className="inline-flex items-center justify-center gap-1.5 rounded-md px-5 py-2 min-w-[140px] font-sans text-[0.8125rem] font-semibold tracking-tight transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 disabled:cursor-not-allowed disabled:opacity-40 bg-primary text-white border border-[rgba(100,108,255,0.65)] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(60,68,200,0.45),0_4px_14px_-2px_rgba(100,108,255,0.45)] hover:bg-primary-hover hover:border-[rgba(100,108,255,0.85)] disabled:hover:bg-primary disabled:hover:border-[rgba(100,108,255,0.65)]"
+                                className="inline-flex items-center justify-center gap-1.5 rounded-md px-5 py-2 min-w-[140px] font-sans text-[0.8125rem] font-semibold tracking-tight transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 disabled:cursor-not-allowed disabled:opacity-40 bg-primary text-white border border-primary/65 shadow-[var(--btn-pri-glow),inset_0_1.5px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(0,0,0,0.22)] hover:bg-primary-hover hover:border-primary/85 disabled:hover:bg-primary disabled:hover:border-primary/65"
                             >
                                 {inFlightCount > 0 ? (
                                     <>
