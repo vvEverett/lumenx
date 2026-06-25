@@ -7,7 +7,7 @@ import { Check, Loader2, Film, AlertTriangle, Layout, Clock, FileText, Download,
 import { useProjectStore } from "@/store/projectStore";
 import { api, type BgmPreset } from "@/lib/api";
 import { getAssetUrl, extractErrorDetail } from "@/lib/utils";
-import StepHeader from "@/components/shared/StepHeader";
+import StepPageHeader, { StepPill } from "@/components/shared/StepPageHeader";
 import SidePanelHeader from "@/components/shared/SidePanelHeader";
 
 type AssemblyPhase = "takes" | "mix" | "export";
@@ -120,19 +120,17 @@ export default function VideoAssembly() {
         <div className="h-full flex bg-surface overflow-hidden">
             {/* Left: main column */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <StepHeader
-                    stepNumber={4}
-                    icon={<Film />}
-                    englishName="Assembly"
+                <StepPageHeader
+                    stepNumber={5}
+                    englishName="ASSEMBLY"
                     title={tStep("assemblyTitle")}
                     subtitle={tStep("assemblySubtitle")}
-                    trailing={(
-                        <span className="font-mono text-[0.625rem] uppercase tracking-[0.18em] text-text-muted">
-                            <span className="text-foreground font-medium">{framesReady}</span>
-                            <span className="text-text-muted">/{framesTotal}</span>
-                            <span className="ml-1.5">frames ready</span>
-                        </span>
-                    )}
+                    pills={framesTotal > 0 ? (
+                        <>
+                            <StepPill label={ta("framesLabel")} value={framesTotal} />
+                            <StepPill label={ta("framesReadyLabel")} value={`${framesReady}/${framesTotal}`} />
+                        </>
+                    ) : null}
                 />
                 {/* PR-3k · Phase tabs — Takes / Mix / Export */}
                 <div className="flex items-center gap-1 px-6 pt-2 border-b border-glass-border bg-surface">

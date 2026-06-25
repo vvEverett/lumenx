@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { Plus, Loader2, Sparkles, PanelBottomOpen, PanelBottomClose } from "lucide-react";
+import StepPageHeader, { StepPill } from "@/components/shared/StepPageHeader";
 import { useTranslations } from "next-intl";
 import { useProjectStore } from "@/store/projectStore";
 import { api, crudApi, type VideoTask, type RefineSSEEvent } from "@/lib/api";
@@ -1748,50 +1749,26 @@ export default function StoryboardR2V() {
         // to main column (not page-wide), so the right TaskQueuePanel can
         // be a true floor-to-ceiling sidebar with its own SidePanelHeader.
         <div className="h-full flex overflow-hidden relative">
-        <div className="atelier-page-bloom" aria-hidden="true" />
-        <div className="atelier-page-grain" aria-hidden="true" />
         {/* Main column — pushed (compressed) when the queue panel opens
-            so the queue doesn't overlay content. */}
+            so the queue doesn't overlay content. Bloom/grain now global in
+            ProjectClient so the whole pipeline shares one atmosphere. */}
         <div className="relative z-10 flex-1 flex flex-col overflow-hidden min-w-0">
-            {/* Custom page header — aligned to mock wb-head */}
-            <header className="shrink-0 px-7 pt-[22px] pb-4">
-                <div className="flex items-start gap-5">
-                    <div className="flex-1 min-w-0">
-                        <div className="font-mono text-[0.59375rem] font-normal uppercase tracking-[0.22em] text-text-muted">
-                            <span>STEP</span>
-                            <span className="ml-1.5 font-medium text-primary">04</span>
-                            <span className="mx-1.5">·</span>
-                            <span>STORYBOARD R2V</span>
-                        </div>
-                        <div className="mt-1.5 flex flex-wrap items-baseline gap-3.5">
-                            <h1 className="font-display text-[2.125rem] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground">
-                                {tStep("storyboardTitle")}
-                            </h1>
-                            <div className="flex items-center gap-2">
-                                {currentProject?.art_direction?.style_config?.name ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            document.dispatchEvent(
-                                                new CustomEvent("lumenx:navigateStep", { detail: "art_direction" }),
-                                            );
-                                        }}
-                                        title={t("artStyleHint")}
-                                        className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-2.5 py-1 font-mono text-[0.59375rem] text-text-secondary transition-colors duration-fast ease-out-quart hover:border-foreground/20 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
-                                    >
-                                        <span className="text-text-muted">{t("artStyleLabel")}</span>
-                                        <span className="text-primary">{currentProject.art_direction.style_config.name}</span>
-                                    </button>
-                                ) : null}
-                                <span className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-2.5 py-1 font-mono text-[0.59375rem] text-text-secondary">
-                                    <span className="text-text-muted">{t("currentModel")}</span>
-                                    <span className="text-primary">{currentModelName}</span>
-                                </span>
-                            </div>
-                        </div>
-                        <p className="mt-1.5 text-[0.8125rem] text-text-secondary">{tStep("storyboardSubtitle")}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0 pt-1">
+            {/* Unified page header (shared StepPageHeader) */}
+            <StepPageHeader
+                stepNumber={4}
+                englishName="STORYBOARD R2V"
+                title={tStep("storyboardTitle")}
+                subtitle={tStep("storyboardSubtitle")}
+                pills={(
+                    <>
+                        {currentProject?.art_direction?.style_config?.name ? (
+                            <StepPill label={t("artStyleLabel")} value={currentProject.art_direction.style_config.name} />
+                        ) : null}
+                        <StepPill label={t("currentModel")} value={currentModelName} />
+                    </>
+                )}
+                trailing={(
+                    <>
                         <TaskQueueButton
                             inFlightCount={inFlightTaskCount}
                             open={queueOpen}
@@ -1806,9 +1783,9 @@ export default function StoryboardR2V() {
                             {generating ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
                             <span>{generating ? t("genInFlight") : t("genShots")}</span>
                         </button>
-                    </div>
-                </div>
-            </header>
+                    </>
+                )}
+            />
             {/* Top Toolbar — mock-aligned: count on the left, expand/collapse pills on the right */}
             <div className="flex flex-wrap items-center gap-3 px-4 py-3 shrink-0 sm:px-6">
                 <div className="flex items-center gap-3">

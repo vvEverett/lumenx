@@ -387,7 +387,9 @@
     "voiceBindAdd": "Bind a voice for this character",
     "voiceBindChange": "Change voice",
     "generateScene": "Generate Scene",
-    "generateProp": "Generate Prop"
+    "generateProp": "Generate Prop",
+    "charactersLabel": "Cast",
+    "voiceBoundLabel": "Voice"
   },
   "common": {
     "save": "Save",
@@ -813,7 +815,8 @@
     "railAssembled": "Exported",
     "railAssemblyReady": "Ready to assemble",
     "railAssemblyGated": "Awaiting storyboard",
-    "gatedTooltip": "Complete upstream steps first"
+    "gatedTooltip": "Complete upstream steps first",
+    "doneTooltip": "Completed"
   },
   "assets": {
     "clickToZoom": "Click to zoom",
@@ -999,7 +1002,8 @@
     "toastOverridePreviewing": "Previewing: {name}",
     "toastOverridePreviewingBody": "Changes not saved yet — click 'Apply' to commit.",
     "toastResetDone": "Reverted to series-inherited style",
-    "toastResetFailed": "Failed to revert to series"
+    "toastResetFailed": "Failed to revert to series",
+    "styleLabel": "Style"
   },
   "script": {
     "scriptEditor": "Script Editor",
@@ -1042,7 +1046,9 @@
     "nameRequired": "Name is required",
     "deleteFailed": "Failed to delete node",
     "createFailed": "Failed to create node",
-    "confirmDelete": "Are you sure you want to delete {name}?"
+    "confirmDelete": "Are you sure you want to delete {name}?",
+    "wordsLabel": "Words",
+    "scenesLabel": "Scenes"
   },
   "models": {
     "seriesGenSettings": "Series Generation Settings",
@@ -1200,7 +1206,9 @@
       "sfx": "SFX"
     },
     "exportTitle": "Export Final Video",
-    "exportSubtitle": "{ready} / {total} frames selected — ready to merge into the final MP4."
+    "exportSubtitle": "{ready} / {total} frames selected — ready to merge into the final MP4.",
+    "framesLabel": "Frames",
+    "framesReadyLabel": "Ready"
   },
   "motion": {
     "motionParams": "Motion Params",

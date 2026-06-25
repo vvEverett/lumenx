@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import {
     ChevronRight,
     ChevronLeft,
-    Lock
+    Lock,
+    Check
 } from "lucide-react";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
@@ -17,9 +18,10 @@ interface Step {
     icon: any;
     comingSoon?: boolean;
     /** Per-step status for the rail's stage model (not a wizard done-check).
-     *  'ready' = has content (teal dot); 'idle' = not started (muted hollow);
-     *  'gated' = blocked by an upstream step (muted + lock, still clickable). */
-    status?: "ready" | "idle" | "gated";
+     *  'ready' = has content (teal check); 'warn' = partial / needs attention
+     *  (amber dot); 'idle' = not started (muted hollow); 'gated' = blocked by
+     *  an upstream step (muted + lock, still clickable). */
+    status?: "ready" | "warn" | "idle" | "gated";
     statusLabel?: string;
 }
 
@@ -116,6 +118,7 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                 {steps.map((step, index) => {
                     const isActive = activeStep === step.id;
+                    const isLast = index === steps.length - 1;
                     const Icon = step.icon;
 
                     return (
@@ -123,17 +126,24 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
                             key={step.id}
                             onClick={() => onStepChange(step.id)}
                             className={clsx(
-                                "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group relative overflow-hidden",
+                                "w-full relative flex items-center gap-3 px-4 py-3 rounded-[14px] transition-all duration-200 group overflow-hidden",
                                 isActive
                                     ? "bg-primary/10 text-primary border border-primary/20"
                                     : "text-text-secondary hover:text-foreground hover:bg-glass",
                                 step.status === "gated" && !isActive && "opacity-60"
                             )}
                         >
+                            {/* connector line to the next step (mock .rail-nav .rstep::after) */}
+                            {!isLast && (
+                                <span
+                                    aria-hidden="true"
+                                    className="pointer-events-none absolute left-[25px] top-[38px] bottom-[-8px] w-[1.5px] bg-border-subtle"
+                                />
+                            )}
                             {isActive && (
                                 <motion.div
                                     layoutId="active-pill"
-                                    className="absolute left-0 w-1 h-full bg-primary"
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-3/5 w-[3px] rounded-r-sm bg-primary"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                 />
@@ -145,7 +155,7 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
                                 isActive ? "text-primary" : "group-hover:text-foreground"
                             )} />
 
-                            <div className="flex flex-col items-start text-sm flex-1">
+                            <div className="flex flex-col items-start gap-0.5 text-sm flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     <span className={clsx("font-medium", step.comingSoon && "opacity-70")}>{step.label}</span>
                                     {step.comingSoon && (
@@ -154,26 +164,35 @@ export default function PipelineSidebar({ activeStep, onStepChange, steps, bread
                                         </span>
                                     )}
                                 </div>
-                                <span className="text-[0.625rem] opacity-50 font-mono">{tp("stepIndex", { number: index + 1 })}</span>
-                                {step.status && (
-                                    <span className="flex items-center gap-1.5 mt-0.5">
-                                        <span className={clsx(
-                                            "h-1.5 w-1.5 rounded-full shrink-0",
-                                            step.status === "ready" && "bg-primary shadow-[var(--glow-primary)]",
-                                            step.status === "idle" && "border border-text-muted/60",
-                                            step.status === "gated" && "border border-text-muted/40"
-                                        )} />
-                                        {step.statusLabel && (
-                                            <span className="text-[0.6rem] text-text-muted font-mono truncate">{step.statusLabel}</span>
-                                        )}
-                                    </span>
-                                )}
+                                {/* rsub — single line: STEP 0N · status (mock pattern) */}
+                                <span className="flex items-center gap-1.5 font-mono text-[9px] tracking-[0.12em] text-text-muted">
+                                    <span className="opacity-70">{tp("stepIndex", { number: index + 1 })}</span>
+                                    {step.statusLabel ? (
+                                        <>
+                                            <span className="opacity-50">·</span>
+                                            <span className="truncate">{step.statusLabel}</span>
+                                        </>
+                                    ) : null}
+                                </span>
                             </div>
 
+                            {/* right rail: 3-state dot (ready/warn/idle), done check,
+                                gated lock, or active chevron — mock .rdot/.rcheck/.rlock */}
                             {isActive ? (
-                                <ChevronRight size={16} className="ml-auto opacity-50" />
+                                <ChevronRight size={16} className="ml-auto shrink-0 opacity-50" />
                             ) : step.status === "gated" ? (
-                                <Lock size={13} className="ml-auto text-text-muted/50" aria-label={tp("gatedTooltip")} />
+                                <Lock size={13} className="ml-auto shrink-0 text-text-muted/50" aria-label={tp("gatedTooltip")} />
+                            ) : step.status === "ready" ? (
+                                <Check size={14} strokeWidth={2.4} className="ml-auto shrink-0 text-primary/80" aria-label={tp("doneTooltip")} />
+                            ) : step.status ? (
+                                <span
+                                    aria-hidden="true"
+                                    className={clsx(
+                                        "ml-auto shrink-0 h-2 w-2 rounded-full",
+                                        step.status === "warn" && "bg-accent shadow-[0_0_6px_rgba(255,169,77,0.5)]",
+                                        step.status === "idle" && "border-[1.5px] border-text-muted/60 opacity-60",
+                                    )}
+                                />
                             ) : null}
                         </button>
                     );

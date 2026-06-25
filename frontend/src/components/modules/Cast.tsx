@@ -25,7 +25,7 @@ import { useProjectStore } from "@/store/projectStore";
 import { api } from "@/lib/api";
 import { getAssetUrl } from "@/lib/utils";
 import { useLightbox } from "@/components/shared/preview/LightboxProvider";
-import StepHeader from "@/components/shared/StepHeader";
+import StepPageHeader, { StepPill } from "@/components/shared/StepPageHeader";
 import PreviewImage from "@/components/shared/preview/PreviewImage";
 import WorkflowActionButton from "@/components/shared/WorkflowActionButton";
 import VoicePickerModal from "./cast/VoicePickerModal";
@@ -169,18 +169,20 @@ export default function Cast() {
 
     return (
         <div className="flex h-full w-full flex-col overflow-hidden">
-            <StepHeader
+            <StepPageHeader
                 stepNumber={3}
-                icon={<Users />}
-                englishName="Cast"
+                englishName="CAST"
                 title={tStep("castTitle")}
                 subtitle={tStep("castSubtitle")}
-                trailing={(
-                    <span className="font-mono text-[0.625rem] uppercase tracking-[0.18em] text-text-muted">
-                        <span className="text-foreground font-medium">{totalCast}</span>
-                        <span className="ml-1.5">{t("totalCast")}</span>
-                    </span>
-                )}
+                pills={totalCast > 0 ? (
+                    <>
+                        <StepPill label={t("charactersLabel")} value={characters.length} />
+                        <StepPill
+                            label={t("voiceBoundLabel")}
+                            value={(currentProject?.characters ?? []).filter((c: any) => c.voice_id).length}
+                        />
+                    </>
+                ) : null}
             />
 
             {/* Empty state — no entities extracted yet */}

@@ -258,14 +258,21 @@ export default function ProjectClient({ id, breadcrumbSegments }: { id: string; 
             {/* Main Content Area — no z-index to avoid trapping fixed modals in a stacking context */}
             <div className="flex-1 flex overflow-hidden relative">
                 <div className="flex-1 overflow-hidden relative">
-                    {activeStep === "script" && <ScriptProcessor />}
-                    {activeStep === "art_direction" && <ArtDirection />}
-                    {activeStep === "cast" && <Cast />}
-                    {activeStep === "assets" && <ConsistencyVault />}  {/* legacy i2v only */}
-                    {activeStep === "storyboard" && <StoryboardComposer />}
-                    {activeStep === "storyboard_r2v" && <StoryboardR2V />}
-                    {activeStep === "motion" && <VideoGenerator />}
-                    {activeStep === "assembly" && <VideoAssembly />}
+                    {/* Global Atelier atmosphere — shared across every step so the
+                        pipeline reads as one surface (bloom + grain, pointer-events
+                        none, content sits above on z-10). */}
+                    <div className="atelier-page-bloom" aria-hidden="true" />
+                    <div className="atelier-page-grain" aria-hidden="true" />
+                    <div className="relative z-10 h-full flex flex-col overflow-hidden">
+                        {activeStep === "script" && <ScriptProcessor />}
+                        {activeStep === "art_direction" && <ArtDirection />}
+                        {activeStep === "cast" && <Cast />}
+                        {activeStep === "assets" && <ConsistencyVault />}  {/* legacy i2v only */}
+                        {activeStep === "storyboard" && <StoryboardComposer />}
+                        {activeStep === "storyboard_r2v" && <StoryboardR2V />}
+                        {activeStep === "motion" && <VideoGenerator />}
+                        {activeStep === "assembly" && <VideoAssembly />}
+                    </div>
                 </div>
             </div>
 

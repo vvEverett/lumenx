@@ -387,7 +387,9 @@
     "voiceBindAdd": "为该角色绑定音色",
     "voiceBindChange": "更换音色",
     "generateScene": "生成场景",
-    "generateProp": "生成道具"
+    "generateProp": "生成道具",
+    "charactersLabel": "角色",
+    "voiceBoundLabel": "语音"
   },
   "common": {
     "save": "保存",
@@ -813,7 +815,8 @@
     "railAssembled": "已导出",
     "railAssemblyReady": "待合成",
     "railAssemblyGated": "待分镜完成",
-    "gatedTooltip": "需先完成上游步骤"
+    "gatedTooltip": "需先完成上游步骤",
+    "doneTooltip": "已完成"
   },
   "assets": {
     "clickToZoom": "点击放大",
@@ -999,7 +1002,8 @@
     "toastOverridePreviewing": "已切换预览：{name}",
     "toastOverridePreviewingBody": "改动尚未保存，点底部「应用并继续」生效。",
     "toastResetDone": "已恢复继承系列风格",
-    "toastResetFailed": "恢复继承失败"
+    "toastResetFailed": "恢复继承失败",
+    "styleLabel": "画风"
   },
   "script": {
     "scriptEditor": "剧本编辑器",
@@ -1042,7 +1046,9 @@
     "nameRequired": "名称为必填项",
     "deleteFailed": "删除失败",
     "createFailed": "创建失败",
-    "confirmDelete": "确定要删除 {name} 吗？"
+    "confirmDelete": "确定要删除 {name} 吗？",
+    "wordsLabel": "字数",
+    "scenesLabel": "场景"
   },
   "models": {
     "seriesGenSettings": "系列生成设置",
@@ -1200,7 +1206,9 @@
       "sfx": "音效"
     },
     "exportTitle": "导出最终视频",
-    "exportSubtitle": "已选定 {ready} / {total} 帧，准备合并为最终 MP4。"
+    "exportSubtitle": "已选定 {ready} / {total} 帧，准备合并为最终 MP4。",
+    "framesLabel": "帧",
+    "framesReadyLabel": "已完成"
   },
   "motion": {
     "motionParams": "动态参数",

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Palette, Wand2, Plus, Check, ChevronRight, Lock, RotateCcw, ArrowUp, AlertTriangle, X, Image as ImageIcon, Pencil } from "lucide-react";
 import { useProjectStore, type StyleConfig, type StylePreset, type StylePresetCategory } from "@/store/projectStore";
 import { api } from "@/lib/api";
-import StepHeader from "@/components/shared/StepHeader";
+import StepPageHeader, { StepPill } from "@/components/shared/StepPageHeader";
 import WorkflowActionButton from "@/components/shared/WorkflowActionButton";
 import { toast } from "@/store/toastStore";
 
@@ -385,12 +385,14 @@ export default function ArtDirection() {
 
     return (
         <div className="flex flex-col h-full w-full overflow-hidden">
-            <StepHeader
+            <StepPageHeader
                 stepNumber={2}
-                icon={<Palette />}
-                englishName="Style"
+                englishName="STYLE"
                 title={tStep("styleTitle")}
                 subtitle={tStep("styleSubtitle")}
+                pills={projectStyle?.name ? (
+                    <StepPill label={ta("styleLabel")} value={projectStyle.name} />
+                ) : null}
             />
 
             {/* Scrollable content — full width */}

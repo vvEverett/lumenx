@@ -7,7 +7,7 @@ import { Wand2, User, MapPin, Box, ChevronRight, ChevronLeft, Save, Sparkles, Pl
 import { api, crudApi } from "@/lib/api";
 import { useProjectStore } from "@/store/projectStore";
 import { toast } from "@/store/toastStore";
-import StepHeader from "@/components/shared/StepHeader";
+import StepPageHeader, { StepPill } from "@/components/shared/StepPageHeader";
 import WorkflowActionButton from "@/components/shared/WorkflowActionButton";
 import PreviousEpisodeSummary from "@/components/modules/PreviousEpisodeSummary";
 import ReconcileModal from "@/components/modules/ReconcileModal";
@@ -211,12 +211,17 @@ export default function ScriptProcessor() {
         <div className="flex h-full w-full overflow-hidden">
             {/* Left: main script editor */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <StepHeader
+                <StepPageHeader
                     stepNumber={1}
-                    icon={<ScrollText />}
-                    englishName="Script"
+                    englishName="SCRIPT"
                     title={tStep("scriptTitle")}
                     subtitle={tStep("scriptSubtitle")}
+                    pills={script ? (
+                        <>
+                            <StepPill label={ts("wordsLabel")} value={script.length} />
+                            <StepPill label={ts("scenesLabel")} value={currentProject?.frames?.length ?? 0} />
+                        </>
+                    ) : null}
                     trailing={(
                         <WorkflowActionButton
                             variant="primary"
