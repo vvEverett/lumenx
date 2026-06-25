@@ -17,14 +17,14 @@ export default function AssetChipBar({ characters, scenes, props, onInsertAsset 
     }
 
     return (
-        <div className="flex flex-wrap items-center gap-1.5 py-1">
+        <div className="flex flex-wrap items-center gap-2 py-1">
             {characters.map((c: any) => (
                 <button
                     key={c.id}
                     onClick={() => onInsertAsset("character", c.name)}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-blue-400/30 bg-blue-400/10 text-[0.6875rem] text-foreground hover:bg-blue-400/20 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-2.5 py-1 text-[11px] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground"
                 >
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                    <span className="h-[6px] w-[6px] rounded-full bg-blue-400" />
                     {c.name}
                 </button>
             ))}
@@ -32,9 +32,9 @@ export default function AssetChipBar({ characters, scenes, props, onInsertAsset 
                 <button
                     key={s.id}
                     onClick={() => onInsertAsset("scene", s.name)}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-green-400/30 bg-green-400/10 text-[0.6875rem] text-foreground hover:bg-green-400/20 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-2.5 py-1 text-[11px] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground"
                 >
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                    <span className="h-[6px] w-[6px] rounded-full bg-teal-400" />
                     {s.name}
                 </button>
             ))}
@@ -42,9 +42,9 @@ export default function AssetChipBar({ characters, scenes, props, onInsertAsset 
                 <button
                     key={p.id}
                     onClick={() => onInsertAsset("prop", p.name)}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-orange-400/30 bg-orange-400/10 text-[0.6875rem] text-foreground hover:bg-orange-400/20 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-2.5 py-1 text-[11px] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground"
                 >
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                    <span className="h-[6px] w-[6px] rounded-full bg-orange-400" />
                     {p.name}
                 </button>
             ))}

@@ -83,7 +83,7 @@ export default function TaskQueuePanel({
                 aria-label="Task queue"
                 className={[
                     // Always: flex layout, glass surface, slide-in entry.
-                    "flex h-full shrink-0 flex-col border-l border-glass-border bg-surface",
+                    "flex h-full shrink-0 flex-col border-l border-glass-border bg-surface/55 backdrop-blur-xl",
                     "motion-safe:animate-[queuePanelIn_280ms_cubic-bezier(0.22,1,0.36,1)_both]",
                     // ≥xl (1280): push column — mock queue width 344px.
                     "xl:static xl:w-[344px] xl:shadow-none xl:z-auto",

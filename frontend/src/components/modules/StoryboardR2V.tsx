@@ -2,8 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
-import { Plus, Palette, Film, Loader2, Sparkles, PanelBottomOpen, PanelBottomClose } from "lucide-react";
-import StepHeader from "@/components/shared/StepHeader";
+import { Plus, Loader2, Sparkles, PanelBottomOpen, PanelBottomClose } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useProjectStore } from "@/store/projectStore";
 import { api, crudApi, type VideoTask, type RefineSSEEvent } from "@/lib/api";
@@ -1745,44 +1744,55 @@ export default function StoryboardR2V() {
     );
 
     return (
-        // Layout v4: outer horizontal split. StepHeader belongs to main
-        // column (not page-wide), so the right TaskQueuePanel can be a
-        // true floor-to-ceiling sidebar with its own SidePanelHeader.
+        // Layout v4: outer horizontal split. Custom page header belongs
+        // to main column (not page-wide), so the right TaskQueuePanel can
+        // be a true floor-to-ceiling sidebar with its own SidePanelHeader.
         <div className="h-full flex overflow-hidden relative">
         {/* Main column — pushed (compressed) when the queue panel opens
             so the queue doesn't overlay content. */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-            <StepHeader
-                stepNumber={3}
-                icon={<Film />}
-                englishName="Storyboard"
-                title={tStep("storyboardTitle")}
-                subtitle={tStep("storyboardSubtitle")}
-                trailing={(
-                    <>
-                        {/* Art-direction style pill */}
-                        {currentProject?.art_direction?.style_config?.name ? (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    document.dispatchEvent(
-                                        new CustomEvent("lumenx:navigateStep", { detail: "art_direction" }),
-                                    );
-                                }}
-                                title={t("artStyleHint")}
-                                className="btn-tip hidden md:inline-flex items-center gap-1.5 rounded-md border border-glass-border bg-black/20 px-2.5 py-1.5 font-mono text-[0.65625rem] font-medium text-text-secondary transition-colors duration-fast ease-out-quart hover:border-accent/50 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/55"
-                            >
-                                <Palette size={11} aria-hidden="true" />
-                                <span className="text-foreground">{currentProject.art_direction.style_config.name}</span>
-                            </button>
-                        ) : null}
-                        {/* Open task queue */}
+            {/* Custom page header — aligned to mock wb-head */}
+            <header className="shrink-0 border-b border-glass-border bg-surface/50 px-6 py-5">
+                <div className="flex items-start gap-5">
+                    <div className="flex-1 min-w-0">
+                        <div className="font-mono text-[0.65625rem] font-normal uppercase tracking-[0.2em] text-text-muted">
+                            <span className="font-medium text-primary">04</span>
+                            <span className="ml-2">STORYBOARD R2V</span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-baseline gap-3">
+                            <h1 className="font-display text-[1.5rem] font-semibold leading-tight tracking-tight text-foreground">
+                                {tStep("storyboardTitle")}
+                            </h1>
+                            <div className="flex items-center gap-2">
+                                {currentProject?.art_direction?.style_config?.name ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            document.dispatchEvent(
+                                                new CustomEvent("lumenx:navigateStep", { detail: "art_direction" }),
+                                            );
+                                        }}
+                                        title={t("artStyleHint")}
+                                        className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-2.5 py-1 font-mono text-[0.625rem] text-text-secondary transition-colors duration-fast ease-out-quart hover:border-foreground/20 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                                    >
+                                        <span className="text-text-muted">{t("artStyleLabel")}</span>
+                                        <span className="text-foreground">{currentProject.art_direction.style_config.name}</span>
+                                    </button>
+                                ) : null}
+                                <span className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-2.5 py-1 font-mono text-[0.625rem] text-text-secondary">
+                                    <span className="text-text-muted">{t("currentModel")}</span>
+                                    <span className="text-foreground">{currentModelName}</span>
+                                </span>
+                            </div>
+                        </div>
+                        <p className="mt-1 text-[0.8125rem] text-text-secondary">{tStep("storyboardSubtitle")}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 pt-1">
                         <TaskQueueButton
                             inFlightCount={inFlightTaskCount}
                             open={queueOpen}
                             onToggle={() => setQueueOpen(v => !v)}
                         />
-                        {/* Batch generate / smart storyboard CTA */}
                         <button
                             type="button"
                             onClick={() => setGenDialogOpen(true)}
@@ -1792,15 +1802,15 @@ export default function StoryboardR2V() {
                             {generating ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
                             <span>{generating ? t("genInFlight") : t("genShots")}</span>
                         </button>
-                    </>
-                )}
-            />
+                    </div>
+                </div>
+            </header>
             {/* Top Toolbar — mock-aligned: count on the left, expand/collapse pills on the right */}
-            <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-glass-border bg-glass/50 shrink-0 sm:px-6">
+            <div className="flex flex-wrap items-center gap-3 px-4 py-3 shrink-0 sm:px-6">
                 <div className="flex items-center gap-3">
-                    <span className="font-mono text-[0.65625rem] uppercase tracking-[0.16em] text-text-muted">
+                    <span className="font-mono text-[11px] tracking-[0.04em] text-text-secondary">
                         <span className="text-foreground font-medium">{shots.length}</span>
-                        <span className="ml-1.5">{shots.length === 1 ? t("shot") : t("shots")}</span>
+                        <span className="ml-1.5 uppercase">{shots.length === 1 ? t("shot") : t("shots")}</span>
                         {totalInFlight > 0 ? <span className="ml-2 text-status-processing-fg">· {totalInFlight} {t("inFlightShort")}</span> : null}
                     </span>
                     <motion.button
@@ -1819,7 +1829,7 @@ export default function StoryboardR2V() {
                             type="button"
                             onClick={expandAllShots}
                             title={t("expandAll")}
-                            className="inline-flex h-7 items-center gap-1.5 rounded-full border border-glass-border bg-black/20 px-3 font-mono text-chrome-sm font-medium text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                            className="inline-flex h-7 items-center gap-1.5 rounded-full border border-glass-border bg-transparent px-3 font-mono text-[10px] uppercase tracking-[0.06em] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                         >
                             <PanelBottomOpen size={12} strokeWidth={1.8} />
                             {t("expandAll")}
@@ -1828,7 +1838,7 @@ export default function StoryboardR2V() {
                             type="button"
                             onClick={collapseAllShots}
                             title={t("collapseAll")}
-                            className="inline-flex h-7 items-center gap-1.5 rounded-full border border-glass-border bg-black/20 px-3 font-mono text-chrome-sm font-medium text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                            className="inline-flex h-7 items-center gap-1.5 rounded-full border border-glass-border bg-transparent px-3 font-mono text-[10px] uppercase tracking-[0.06em] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                         >
                             <PanelBottomClose size={12} strokeWidth={1.8} />
                             {t("collapseAll")}
@@ -1846,7 +1856,7 @@ export default function StoryboardR2V() {
                 onGenerateDialogue={handleBatchDialogue}
             />
 
-            <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4 sm:px-7">
+            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 sm:px-7">
                 {shots.length === 0 && (
                     <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center px-6">
                         <div className="rounded-2xl border border-glass-border bg-glass p-8 max-w-lg">
@@ -1986,7 +1996,7 @@ export default function StoryboardR2V() {
                             const charId = Array.isArray(frame.character_ids) ? frame.character_ids[0] : null;
                             const speaker = charId ? characters.find((c: any) => c.id === charId) : null;
                             return (
-                                <div className="ml-2 mr-1 mt-1.5 md:ml-5">
+                                <div className="mx-5 mb-4">
                                     <DialogueAudioRow
                                         scriptId={currentProject!.id}
                                         frameId={frame.id}
@@ -2069,7 +2079,7 @@ export default function StoryboardR2V() {
                             v1 不加 explicit section header / first-frame
                             thumbnail in Step 2 — 看用户反馈再升级 v2. */}
                         {expandedShots.has(shot.id) ? (
-                        <div className="ml-2 mr-1 mt-1.5 rounded-lg border border-glass-border bg-black/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_2px_12px_-6px_rgba(0,0,0,0.5)] backdrop-blur-[2px] motion-safe:animate-[shotPanelIn_220ms_cubic-bezier(0.22,1,0.36,1)_both] md:ml-5">
+                        <div className="mx-5 mb-4 rounded-xl border border-glass-border bg-surface-inset/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-sm motion-safe:animate-[shotPanelIn_220ms_cubic-bezier(0.22,1,0.36,1)_both]">
                             {isI2vTab ? (
                                 <div>
                                     <T2ISubsection

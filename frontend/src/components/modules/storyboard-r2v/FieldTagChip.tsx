@@ -113,12 +113,15 @@ export default function FieldTagChip({ field, value, editorConfig, onChange }: F
                 ref={chipRef}
                 type="button"
                 onClick={() => setOpen(v => !v)}
-                className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[0.75rem] font-medium cursor-pointer transition-all duration-150 ease-out group/chip ${
+                className={`inline-flex items-center gap-1 rounded-full border border-glass-border bg-surface-inset px-2.5 py-1 text-[11px] font-medium text-text-secondary cursor-pointer transition-all duration-150 ease-out group/chip hover:border-foreground/20 hover:text-foreground ${
                     isEmpty
-                        ? `border border-dashed border-foreground/20 bg-glass text-text-muted hover:border-foreground/30 hover:text-text-secondary`
-                        : `border ${colors.border} ${colors.bg} ${colors.text} ${colors.hoverBorder} hover:scale-[1.02]`
+                        ? "border-dashed border-foreground/20 bg-glass text-text-muted hover:border-foreground/30 hover:text-text-secondary"
+                        : ""
                 }`}
             >
+                <span className="font-mono text-[8.5px] uppercase tracking-[0.06em] text-text-muted">
+                    {label}
+                </span>
                 <span>{displayValue}</span>
                 {isEmpty ? (
                     <Plus size={10} strokeWidth={2.5} className="opacity-60" />

@@ -388,12 +388,9 @@ export default function ShotCard({
             // "waiting for a first frame" so the user knows where to
             // act (Issue 15).
             return (
-                <div className="w-full aspect-video flex flex-col items-center justify-center gap-2 text-text-secondary/60">
-                    <div className="w-10 h-10 rounded-xl bg-glass border border-glass-border flex items-center justify-center">
-                        <ImageIcon size={18} strokeWidth={1.5} />
-                    </div>
-                    <span className="text-[0.6875rem] font-medium">{t("generateImageOrUpload")}</span>
-                    <span className="text-[0.625rem] text-text-muted">↓ Step 1</span>
+                <div className="w-full aspect-video flex flex-col items-center justify-center gap-2.5 text-text-muted">
+                    <ImageIcon size={24} strokeWidth={1.6} className="opacity-50" />
+                    <span className="font-mono text-[0.65625rem] uppercase tracking-[0.08em]">{t("generateImageOrUpload")}</span>
                 </div>
             );
         }
@@ -433,11 +430,9 @@ export default function ShotCard({
             );
         }
         return (
-            <div className="w-full aspect-video flex flex-col items-center justify-center gap-2 text-text-secondary/60">
-                <div className="w-10 h-10 rounded-xl bg-glass border border-glass-border flex items-center justify-center">
-                    <Video size={18} strokeWidth={1.5} />
-                </div>
-                <span className="text-[0.6875rem] font-medium">{t("noVideoYet")}</span>
+            <div className="w-full aspect-video flex flex-col items-center justify-center gap-2.5 text-text-muted">
+                <Video size={24} strokeWidth={1.6} className="opacity-50" />
+                <span className="font-mono text-[0.65625rem] uppercase tracking-[0.08em]">{t("noVideoYet")}</span>
             </div>
         );
     };
@@ -564,8 +559,8 @@ export default function ShotCard({
                 }}
             />
 
-            {/* Liquid Glass card body */}
-            <div className="relative backdrop-blur-xl bg-glass border border-glass-border shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] rounded-xl overflow-hidden z-10">
+            {/* Floating card body — mock-aligned glass surface */}
+            <div className="relative overflow-hidden rounded-[20px] border border-glass-border bg-surface shadow-[0_2px_8px_rgba(0,0,0,0.40),inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-base ease-out-quart group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.55)] z-10">
                 {/* Card top — shot no/cap + status badge + tab switcher */}
                 <div className="flex items-center justify-between gap-4 px-5 pt-5 pb-3">
                     <div className="flex items-center gap-3 min-w-0">
@@ -585,7 +580,7 @@ export default function ShotCard({
                     <div className="flex items-center gap-2 shrink-0">
                         <ShotStatusBadge shot={shot} t={t} />
                         {/* Pill Tab Switcher */}
-                        <div className="relative inline-flex items-center p-[3px] bg-black/40 rounded-full backdrop-blur-sm">
+                        <div className="relative inline-flex items-center p-[3px] bg-surface-inset rounded-full">
                             <motion.div
                                 className="absolute top-[3px] bottom-[3px] rounded-full bg-elevated shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
                                 initial={false}
@@ -620,7 +615,7 @@ export default function ShotCard({
                 {/* Main content: Preview + Editor */}
                 <div className="flex">
                     {/* Left: Preview */}
-                    <div className="group/preview relative w-72 shrink-0 bg-black/20 flex flex-col items-center justify-center border-r border-border-subtle overflow-hidden">
+                    <div className="group/preview relative w-72 shrink-0 bg-surface-inset flex flex-col items-center justify-center border-r border-border-subtle overflow-hidden rounded-md shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
                         {renderPreview()}
                         {/* Selected-take amber halation */}
                         {(shot.isVideoPinned || shot.finalTakeId) && shot.videoUrl ? (
@@ -680,7 +675,7 @@ export default function ShotCard({
                     </div>
 
                     {/* Right: Prompt + Controls */}
-                    <div className="flex-1 p-5 flex flex-col gap-3">
+                    <div className="flex-1 py-2 pl-5 pr-5 flex flex-col gap-3">
                         {/* Cast avatar group */}
                         {castAvatars.length > 0 ? (
                             <div className="flex items-center gap-2">
@@ -725,7 +720,6 @@ export default function ShotCard({
 
                         {/* Prompt Editor wrapper — with left accent line */}
                         <div className="relative">
-                            <div className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-border-subtle transition-colors duration-fast" />
                             <textarea
                                 ref={textareaRef}
                                 value={shot.prompt}
@@ -737,7 +731,7 @@ export default function ShotCard({
                                     }
                                 }}
                                 placeholder={t("promptPlaceholder")}
-                                className="w-full text-sm resize-none leading-relaxed bg-transparent border border-glass-border rounded-r-lg rounded-l-none pl-3 pr-8 py-2.5 text-foreground placeholder:text-text-muted focus:outline-none focus:border-primary/30 focus:bg-glass transition-all duration-200 min-h-[110px] max-h-[260px] overflow-y-auto hover:border-foreground/20"
+                                className="w-full resize-none bg-transparent border-l-2 border-glass-border pl-3.5 pr-8 py-1 text-[13px] leading-relaxed text-foreground placeholder:text-text-muted focus:outline-none focus:border-l-primary/40 focus:bg-glass/30 transition-all duration-200 min-h-[110px] max-h-[260px] overflow-y-auto"
                                 rows={5}
                             />
                             {/* Expand-to-modal icon — top-right,
@@ -1001,7 +995,7 @@ export default function ShotCard({
                                             ? t("needFirstFrameTooltip")
                                             : t("needPromptInputTooltip"))
                                         : t("genVideoCandidatesTooltip", { count: generateCount })}
-                                    className="inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-1.5 font-sans text-[0.8125rem] font-semibold tracking-tight transition-all duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 disabled:cursor-not-allowed disabled:opacity-40 bg-primary text-on-accent shadow-[var(--btn-pri-glow),inset_0_1.5px_0_rgba(255,255,255,0.14)] hover:bg-primary-hover hover:-translate-y-px disabled:hover:translate-y-0"
+                                    className="inline-flex items-center justify-center gap-1.5 rounded-full px-[18px] py-[9px] font-sans text-[0.8125rem] font-semibold tracking-tight transition-all duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 disabled:cursor-not-allowed disabled:opacity-40 bg-primary text-on-accent shadow-[var(--btn-pri-glow),inset_0_1.5px_0_rgba(255,255,255,0.14)] hover:bg-primary-hover hover:-translate-y-px disabled:hover:translate-y-0"
                                 >
                                     {inFlightCount > 0 ? (
                                         <>
@@ -1024,7 +1018,7 @@ export default function ShotCard({
                             onClick={onToggleExpanded}
                             aria-expanded={expanded}
                             aria-label={expanded ? t("collapseShot") : t("expandShot")}
-                            className="group/disc flex w-full items-center gap-2.5 border-t border-glass-border bg-black/20 px-5 py-2.5 font-mono text-[0.6875rem] font-medium uppercase tracking-[0.14em] text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                            className="group/disc flex w-full items-center gap-2.5 border-t border-glass-border bg-black/[0.06] px-5 py-2.5 font-mono text-[0.65625rem] uppercase tracking-[0.14em] text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                         >
                             {expanded ? (
                                 <ChevronUp size={13} strokeWidth={2} className="text-text-muted transition-transform duration-fast group-hover/disc:text-text-secondary" aria-hidden="true" />

@@ -300,7 +300,7 @@ export default function ParamsSection({
                                             value={params.negativePrompt ?? ""}
                                             onChange={(e) => set("negativePrompt", e.target.value)}
                                             placeholder="things to avoid…"
-                                            className="w-full rounded-md border border-glass-border bg-black/30 px-2.5 py-1.5 font-sans text-body-sm text-foreground placeholder:text-text-muted outline-none transition-colors duration-fast ease-out-quart focus:border-primary/55 focus-visible:ring-2 focus-visible:ring-primary/45"
+                                            className="w-full rounded-md border border-glass-border bg-surface-inset px-2.5 py-1.5 font-sans text-body-sm text-foreground placeholder:text-text-muted outline-none transition-colors duration-fast ease-out-quart focus:border-primary/55 focus-visible:ring-2 focus-visible:ring-primary/45"
                                         />
                                     </ParamRow>
                                 ) : null}
@@ -329,7 +329,7 @@ export default function ParamsSection({
                                                 }}
                                                 placeholder="random"
                                                 aria-label="Random seed (leave blank for provider default)"
-                                                className="w-32 rounded-md border border-glass-border bg-black/30 px-2 py-1.5 font-mono text-body-sm text-foreground placeholder:text-text-muted outline-none transition-colors duration-fast ease-out-quart focus:border-primary/55 focus-visible:ring-2 focus-visible:ring-primary/45"
+                                                className="w-32 rounded-md border border-glass-border bg-surface-inset px-2 py-1.5 font-mono text-body-sm text-foreground placeholder:text-text-muted outline-none transition-colors duration-fast ease-out-quart focus:border-primary/55 focus-visible:ring-2 focus-visible:ring-primary/45"
                                             />
                                             {/* Dice = randomize. Lucide icon for
                                                 visual cohesion with the rest of
@@ -489,7 +489,7 @@ function PillCluster({
     onChange: (v: string) => void;
 }) {
     return (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
             {options.map((opt) => {
                 const active = String(value) === String(opt);
                 return (
@@ -498,10 +498,10 @@ function PillCluster({
                         type="button"
                         onClick={() => onChange(String(opt))}
                         aria-pressed={active}
-                        className={`min-h-[28px] rounded-md border px-2.5 py-1 font-mono text-chrome-sm font-medium transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${
+                        className={`min-h-[28px] rounded-full border px-2.5 py-1 font-mono text-[0.59375rem] font-medium transition-colors duration-fast ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${
                             active
-                                ? "border-primary/55 bg-primary/15 text-primary"
-                                : "border-glass-border bg-black/20 text-text-secondary hover:border-foreground/30 hover:text-foreground"
+                                ? "border-primary/45 bg-primary/14 text-primary"
+                                : "border-glass-border bg-surface-inset text-text-secondary hover:border-foreground/20 hover:text-foreground"
                         }`}
                     >
                         {opt}
@@ -580,7 +580,7 @@ function DurationControl({
                         if (clamped !== value) onChange(clamped);
                     }}
                     aria-label={`Duration in seconds (type a value between ${cfg.min} and ${cfg.max})`}
-                    className="w-12 rounded border border-glass-border bg-black/30 px-1.5 py-0.5 text-right font-mono text-body-sm tabular-nums text-foreground outline-none transition-colors duration-fast ease-out-quart focus:border-primary/55 focus-visible:ring-1 focus-visible:ring-primary/45 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="w-12 rounded border border-glass-border bg-surface-inset px-1.5 py-0.5 text-right font-mono text-body-sm tabular-nums text-foreground outline-none transition-colors duration-fast ease-out-quart focus:border-primary/55 focus-visible:ring-1 focus-visible:ring-primary/45 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="font-mono text-body-sm text-text-muted">s</span>
             </div>

@@ -108,7 +108,7 @@ function BannerShell({ children }: { children: React.ReactNode }) {
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="shrink-0 px-4 pt-3 sm:px-6"
         >
-            <div className="flex items-center gap-3 rounded-xl border border-glass-border bg-glass px-4 py-3 shadow-[var(--shadow-rest)]">
+            <div className="flex items-center gap-3 rounded-xl border border-glass-border bg-surface px-4 py-3 shadow-[var(--shadow-rest)]">
                 {children}
             </div>
         </motion.div>
@@ -133,8 +133,8 @@ function SummaryBar({
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="shrink-0 px-4 pt-3 sm:px-6"
         >
-            <div className="flex items-center gap-3 rounded-xl border border-glass-border bg-glass px-4 py-3 shadow-[var(--shadow-rest)]">
-                <CheckCircle2 size={15} className="text-status-completed-fg shrink-0" strokeWidth={1.8} />
+            <div className="flex items-center gap-3 rounded-xl border border-glass-border bg-surface px-4 py-3 shadow-[var(--shadow-rest)]">
+                <CheckCircle2 size={16} className="text-status-completed-fg shrink-0" strokeWidth={1.8} />
                 <span className="text-[0.8125rem] text-text-secondary">
                     <span className="text-status-completed-fg font-semibold">
                         {t("bannerFrameCount", { count: summary.frameCount })}
