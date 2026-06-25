@@ -117,7 +117,7 @@ export default function VideoAssembly() {
         // Layout v4: outer horizontal split. StepHeader belongs to main
         // column; right Variants panel is floor-to-ceiling with its own
         // SidePanelHeader.
-        <div className="h-full flex bg-surface overflow-hidden">
+        <div className="h-full flex overflow-hidden">
             {/* Left: main column */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 <StepPageHeader

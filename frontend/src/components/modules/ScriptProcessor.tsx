@@ -3,12 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wand2, User, MapPin, Box, ChevronRight, ChevronLeft, Save, Sparkles, Plus, Trash2, X, ScrollText, PanelRightOpen, PanelRightClose } from "lucide-react";
+import { Wand2, Loader2, User, MapPin, Box, ChevronRight, ChevronLeft, Save, Sparkles, Plus, Trash2, X, ScrollText, PanelRightOpen, PanelRightClose } from "lucide-react";
 import { api, crudApi } from "@/lib/api";
 import { useProjectStore } from "@/store/projectStore";
 import { toast } from "@/store/toastStore";
 import StepPageHeader, { StepPill } from "@/components/shared/StepPageHeader";
-import WorkflowActionButton from "@/components/shared/WorkflowActionButton";
 import PreviousEpisodeSummary from "@/components/modules/PreviousEpisodeSummary";
 import ReconcileModal from "@/components/modules/ReconcileModal";
 
@@ -223,15 +222,15 @@ export default function ScriptProcessor() {
                         </>
                     ) : null}
                     trailing={(
-                        <WorkflowActionButton
-                            variant="primary"
-                            loading={isAnalyzing}
-                            leftIcon={<Wand2 />}
+                        <button
+                            type="button"
                             onClick={handleAnalyze}
-                            disabled={!script}
+                            disabled={!script || isAnalyzing}
+                            className="inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 font-sans text-[0.8125rem] font-semibold text-on-accent shadow-[var(--btn-pri-glow),inset_0_1.5px_0_rgba(255,255,255,0.14)] transition-all duration-fast ease-out-quart hover:bg-primary-hover disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                         >
-                            {isAnalyzing ? ts("analyzingScript") : ts("extractEntities")}
-                        </WorkflowActionButton>
+                            {isAnalyzing ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
+                            <span>{isAnalyzing ? ts("analyzingScript") : ts("extractEntities")}</span>
+                        </button>
                     )}
                 />
                 <div className="flex-1 relative p-6 bg-surface overflow-hidden">
