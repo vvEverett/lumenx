@@ -781,7 +781,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
             chipLabel: t("tabCharacters"),
             hoverAccent: "rgba(167,139,250,0.55)",
             watermarkIcon: <Users size={48} className="text-text-muted" strokeWidth={1} />,
-            ctaIcon: <Wand2 size={14} strokeWidth={1.75} />,
+            ctaIcon: <Wand2 size={22} strokeWidth={1.75} />,
             ctaLabel: t("generateReference"),
         },
         scene: {
@@ -795,7 +795,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
             chipLabel: t("tabScenes"),
             hoverAccent: "rgba(110,231,183,0.5)",
             watermarkIcon: <MapPin size={64} className="text-text-muted" strokeWidth={0.75} />,
-            ctaIcon: <Sparkles size={14} strokeWidth={1.75} />,
+            ctaIcon: <Sparkles size={22} strokeWidth={1.75} />,
             ctaLabel: t("generateScene"),
         },
         prop: {
@@ -809,7 +809,7 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
             chipLabel: t("tabProps"),
             hoverAccent: "rgba(252,211,77,0.5)",
             watermarkIcon: <Box size={40} className="text-text-muted" strokeWidth={1} />,
-            ctaIcon: <Layers size={13} strokeWidth={1.75} />,
+            ctaIcon: <Layers size={22} strokeWidth={1.75} />,
             ctaLabel: t("generateProp"),
         },
     };
@@ -859,9 +859,6 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
                             className="relative grid h-full w-full place-items-center bg-black/20 text-text-secondary hover:text-foreground transition-colors overflow-hidden"
                             style={k.emptyPattern}
                         >
-                            <span className="pointer-events-none absolute inset-0 grid place-items-center">
-                                {k.watermarkIcon}
-                            </span>
                             {item.kind === "scene" && (
                                 <>
                                     <span className="pointer-events-none absolute inset-x-0 top-0 h-3 bg-gradient-to-b from-black/30 to-transparent" aria-hidden="true" />
@@ -869,8 +866,8 @@ function CastCard({ item, onOpenWorkbench }: { item: CastItem; onOpenWorkbench?:
                                 </>
                             )}
                             <CornerMarks />
-                            <span className="relative flex flex-col items-center gap-1.5 z-10">
-                                {k.ctaIcon}
+                            <span className="relative flex flex-col items-center gap-2 z-10">
+                                <span className="text-text-muted/70">{k.ctaIcon}</span>
                                 <span className="text-[0.625rem] font-medium tracking-wide">{k.ctaLabel}</span>
                             </span>
                         </button>
