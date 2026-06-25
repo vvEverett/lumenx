@@ -560,7 +560,7 @@ export default function ShotCard({
             />
 
             {/* Floating card body — mock-aligned glass surface */}
-            <div className="relative overflow-hidden rounded-[20px] border border-foreground/10 bg-surface shadow-[0_8px_30px_-10px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-base ease-out-quart group-hover:-translate-y-1 group-hover:shadow-[0_16px_50px_-12px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.07)] z-10">
+            <div className="relative overflow-hidden rounded-[20px] border border-foreground/20 bg-surface shadow-[0_8px_30px_-10px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-base ease-out-quart group-hover:-translate-y-1 group-hover:shadow-[0_16px_50px_-12px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.07)] z-10">
                 {/* Card top — shot no/cap + status badge + tab switcher */}
                 <div className="flex items-center justify-between gap-4 px-5 pt-4 pb-3">
                     <div className="flex items-center gap-3 min-w-0">
@@ -615,7 +615,7 @@ export default function ShotCard({
                 {/* Main content: Preview + Editor */}
                 <div className="flex px-5">
                     {/* Left: Preview */}
-                    <div className="group/preview relative w-72 shrink-0 bg-surface-inset flex flex-col items-center justify-center overflow-hidden rounded-[14px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
+                    <div className="group/preview relative w-72 shrink-0 bg-surface-inset flex flex-col items-center justify-center overflow-hidden rounded-[14px] border border-foreground/15 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
                         {renderPreview()}
                         {/* Selected-take amber halation */}
                         {(shot.isVideoPinned || shot.finalTakeId) && shot.videoUrl ? (
@@ -887,7 +887,7 @@ export default function ShotCard({
                 </div>
 
                 {/* actions row — full-width per mock (lives outside editor/card-body) */}
-                <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-t border-glass-border">
+                <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-t border-foreground/10">
                             <div className="flex items-center gap-1 shrink-0">
                                 <motion.button
                                     whileHover={{ scale: 1.06 }}
@@ -1015,7 +1015,7 @@ export default function ShotCard({
                             onClick={onToggleExpanded}
                             aria-expanded={expanded}
                             aria-label={expanded ? t("collapseShot") : t("expandShot")}
-                            className="group/disc flex w-full items-center gap-2.5 border-t border-glass-border px-5 py-2.5 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                            className="group/disc flex w-full items-center gap-2.5 border-t border-foreground/10 px-5 py-2.5 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-text-muted transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                         >
                             {expanded ? (
                                 <ChevronUp size={13} strokeWidth={2} className="text-text-muted transition-transform duration-fast group-hover/disc:text-text-secondary" aria-hidden="true" />
