@@ -560,7 +560,7 @@ export default function ShotCard({
             />
 
             {/* Floating card body — mock-aligned glass surface */}
-            <div className="relative overflow-hidden rounded-[20px] border border-border-subtle bg-surface shadow-[0_8px_30px_-10px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-base ease-out-quart group-hover:-translate-y-1 group-hover:shadow-[0_16px_50px_-12px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.07)] z-10">
+            <div className="relative overflow-hidden rounded-[20px] border border-glass-border bg-surface shadow-[0_8px_30px_-10px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-base ease-out-quart group-hover:-translate-y-1 group-hover:shadow-[0_16px_50px_-12px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.07)] z-10">
                 {/* Card top — shot no/cap + status badge + tab switcher */}
                 <div className="flex items-center justify-between gap-4 px-5 pt-4 pb-3">
                     <div className="flex items-center gap-3 min-w-0">
