@@ -560,11 +560,11 @@ export default function ShotCard({
             />
 
             {/* Floating card body — mock-aligned glass surface */}
-            <div className="relative overflow-hidden rounded-[20px] border border-glass-border bg-surface shadow-[0_2px_8px_rgba(0,0,0,0.40),inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-base ease-out-quart group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.55)] z-10">
+            <div className="relative overflow-hidden rounded-[20px] border border-transparent bg-surface shadow-[0_8px_30px_-10px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-base ease-out-quart group-hover:-translate-y-1 group-hover:shadow-[0_16px_50px_-12px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.07)] z-10">
                 {/* Card top — shot no/cap + status badge + tab switcher */}
                 <div className="flex items-center justify-between gap-4 px-5 pt-4 pb-3">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="font-display text-[1.625rem] font-semibold leading-none text-text-muted tracking-tight">
+                        <div className="font-display text-[1.875rem] font-semibold leading-none text-text-secondary tracking-tight">
                             {String(index + 1).padStart(2, "0")}
                         </div>
                         <div className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-text-muted leading-tight">
@@ -592,7 +592,7 @@ export default function ShotCard({
                             />
                             <button
                                 onClick={() => onSetTabMode("t2i_i2v")}
-                                className={`relative z-10 flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
+                                className={`relative z-10 flex items-center gap-1.5 px-4 py-2 text-base font-semibold rounded-full transition-colors duration-200 ${
                                     isActiveT2I ? "text-foreground" : "text-text-secondary hover:text-text-secondary/80"
                                 }`}
                             >
@@ -601,7 +601,7 @@ export default function ShotCard({
                             </button>
                             <button
                                 onClick={() => onSetTabMode("direct_r2v")}
-                                className={`relative z-10 flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
+                                className={`relative z-10 flex items-center gap-1.5 px-4 py-2 text-base font-semibold rounded-full transition-colors duration-200 ${
                                     !isActiveT2I ? "text-foreground" : "text-text-secondary hover:text-text-secondary/80"
                                 }`}
                             >
