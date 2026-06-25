@@ -271,12 +271,11 @@ export default function ParamsSection({
                     </ParamRow>
                 ) : null}
 
-                {/* Advanced fold — indented (pl-8) to align with section titles,
-                    marking it as a sub-level of Params. Candidates section below
-                    is a sibling, so its body aligns with model rows (pl-0) while
-                    Advanced sits one level in. */}
+                {/* Advanced fold — slight indent (pl-4) to read as a sub-group
+                    of Params, no border/box (keeps it clean). Candidates below
+                    is a sibling section. */}
                 {hasAdvanced ? (
-                    <div className="pt-1 pl-8">
+                    <div className="pt-1 pl-4">
                         <button
                             type="button"
                             onClick={() => setAdvOpen(!advOpen)}
@@ -295,7 +294,7 @@ export default function ParamsSection({
                             </span>
                         </button>
                         {advOpen ? (
-                            <div className="space-y-3 mt-2 rounded-[14px] border border-dashed border-glass-border p-3">
+                            <div className="space-y-3 mt-2">
                                 {modelParams.negativePrompt ? (
                                     <ParamRow label="Negative">
                                         <input
@@ -471,10 +470,10 @@ export default function ParamsSection({
 // ---------- Sub-components ----------
 
 function ParamRow({ label, children }: { label: string; children: React.ReactNode }) {
-    // Mock-aligned: label is a 64px mono uppercase label, control flexes.
+    // Mock-aligned: label is a mono uppercase label, control flexes.
     return (
-        <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:gap-3">
-            <span className="font-mono text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-text-muted w-16 shrink-0 pt-1.5">
+        <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:gap-4">
+            <span className="font-mono text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-text-muted w-20 shrink-0 pt-1.5">
                 {label}
             </span>
             <div className="min-w-0 w-full flex-1 sm:w-auto">{children}</div>
@@ -492,7 +491,7 @@ function PillCluster({
     onChange: (v: string) => void;
 }) {
     return (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
             {options.map((opt) => {
                 const active = String(value) === String(opt);
                 return (
