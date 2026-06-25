@@ -271,11 +271,12 @@ export default function ParamsSection({
                     </ParamRow>
                 ) : null}
 
-                {/* Advanced fold — dashed sub-panel per mock, sits inline with
-                    the basic param rows (same level), the dashed box makes the
-                    expanded body read as a nested group, not a sibling section. */}
+                {/* Advanced fold — indented (pl-8) to align with section titles,
+                    marking it as a sub-level of Params. Candidates section below
+                    is a sibling, so its body aligns with model rows (pl-0) while
+                    Advanced sits one level in. */}
                 {hasAdvanced ? (
-                    <div className="pt-1">
+                    <div className="pt-1 pl-8">
                         <button
                             type="button"
                             onClick={() => setAdvOpen(!advOpen)}

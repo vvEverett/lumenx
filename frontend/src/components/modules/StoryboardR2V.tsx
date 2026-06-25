@@ -1833,7 +1833,7 @@ export default function StoryboardR2V() {
                             type="button"
                             onClick={expandAllShots}
                             title={t("expandAll")}
-                            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-glass-border bg-transparent px-4 font-mono text-base uppercase tracking-[0.06em] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-glass-border bg-transparent px-3.5 font-mono text-[13px] uppercase tracking-[0.06em] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                         >
                             <PanelBottomOpen size={12} strokeWidth={1.8} />
                             {t("expandAll")}
@@ -1842,7 +1842,7 @@ export default function StoryboardR2V() {
                             type="button"
                             onClick={collapseAllShots}
                             title={t("collapseAll")}
-                            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-glass-border bg-transparent px-4 font-mono text-base uppercase tracking-[0.06em] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-glass-border bg-transparent px-3.5 font-mono text-[13px] uppercase tracking-[0.06em] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
                         >
                             <PanelBottomClose size={12} strokeWidth={1.8} />
                             {t("collapseAll")}

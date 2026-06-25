@@ -22,30 +22,30 @@ export default function AssetChipBar({ characters, scenes, props, onInsertAsset 
                 <button
                     key={c.id}
                     onClick={() => onInsertAsset("character", c.name)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-3.5 py-1.5 text-base text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-3 py-1 text-[13px] max-w-[200px] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground"
                 >
-                    <span className="h-[6px] w-[6px] rounded-full bg-blue-400" />
-                    {c.name}
+                    <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-blue-400" />
+                    <span className="truncate">{c.name}</span>
                 </button>
             ))}
             {scenes.map((s: any) => (
                 <button
                     key={s.id}
                     onClick={() => onInsertAsset("scene", s.name)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-3.5 py-1.5 text-base text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-3 py-1 text-[13px] max-w-[200px] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground"
                 >
-                    <span className="h-[6px] w-[6px] rounded-full bg-teal-400" />
-                    {s.name}
+                    <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-teal-400" />
+                    <span className="truncate">{s.name}</span>
                 </button>
             ))}
             {props.map((p: any) => (
                 <button
                     key={p.id}
                     onClick={() => onInsertAsset("prop", p.name)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-3.5 py-1.5 text-base text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-glass-border bg-surface-inset px-3 py-1 text-[13px] max-w-[200px] text-text-secondary transition-colors duration-fast ease-out-quart hover:bg-hover-bg hover:text-foreground"
                 >
-                    <span className="h-[6px] w-[6px] rounded-full bg-orange-400" />
-                    {p.name}
+                    <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-orange-400" />
+                    <span className="truncate">{p.name}</span>
                 </button>
             ))}
         </div>
