@@ -3606,8 +3606,16 @@ class ComicGenPipeline:
             raise ValueError("Script not found")
             
         target_asset = None
+        asset_is_series_level = False
         if asset_type == "character":
             target_asset = next((c for c in script.characters if c.id == asset_id), None)
+            # Fallback to parent series for series-level characters.
+            if not target_asset and script.series_id:
+                series = self.series_store.get(script.series_id)
+                if series:
+                    target_asset = next((c for c in series.characters if c.id == asset_id), None)
+                    if target_asset:
+                        asset_is_series_level = True
             if target_asset:
                 # If generation_type is specified, only select from that specific asset
                 if generation_type == "full_body":
@@ -3624,18 +3632,28 @@ class ComicGenPipeline:
                     if variant:
                         target_asset.headshot_image_url = variant.url
                         target_asset.avatar_url = variant.url  # Sync avatar
+                elif generation_type == "reference_sheet":
+                    # R2V v2: reference_sheet is the canonical asset unit for
+                    # the CastWorkbench flow. Selecting a variant here updates
+                    # selected_image_id + legacy image_url so the rest of the
+                    # app (storyboard reference, etc.) sees the pick.
+                    variant = self._select_variant_in_asset(getattr(target_asset, "reference_sheet", None), variant_id)
+                    if variant:
+                        if target_asset.reference_sheet:
+                            target_asset.reference_sheet.selected_image_id = variant.id
+                        target_asset.image_url = variant.url
                 else:
                     # Legacy fallback: search all assets (for backward compatibility)
                     variant = self._select_variant_in_asset(target_asset.full_body_asset, variant_id)
                     if variant:
                         target_asset.full_body_image_url = variant.url
                         target_asset.image_url = variant.url
-                    
+
                     if not variant:
                         variant = self._select_variant_in_asset(target_asset.three_view_asset, variant_id)
                         if variant:
                             target_asset.three_view_image_url = variant.url
-                    
+
                     if not variant:
                         variant = self._select_variant_in_asset(target_asset.headshot_asset, variant_id)
                         if variant:
@@ -3644,6 +3662,12 @@ class ComicGenPipeline:
                         
         elif asset_type == "scene":
             target_asset = next((s for s in script.scenes if s.id == asset_id), None)
+            if not target_asset and script.series_id:
+                series = self.series_store.get(script.series_id)
+                if series:
+                    target_asset = next((s for s in series.scenes if s.id == asset_id), None)
+                    if target_asset:
+                        asset_is_series_level = True
             if target_asset:
                 variant = self._select_variant_in_asset(target_asset.image_asset, variant_id)
                 if variant:
@@ -3651,6 +3675,12 @@ class ComicGenPipeline:
 
         elif asset_type == "prop":
             target_asset = next((p for p in script.props if p.id == asset_id), None)
+            if not target_asset and script.series_id:
+                series = self.series_store.get(script.series_id)
+                if series:
+                    target_asset = next((p for p in series.props if p.id == asset_id), None)
+                    if target_asset:
+                        asset_is_series_level = True
             if target_asset:
                 variant = self._select_variant_in_asset(target_asset.image_asset, variant_id)
                 if variant:
@@ -3670,8 +3700,10 @@ class ComicGenPipeline:
                     variant = self._select_variant_in_asset(target_asset.image_asset, variant_id)
                     # If sketch, maybe don't update main image_url if rendered exists?
                     # For now, let's assume we only select rendered variants for frames usually.
-        
+
         self._save_data()
+        if asset_is_series_level:
+            self._save_series_data()
         return script
 
     def delete_asset_variant(self, script_id: str, asset_id: str, asset_type: str, variant_id: str) -> Script:
