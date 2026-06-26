@@ -596,7 +596,7 @@ class ComicGenPipeline:
         
         asset_list = []
         target_asset = None
-        
+
         if asset_type == "character":
             asset_list = script.characters
         elif asset_type == "scene":
@@ -605,8 +605,21 @@ class ComicGenPipeline:
             asset_list = script.props
         else:
             raise ValueError(f"Invalid asset_type: {asset_type}")
-        
+
         target_asset = next((a for a in asset_list if a.id == asset_id), None)
+        # Fallback: /projects/{id} returns merged characters (episode +
+        # series + library, see get_project), so the frontend can pass a
+        # series-level asset id for an episode-scoped request. Look it up
+        # on the parent series if not on the episode itself.
+        if not target_asset and script.series_id:
+            series = self.series_store.get(script.series_id)
+            if series:
+                series_list = (
+                    series.characters if asset_type == "character"
+                    else series.scenes if asset_type == "scene"
+                    else series.props
+                )
+                target_asset = next((a for a in series_list if a.id == asset_id), None)
         if not target_asset:
             raise ValueError(f"{asset_type.capitalize()} {asset_id} not found")
         
@@ -670,8 +683,19 @@ class ComicGenPipeline:
             asset_list = script.props
         else:
             raise ValueError(f"Invalid asset_type: {asset_type}")
-        
+
         target_asset = next((a for a in asset_list if a.id == asset_id), None)
+        # Fallback to parent series for series-level assets (see generate_asset
+        # for rationale — /projects returns merged characters).
+        if not target_asset and script.series_id:
+            series = self.series_store.get(script.series_id)
+            if series:
+                series_list = (
+                    series.characters if asset_type == "character"
+                    else series.scenes if asset_type == "scene"
+                    else series.props
+                )
+                target_asset = next((a for a in series_list if a.id == asset_id), None)
         if not target_asset:
             raise ValueError(f"{asset_type.capitalize()} {asset_id} not found")
         

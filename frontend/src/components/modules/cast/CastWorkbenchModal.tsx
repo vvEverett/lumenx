@@ -273,7 +273,9 @@ export default function CastWorkbenchModal({ isOpen, kind, entityId, onClose }: 
 
     const handleTemplateSwitch = (tpl: CharacterTemplate) => {
         if (tpl === selectedTemplate) return;
-        if (CHARACTER_TEMPLATES[tpl].comingSoon) return;
+        // design_sheet (comingSoon) is gated on gpt-image-2 — the button
+        // unlocks when isGptImage2, so allow the switch too.
+        if (CHARACTER_TEMPLATES[tpl].comingSoon && !isGptImage2) return;
         if (promptDirty) {
             setPendingTemplate(tpl);
         } else {
