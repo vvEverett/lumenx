@@ -611,6 +611,7 @@ class ComicGenPipeline:
         # series + library, see get_project), so the frontend can pass a
         # series-level asset id for an episode-scoped request. Look it up
         # on the parent series if not on the episode itself.
+        asset_is_series_level = False
         if not target_asset and script.series_id:
             series = self.series_store.get(script.series_id)
             if series:
@@ -620,11 +621,15 @@ class ComicGenPipeline:
                     else series.props
                 )
                 target_asset = next((a for a in series_list if a.id == asset_id), None)
+                if target_asset:
+                    asset_is_series_level = True
         if not target_asset:
             raise ValueError(f"{asset_type.capitalize()} {asset_id} not found")
-        
+
         target_asset.status = GenerationStatus.PROCESSING
         self._save_data()
+        if asset_is_series_level:
+            self._save_series_data()
         
         try:
             # Generate with Art Direction style injected
@@ -659,7 +664,13 @@ class ComicGenPipeline:
             raise e
         finally:
             self._save_data()
-        
+            # If the asset lives on the parent series (not the episode),
+            # _save_data() (which persists scripts/episodes) won't capture
+            # the variant changes — persist the series too, otherwise the
+            # generated image disappears on the next reload.
+            if asset_is_series_level:
+                self._save_series_data()
+
         return script
 
     def create_asset_generation_task(self, script_id: str, asset_id: str, asset_type: str,
@@ -687,6 +698,7 @@ class ComicGenPipeline:
         target_asset = next((a for a in asset_list if a.id == asset_id), None)
         # Fallback to parent series for series-level assets (see generate_asset
         # for rationale — /projects returns merged characters).
+        asset_is_series_level = False
         if not target_asset and script.series_id:
             series = self.series_store.get(script.series_id)
             if series:
@@ -696,10 +708,14 @@ class ComicGenPipeline:
                     else series.props
                 )
                 target_asset = next((a for a in series_list if a.id == asset_id), None)
+                if target_asset:
+                    asset_is_series_level = True
         if not target_asset:
             raise ValueError(f"{asset_type.capitalize()} {asset_id} not found")
-        
+
         target_asset.status = GenerationStatus.PROCESSING
+        if asset_is_series_level:
+            self._save_series_data()
         
         # Create task
         task_id = str(uuid.uuid4())
