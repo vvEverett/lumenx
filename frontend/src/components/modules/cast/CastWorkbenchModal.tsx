@@ -18,6 +18,7 @@
  *     (asset generation can take 20-60s).
  */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, Loader2, Check, RefreshCw, Wand2, Palette, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -440,7 +441,7 @@ export default function CastWorkbenchModal({ isOpen, kind, entityId, onClose }: 
     } as const;
     const accent = accentClasses[kind];
 
-    return (
+    return createPortal((
         <AnimatePresence>
             <motion.div
                 initial={{ opacity: 0 }}
@@ -926,5 +927,5 @@ export default function CastWorkbenchModal({ isOpen, kind, entityId, onClose }: 
                 </motion.div>
             </motion.div>
         </AnimatePresence>
-    );
+    ), document.body);
 }
