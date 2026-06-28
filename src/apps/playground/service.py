@@ -314,11 +314,11 @@ class PlaygroundService:
         params = gen.parameters
         kwargs = {
             "model_name": gen.model_id,
-            "size": params.get("size", "1280*1280"),
+            "size": params.get("size", "2048*1152"),
             "n": 1,
             "negative_prompt": gen.negative_prompt,
             "seed": params.get("seed"),
-            "prompt_extend": params.get("prompt_extend", True),
+            "prompt_extend": params.get("prompt_extend", False),
             "watermark": params.get("watermark", False),
         }
 

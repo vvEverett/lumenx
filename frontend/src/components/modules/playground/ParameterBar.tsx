@@ -304,7 +304,7 @@ export default function ParameterBar() {
       })
       .filter((option): option is ParamOption => option !== null);
 
-    return [...sizeOptions, ...referenceOptions];
+    return [...referenceOptions, ...sizeOptions];
   }, [hasSize, inputMedia, inputMediaInfo, isWanImageModel, sizeOptions]);
   const imageSizeValues = imageSizeOptions.map((option) => typeof option === 'string' ? option : option.value);
   const imageSizeValidationKey = imageSizeValues.join('|');
@@ -326,6 +326,10 @@ export default function ParameterBar() {
   const supportsSeed = modelParams?.seed !== false;
   const supportsPromptExtend = modelParams?.promptExtend !== false;
   const supportsWatermark = modelParams?.watermark !== false;
+  const promptExtendDefault = isWanImageModel ? false : true;
+  const promptExtendValue = typeof parameters.prompt_extend === 'boolean'
+    ? parameters.prompt_extend
+    : promptExtendDefault;
   const hasAnyAdvanced = supportsSeed || supportsPromptExtend || supportsWatermark;
 
   // When model changes, reset params whose current value is not in the new model's options
@@ -574,7 +578,7 @@ export default function ParameterBar() {
               {supportsPromptExtend && (
                 <PillToggle
                   label="提示词扩展"
-                  value={parameters.prompt_extend !== false}
+                  value={promptExtendValue}
                   onChange={(v) => updateParam('prompt_extend', v)}
                 />
               )}
