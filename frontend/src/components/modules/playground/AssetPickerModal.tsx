@@ -26,7 +26,7 @@ interface AssetItem {
 }
 
 type FilterTab = 'all' | 'image' | 'video';
-type SourceTab = 'library' | 'history';
+type SourceTab = 'uploads' | 'saved' | 'history';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -77,7 +77,7 @@ export default function AssetPickerModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  const [activeSource, setActiveSource] = useState<SourceTab>('library');
+  const [activeSource, setActiveSource] = useState<SourceTab>('uploads');
   const [activeTab, setActiveTab] = useState<FilterTab>(
     accept === 'all' ? 'all' : accept
   );
@@ -109,7 +109,7 @@ export default function AssetPickerModal({
           type: isVideo ? 'video' : 'image',
           thumbnail: item.thumbnail_path || undefined,
           label: getFileName(item.media_path),
-          source: 'library',
+          source: item.category === 'uploads' ? 'uploads' : 'saved',
         });
       }
 
@@ -160,7 +160,7 @@ export default function AssetPickerModal({
   useEffect(() => {
     if (isOpen) {
       setSelected(null);
-      setActiveSource('library');
+      setActiveSource('uploads');
       fetchAssets();
     }
   }, [isOpen, fetchAssets]);
@@ -240,9 +240,14 @@ export default function AssetPickerModal({
   const visibleTabs = tabs.filter((t) => t.show);
   const sourceTabs: { key: SourceTab; label: string; count: number }[] = [
     {
-      key: 'library',
-      label: '资产库',
-      count: assets.filter((a) => a.source === 'library').length,
+      key: 'uploads',
+      label: '上传资产',
+      count: assets.filter((a) => a.source === 'uploads').length,
+    },
+    {
+      key: 'saved',
+      label: '收藏资产',
+      count: assets.filter((a) => a.source === 'saved').length,
     },
     {
       key: 'history',
@@ -380,12 +385,18 @@ export default function AssetPickerModal({
                 <div className="flex flex-col items-center justify-center py-16 gap-2">
                   <ImageIcon className="w-8 h-8 text-white/20" />
                   <span className="text-xs text-white/40">
-                    {activeSource === 'library' ? '暂无收藏素材' : '暂无历史素材'}
+                    {activeSource === 'uploads'
+                      ? '暂无上传素材'
+                      : activeSource === 'saved'
+                        ? '暂无收藏素材'
+                        : '暂无历史素材'}
                   </span>
                   <span className="text-[11px] text-white/25">
-                    {activeSource === 'library'
-                      ? '收藏生成结果后会出现在这里'
-                      : '在 Playground 中生成内容后，输出将出现在这里'}
+                    {activeSource === 'uploads'
+                      ? '本地上传的图片或视频会出现在这里'
+                      : activeSource === 'saved'
+                        ? '收藏生成结果后会出现在这里'
+                        : '在 Playground 中生成内容后，输出将出现在这里'}
                   </span>
                 </div>
               )}

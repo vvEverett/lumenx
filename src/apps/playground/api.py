@@ -10,6 +10,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Response, UploadF
 from .models import (
     CreateTemplateRequest,
     GenerateRequest,
+    PlaygroundLibraryItem,
     PlaygroundTemplate,
     SaveToLibraryRequest,
     UpdateTemplateRequest,
@@ -201,6 +202,22 @@ router.add_api_route("/templates/{template_id}", delete_template, methods=["DELE
 UPLOAD_DIR = os.path.join("output", "playground", "uploads")
 
 
+def _detect_library_media_type(file: UploadFile, path: str) -> Optional[str]:
+    """Return the library media type for uploaded files the picker can reuse."""
+    content_type = (file.content_type or "").lower()
+    if content_type.startswith("image/"):
+        return "image"
+    if content_type.startswith("video/"):
+        return "video"
+
+    ext = os.path.splitext(path)[1].lower()
+    if ext in {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"}:
+        return "image"
+    if ext in {".mp4", ".mov", ".webm", ".avi", ".mkv"}:
+        return "video"
+    return None
+
+
 async def upload_media(file: UploadFile = File(...)):
     """Upload a media file for use as playground input (reference image, first frame, etc.)."""
     os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -210,7 +227,31 @@ async def upload_media(file: UploadFile = File(...)):
     contents = await file.read()
     with open(dest, "wb") as f:
         f.write(contents)
-    return {"path": dest}
+
+    library_item = None
+    media_type = _detect_library_media_type(file, dest)
+    if media_type:
+        now = datetime.now(timezone.utc).isoformat()
+        upload_id = str(uuid.uuid4())
+        library_item = PlaygroundLibraryItem(
+            id=upload_id,
+            generation_id=f"upload:{upload_id}",
+            output_id=upload_id,
+            media_path=dest,
+            original_media_path=dest,
+            media_type=media_type,
+            thumbnail_path=None,
+            category="uploads",
+            prompt=file.filename or "",
+            model_id="upload",
+            created_at=now,
+        )
+        _storage.upsert_library_item(library_item)
+
+    return {
+        "path": dest,
+        "library_item": library_item.model_dump() if library_item else None,
+    }
 
 
 router.add_api_route("/upload", upload_media, methods=["POST"])

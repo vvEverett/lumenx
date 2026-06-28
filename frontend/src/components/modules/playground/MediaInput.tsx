@@ -187,7 +187,15 @@ export default function MediaInput() {
   };
 
   const handleAssetSelect = (path: string) => {
-    setInputMedia([...inputMedia, path]);
+    if (!config) return;
+
+    if (config.multiple) {
+      if (inputMedia.length >= config.maxFiles) return;
+      setInputMedia([...inputMedia, path]);
+      return;
+    }
+
+    setInputMedia([path]);
   };
 
   const handleImageLoad = (

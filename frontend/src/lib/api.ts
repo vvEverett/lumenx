@@ -1587,11 +1587,11 @@ export const playgroundApi = {
   deleteTemplate: (id: string) =>
     axios.delete(API_URL + "/playground/templates/" + id).then(r => r.data),
 
-  // Upload media file for playground input (returns file path)
+  // Upload media file for playground input and save reusable image/video uploads to the library.
   uploadMedia: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    return axios.post<{ path: string }>(API_URL + "/playground/upload", formData, {
+    return axios.post<{ path: string; library_item?: PlaygroundLibraryItemResponse | null }>(API_URL + "/playground/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }).then(r => r.data);
   },
