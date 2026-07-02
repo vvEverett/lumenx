@@ -2089,7 +2089,7 @@ class ComicGenPipeline:
             # Skip auto-switch if user already selected an R2V model directly
             if not (model and model.endswith("-r2v")):
                 if model and model.startswith("happyhorse-"):
-                    model = "happyhorse-1.0-r2v"
+                    model = "happyhorse-1.1-r2v"
                 elif model and model.startswith("wan2.7-"):
                     model = "wan2.7-r2v"
                 elif model and model.startswith("kling"):

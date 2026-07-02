@@ -2,10 +2,10 @@
   "compat": {
     "legacy_model_ids": {
       "gpt-image-2": "gpt-image/gpt-image-2#image",
-      "happyhorse-1.0-i2v": "happyhorse/happyhorse-1.0-video#i2v",
-      "happyhorse-1.0-r2v": "happyhorse/happyhorse-1.0-video#r2v",
-      "happyhorse-1.0-t2v": "happyhorse/happyhorse-1.0-t2v#i2v",
       "happyhorse-1.0-video-edit": "happyhorse/happyhorse-1.0-video-edit#i2v",
+      "happyhorse-1.1-i2v": "happyhorse/happyhorse-1.1-video#i2v",
+      "happyhorse-1.1-r2v": "happyhorse/happyhorse-1.1-video#r2v",
+      "happyhorse-1.1-t2v": "happyhorse/happyhorse-1.1-t2v#i2v",
       "kling-v3-i2v": "kling/kling-v3-video#i2v",
       "kling-v3-r2v": "kling/kling-v3-video#r2v",
       "pixverse-c1-i2v": "pixverse/pixverse-c1-video#i2v",
@@ -45,16 +45,16 @@
   "defaults": {
     "canonical_model_settings": {
       "i2i_model": "wan/wan2.7-image-pro#image",
-      "i2v_model": "happyhorse/happyhorse-1.0-video#i2v",
+      "i2v_model": "happyhorse/happyhorse-1.1-video#i2v",
       "image_model": "wan/wan2.7-image-pro#image",
-      "r2v_model": "happyhorse/happyhorse-1.0-video#r2v",
+      "r2v_model": "happyhorse/happyhorse-1.1-video#r2v",
       "t2i_model": "wan/wan2.7-image-pro#image"
     },
     "model_settings": {
       "i2i_model": "wan2.7-image-pro",
-      "i2v_model": "happyhorse-1.0-i2v",
+      "i2v_model": "happyhorse-1.1-i2v",
       "image_model": "wan2.7-image-pro",
-      "r2v_model": "happyhorse-1.0-r2v",
+      "r2v_model": "happyhorse-1.1-r2v",
       "t2i_model": "wan2.7-image-pro"
     }
   },
@@ -116,14 +116,15 @@
       },
       "family": "happyhorse",
       "models": [
-        "happyhorse-1.0-i2v",
-        "happyhorse-1.0-r2v",
-        "happyhorse-1.0-t2v",
-        "happyhorse-1.0-video-edit"
+        "happyhorse-1.0-video-edit",
+        "happyhorse-1.1-i2v",
+        "happyhorse-1.1-r2v",
+        "happyhorse-1.1-t2v"
       ],
       "provider": "aliyun",
       "routing_prefixes": [
-        "happyhorse-1.0-"
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
       ],
       "supported_backends": [
         "dashscope"
@@ -507,120 +508,6 @@
         }
       }
     },
-    "happyhorse/happyhorse-1.0-t2v": {
-      "backend_env_key": null,
-      "credential_sources": {
-        "dashscope": [
-          "DASHSCOPE_API_KEY"
-        ]
-      },
-      "default_backend": "dashscope",
-      "description": "Text-to-video generation (hidden)",
-      "display_name": "HappyHorse T2V",
-      "docs": {
-        "context_hub_doc_ids": [
-          "aliyun/happyhorse-video"
-        ],
-        "official_snapshot_ids": [
-          "aliyun/happyhorse/2026-04-28"
-        ]
-      },
-      "family": "happyhorse",
-      "id": "happyhorse/happyhorse-1.0-t2v",
-      "legacy_model_ids": [
-        "happyhorse-1.0-t2v"
-      ],
-      "modes": [
-        "happyhorse/happyhorse-1.0-t2v#i2v"
-      ],
-      "provider": "aliyun",
-      "release_stage": "stable",
-      "routing_prefixes": [
-        "happyhorse-1.0-"
-      ],
-      "runtime": {},
-      "status": "hidden",
-      "supported_backends": [
-        "dashscope"
-      ],
-      "supported_modalities": [
-        "t2v",
-        "i2v",
-        "r2v",
-        "v2v"
-      ],
-      "transport": {
-        "audio_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "image_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "reference_video_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        }
-      }
-    },
-    "happyhorse/happyhorse-1.0-video": {
-      "backend_env_key": null,
-      "credential_sources": {
-        "dashscope": [
-          "DASHSCOPE_API_KEY"
-        ]
-      },
-      "default_backend": "dashscope",
-      "description": "HappyHorse video generation with I2V and R2V modes",
-      "display_name": "HappyHorse 1.0 Video",
-      "docs": {
-        "context_hub_doc_ids": [
-          "aliyun/happyhorse-video"
-        ],
-        "official_snapshot_ids": [
-          "aliyun/happyhorse/2026-04-28"
-        ]
-      },
-      "family": "happyhorse",
-      "id": "happyhorse/happyhorse-1.0-video",
-      "legacy_model_ids": [
-        "happyhorse-1.0-i2v",
-        "happyhorse-1.0-r2v"
-      ],
-      "modes": [
-        "happyhorse/happyhorse-1.0-video#i2v",
-        "happyhorse/happyhorse-1.0-video#r2v"
-      ],
-      "provider": "aliyun",
-      "release_stage": "stable",
-      "routing_prefixes": [
-        "happyhorse-1.0-"
-      ],
-      "runtime": {
-        "dashscope": {
-          "gateway": "dashscope"
-        }
-      },
-      "status": "active",
-      "supported_backends": [
-        "dashscope"
-      ],
-      "supported_modalities": [
-        "t2v",
-        "i2v",
-        "r2v",
-        "v2v"
-      ],
-      "transport": {
-        "audio_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "image_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "reference_video_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        }
-      }
-    },
     "happyhorse/happyhorse-1.0-video-edit": {
       "backend_env_key": null,
       "credential_sources": {
@@ -629,7 +516,7 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Video editing with reference images (hidden)",
+      "description": "Video editing with reference images (hidden, still 1.0)",
       "display_name": "HappyHorse V2V",
       "docs": {
         "context_hub_doc_ids": [
@@ -650,10 +537,127 @@
       "provider": "aliyun",
       "release_stage": "stable",
       "routing_prefixes": [
-        "happyhorse-1.0-"
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
       ],
       "runtime": {},
       "status": "hidden",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2v",
+        "i2v",
+        "r2v",
+        "v2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "happyhorse/happyhorse-1.1-t2v": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Text-to-video generation (hidden)",
+      "display_name": "HappyHorse T2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/happyhorse-video"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/happyhorse/2026-04-28"
+        ]
+      },
+      "family": "happyhorse",
+      "id": "happyhorse/happyhorse-1.1-t2v",
+      "legacy_model_ids": [
+        "happyhorse-1.1-t2v"
+      ],
+      "modes": [
+        "happyhorse/happyhorse-1.1-t2v#i2v"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
+      ],
+      "runtime": {},
+      "status": "hidden",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "supported_modalities": [
+        "t2v",
+        "i2v",
+        "r2v",
+        "v2v"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      }
+    },
+    "happyhorse/happyhorse-1.1-video": {
+      "backend_env_key": null,
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "HappyHorse video generation with I2V and R2V modes",
+      "display_name": "HappyHorse 1.1 Video",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/happyhorse-video"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/happyhorse/2026-04-28"
+        ]
+      },
+      "family": "happyhorse",
+      "id": "happyhorse/happyhorse-1.1-video",
+      "legacy_model_ids": [
+        "happyhorse-1.1-i2v",
+        "happyhorse-1.1-r2v"
+      ],
+      "modes": [
+        "happyhorse/happyhorse-1.1-video#i2v",
+        "happyhorse/happyhorse-1.1-video#r2v"
+      ],
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
+      ],
+      "runtime": {
+        "dashscope": {
+          "gateway": "dashscope"
+        }
+      },
+      "status": "active",
       "supported_backends": [
         "dashscope"
       ],
@@ -2223,234 +2227,6 @@
         ]
       }
     },
-    "happyhorse-1.0-i2v": {
-      "backend_env_key": null,
-      "capabilities": [
-        "i2v"
-      ],
-      "credential_sources": {
-        "dashscope": [
-          "DASHSCOPE_API_KEY"
-        ]
-      },
-      "default_backend": "dashscope",
-      "description": "Image-to-video with reference character support",
-      "display_name": "HappyHorse I2V",
-      "docs": {
-        "context_hub_doc_ids": [
-          "aliyun/happyhorse-video"
-        ],
-        "official_snapshot_ids": [
-          "aliyun/happyhorse/2026-04-28"
-        ]
-      },
-      "duration": {
-        "default": 5,
-        "max": 15,
-        "min": 3,
-        "step": 1,
-        "type": "slider"
-      },
-      "family": "happyhorse",
-      "id": "happyhorse-1.0-i2v",
-      "inputs": {
-        "reference_images": {
-          "max": 9
-        }
-      },
-      "params": {
-        "negativePrompt": true,
-        "promptExtend": true,
-        "resolution": {
-          "default": "1080p",
-          "options": [
-            "720p",
-            "1080p"
-          ]
-        },
-        "seed": true,
-        "watermark": true
-      },
-      "provider": "aliyun",
-      "release_stage": "stable",
-      "routing_prefixes": [
-        "happyhorse-1.0-"
-      ],
-      "status": "active",
-      "supported_backends": [
-        "dashscope"
-      ],
-      "transport": {
-        "audio_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "image_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "reference_video_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        }
-      },
-      "ui": {
-        "badges": [],
-        "order": 120,
-        "recommended": true,
-        "selection_group": "i2v",
-        "visible_in": [
-          "project_settings",
-          "series_settings",
-          "video_sidebar",
-          "global_settings"
-        ]
-      }
-    },
-    "happyhorse-1.0-r2v": {
-      "backend_env_key": null,
-      "capabilities": [
-        "r2v"
-      ],
-      "credential_sources": {
-        "dashscope": [
-          "DASHSCOPE_API_KEY"
-        ]
-      },
-      "default_backend": "dashscope",
-      "description": "Reference images to video generation",
-      "display_name": "HappyHorse R2V",
-      "docs": {
-        "context_hub_doc_ids": [
-          "aliyun/happyhorse-video"
-        ],
-        "official_snapshot_ids": [
-          "aliyun/happyhorse/2026-04-28"
-        ]
-      },
-      "duration": {
-        "default": 5,
-        "max": 15,
-        "min": 3,
-        "step": 1,
-        "type": "slider"
-      },
-      "family": "happyhorse",
-      "id": "happyhorse-1.0-r2v",
-      "inputs": {
-        "reference_images": {
-          "max": 9
-        }
-      },
-      "params": {
-        "negativePrompt": true,
-        "promptExtend": true,
-        "resolution": {
-          "default": "1080p",
-          "options": [
-            "720p",
-            "1080p"
-          ]
-        },
-        "seed": true,
-        "watermark": true
-      },
-      "provider": "aliyun",
-      "release_stage": "stable",
-      "routing_prefixes": [
-        "happyhorse-1.0-"
-      ],
-      "status": "active",
-      "supported_backends": [
-        "dashscope"
-      ],
-      "transport": {
-        "audio_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "image_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "reference_video_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        }
-      },
-      "ui": {
-        "badges": [],
-        "order": 80,
-        "recommended": true,
-        "selection_group": "r2v",
-        "visible_in": [
-          "project_settings",
-          "series_settings",
-          "video_sidebar",
-          "global_settings"
-        ]
-      }
-    },
-    "happyhorse-1.0-t2v": {
-      "backend_env_key": null,
-      "capabilities": [
-        "t2v"
-      ],
-      "credential_sources": {
-        "dashscope": [
-          "DASHSCOPE_API_KEY"
-        ]
-      },
-      "default_backend": "dashscope",
-      "description": "Text-to-video generation (hidden)",
-      "display_name": "HappyHorse T2V",
-      "docs": {
-        "context_hub_doc_ids": [
-          "aliyun/happyhorse-video"
-        ],
-        "official_snapshot_ids": [
-          "aliyun/happyhorse/2026-04-28"
-        ]
-      },
-      "duration": null,
-      "family": "happyhorse",
-      "id": "happyhorse-1.0-t2v",
-      "inputs": {},
-      "params": {
-        "negativePrompt": true,
-        "promptExtend": true,
-        "resolution": {
-          "default": "1080p",
-          "options": [
-            "720p",
-            "1080p"
-          ]
-        },
-        "seed": true,
-        "watermark": true
-      },
-      "provider": "aliyun",
-      "release_stage": "stable",
-      "routing_prefixes": [
-        "happyhorse-1.0-"
-      ],
-      "status": "hidden",
-      "supported_backends": [
-        "dashscope"
-      ],
-      "transport": {
-        "audio_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "image_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "reference_video_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        }
-      },
-      "ui": {
-        "badges": [],
-        "order": 0,
-        "recommended": true,
-        "selection_group": "i2v",
-        "visible_in": []
-      }
-    },
     "happyhorse-1.0-video-edit": {
       "backend_env_key": null,
       "capabilities": [
@@ -2462,7 +2238,7 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Video editing with reference images (hidden)",
+      "description": "Video editing with reference images (hidden, still 1.0)",
       "display_name": "HappyHorse V2V",
       "docs": {
         "context_hub_doc_ids": [
@@ -2492,7 +2268,239 @@
       "provider": "aliyun",
       "release_stage": "stable",
       "routing_prefixes": [
-        "happyhorse-1.0-"
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
+      ],
+      "status": "hidden",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 0,
+        "recommended": true,
+        "selection_group": "i2v",
+        "visible_in": []
+      }
+    },
+    "happyhorse-1.1-i2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "i2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Image-to-video with reference character support",
+      "display_name": "HappyHorse I2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/happyhorse-video"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/happyhorse/2026-04-28"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 15,
+        "min": 3,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "happyhorse",
+      "id": "happyhorse-1.1-i2v",
+      "inputs": {
+        "reference_images": {
+          "max": 9
+        }
+      },
+      "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
+        "resolution": {
+          "default": "1080p",
+          "options": [
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "watermark": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 120,
+        "recommended": true,
+        "selection_group": "i2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "happyhorse-1.1-r2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "r2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Reference images to video generation",
+      "display_name": "HappyHorse R2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/happyhorse-video"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/happyhorse/2026-04-28"
+        ]
+      },
+      "duration": {
+        "default": 5,
+        "max": 15,
+        "min": 3,
+        "step": 1,
+        "type": "slider"
+      },
+      "family": "happyhorse",
+      "id": "happyhorse-1.1-r2v",
+      "inputs": {
+        "reference_images": {
+          "max": 9
+        }
+      },
+      "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
+        "resolution": {
+          "default": "1080p",
+          "options": [
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "watermark": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
+      ],
+      "status": "active",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 80,
+        "recommended": true,
+        "selection_group": "r2v",
+        "visible_in": [
+          "project_settings",
+          "series_settings",
+          "video_sidebar",
+          "global_settings"
+        ]
+      }
+    },
+    "happyhorse-1.1-t2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "t2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Text-to-video generation (hidden)",
+      "display_name": "HappyHorse T2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/happyhorse-video"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/happyhorse/2026-04-28"
+        ]
+      },
+      "duration": null,
+      "family": "happyhorse",
+      "id": "happyhorse-1.1-t2v",
+      "inputs": {},
+      "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
+        "resolution": {
+          "default": "1080p",
+          "options": [
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "watermark": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
       ],
       "status": "hidden",
       "supported_backends": [
@@ -5268,10 +5276,10 @@
         ]
       }
     },
-    "happyhorse/happyhorse-1.0-t2v#i2v": {
+    "happyhorse/happyhorse-1.0-video-edit#i2v": {
       "backend_env_key": null,
       "capabilities": [
-        "t2v"
+        "v2v"
       ],
       "credential_sources": {
         "dashscope": [
@@ -5279,8 +5287,8 @@
         ]
       },
       "default_backend": "dashscope",
-      "description": "Text-to-video generation (hidden)",
-      "display_name": "HappyHorse T2V",
+      "description": "Video editing with reference images (hidden, still 1.0)",
+      "display_name": "HappyHorse V2V",
       "docs": {
         "context_hub_doc_ids": [
           "aliyun/happyhorse-video"
@@ -5291,11 +5299,11 @@
       },
       "duration": null,
       "family": "happyhorse",
-      "id": "happyhorse/happyhorse-1.0-t2v#i2v",
+      "id": "happyhorse/happyhorse-1.0-video-edit#i2v",
       "inputs": {},
-      "legacy_model_id": "happyhorse-1.0-t2v",
+      "legacy_model_id": "happyhorse-1.0-video-edit",
       "mode": "i2v",
-      "model_line_id": "happyhorse/happyhorse-1.0-t2v",
+      "model_line_id": "happyhorse/happyhorse-1.0-video-edit",
       "params": {
         "negativePrompt": true,
         "promptExtend": true,
@@ -5312,7 +5320,8 @@
       "provider": "aliyun",
       "release_stage": "stable",
       "routing_prefixes": [
-        "happyhorse-1.0-"
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
       ],
       "runtime": {},
       "status": "hidden",
@@ -5338,7 +5347,78 @@
         "visible_in": []
       }
     },
-    "happyhorse/happyhorse-1.0-video#i2v": {
+    "happyhorse/happyhorse-1.1-t2v#i2v": {
+      "backend_env_key": null,
+      "capabilities": [
+        "t2v"
+      ],
+      "credential_sources": {
+        "dashscope": [
+          "DASHSCOPE_API_KEY"
+        ]
+      },
+      "default_backend": "dashscope",
+      "description": "Text-to-video generation (hidden)",
+      "display_name": "HappyHorse T2V",
+      "docs": {
+        "context_hub_doc_ids": [
+          "aliyun/happyhorse-video"
+        ],
+        "official_snapshot_ids": [
+          "aliyun/happyhorse/2026-04-28"
+        ]
+      },
+      "duration": null,
+      "family": "happyhorse",
+      "id": "happyhorse/happyhorse-1.1-t2v#i2v",
+      "inputs": {},
+      "legacy_model_id": "happyhorse-1.1-t2v",
+      "mode": "i2v",
+      "model_line_id": "happyhorse/happyhorse-1.1-t2v",
+      "params": {
+        "negativePrompt": true,
+        "promptExtend": true,
+        "resolution": {
+          "default": "1080p",
+          "options": [
+            "720p",
+            "1080p"
+          ]
+        },
+        "seed": true,
+        "watermark": true
+      },
+      "provider": "aliyun",
+      "release_stage": "stable",
+      "routing_prefixes": [
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
+      ],
+      "runtime": {},
+      "status": "hidden",
+      "supported_backends": [
+        "dashscope"
+      ],
+      "transport": {
+        "audio_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "image_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        },
+        "reference_video_input_mode": {
+          "dashscope": "dashscope_temp_file_url"
+        }
+      },
+      "ui": {
+        "badges": [],
+        "order": 0,
+        "recommended": true,
+        "selection_group": "i2v",
+        "visible_in": []
+      }
+    },
+    "happyhorse/happyhorse-1.1-video#i2v": {
       "backend_env_key": null,
       "capabilities": [
         "i2v"
@@ -5367,15 +5447,15 @@
         "type": "slider"
       },
       "family": "happyhorse",
-      "id": "happyhorse/happyhorse-1.0-video#i2v",
+      "id": "happyhorse/happyhorse-1.1-video#i2v",
       "inputs": {
         "reference_images": {
           "max": 9
         }
       },
-      "legacy_model_id": "happyhorse-1.0-i2v",
+      "legacy_model_id": "happyhorse-1.1-i2v",
       "mode": "i2v",
-      "model_line_id": "happyhorse/happyhorse-1.0-video",
+      "model_line_id": "happyhorse/happyhorse-1.1-video",
       "params": {
         "negativePrompt": true,
         "promptExtend": true,
@@ -5392,7 +5472,8 @@
       "provider": "aliyun",
       "release_stage": "stable",
       "routing_prefixes": [
-        "happyhorse-1.0-"
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
       ],
       "runtime": {
         "dashscope": {
@@ -5427,7 +5508,7 @@
         ]
       }
     },
-    "happyhorse/happyhorse-1.0-video#r2v": {
+    "happyhorse/happyhorse-1.1-video#r2v": {
       "backend_env_key": null,
       "capabilities": [
         "r2v"
@@ -5456,15 +5537,15 @@
         "type": "slider"
       },
       "family": "happyhorse",
-      "id": "happyhorse/happyhorse-1.0-video#r2v",
+      "id": "happyhorse/happyhorse-1.1-video#r2v",
       "inputs": {
         "reference_images": {
           "max": 9
         }
       },
-      "legacy_model_id": "happyhorse-1.0-r2v",
+      "legacy_model_id": "happyhorse-1.1-r2v",
       "mode": "r2v",
-      "model_line_id": "happyhorse/happyhorse-1.0-video",
+      "model_line_id": "happyhorse/happyhorse-1.1-video",
       "params": {
         "negativePrompt": true,
         "promptExtend": true,
@@ -5481,7 +5562,8 @@
       "provider": "aliyun",
       "release_stage": "stable",
       "routing_prefixes": [
-        "happyhorse-1.0-"
+        "happyhorse-1.0-",
+        "happyhorse-1.1-"
       ],
       "runtime": {
         "dashscope": {
@@ -5514,76 +5596,6 @@
           "video_sidebar",
           "global_settings"
         ]
-      }
-    },
-    "happyhorse/happyhorse-1.0-video-edit#i2v": {
-      "backend_env_key": null,
-      "capabilities": [
-        "v2v"
-      ],
-      "credential_sources": {
-        "dashscope": [
-          "DASHSCOPE_API_KEY"
-        ]
-      },
-      "default_backend": "dashscope",
-      "description": "Video editing with reference images (hidden)",
-      "display_name": "HappyHorse V2V",
-      "docs": {
-        "context_hub_doc_ids": [
-          "aliyun/happyhorse-video"
-        ],
-        "official_snapshot_ids": [
-          "aliyun/happyhorse/2026-04-28"
-        ]
-      },
-      "duration": null,
-      "family": "happyhorse",
-      "id": "happyhorse/happyhorse-1.0-video-edit#i2v",
-      "inputs": {},
-      "legacy_model_id": "happyhorse-1.0-video-edit",
-      "mode": "i2v",
-      "model_line_id": "happyhorse/happyhorse-1.0-video-edit",
-      "params": {
-        "negativePrompt": true,
-        "promptExtend": true,
-        "resolution": {
-          "default": "1080p",
-          "options": [
-            "720p",
-            "1080p"
-          ]
-        },
-        "seed": true,
-        "watermark": true
-      },
-      "provider": "aliyun",
-      "release_stage": "stable",
-      "routing_prefixes": [
-        "happyhorse-1.0-"
-      ],
-      "runtime": {},
-      "status": "hidden",
-      "supported_backends": [
-        "dashscope"
-      ],
-      "transport": {
-        "audio_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "image_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        },
-        "reference_video_input_mode": {
-          "dashscope": "dashscope_temp_file_url"
-        }
-      },
-      "ui": {
-        "badges": [],
-        "order": 0,
-        "recommended": true,
-        "selection_group": "i2v",
-        "visible_in": []
       }
     },
     "kling/kling-v3-video#i2v": {

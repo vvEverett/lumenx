@@ -40,7 +40,7 @@ describe('model catalog selectors', () => {
         expect(DEFAULT_MODEL_SETTINGS).toMatchObject({
             t2i_model: 'wan2.7-image-pro',
             i2i_model: 'wan2.7-image-pro',
-            i2v_model: 'happyhorse-1.0-i2v',
+            i2v_model: 'happyhorse-1.1-i2v',
             image_model: 'wan2.7-image-pro',
         });
 
@@ -53,7 +53,7 @@ describe('model catalog selectors', () => {
 
         // Ordered DESC by ui.order; ties broken by display_name asc.
         expect(GLOBAL_I2V_MODELS.map((model) => model.id)).toEqual([
-            'happyhorse-1.0-i2v',
+            'happyhorse-1.1-i2v',
             'kling-v3-i2v',
             'pixverse/pixverse-v6-video',
             'seedance-2.0-i2v',
@@ -84,7 +84,7 @@ describe('model catalog fallbacks', () => {
         ).toMatchObject({
             t2i_model: 'wan2.7-image-pro',
             i2i_model: 'wan2.7-image-pro',
-            i2v_model: 'happyhorse-1.0-i2v',
+            i2v_model: 'happyhorse-1.1-i2v',
         });
     });
 
@@ -139,7 +139,7 @@ describe('model catalog fallbacks', () => {
         // After 524f3a1 deprecated the wan2.6 series, 'wan2.6-i2v' is hidden
         // (visible_in: []), so the canonical → legacy normalization is filtered
         // out by the visibility check and the resolver falls back to the current
-        // i2v default (happyhorse-1.0-i2v). The raw normalization contract is
+        // i2v default (happyhorse-1.1-i2v). The raw normalization contract is
         // covered directly by the Phase 2 canonical helpers below.
         expect(
             resolveCompatModelSettings(
@@ -148,11 +148,11 @@ describe('model catalog fallbacks', () => {
                 },
                 'global_settings'
             ).i2v_model
-        ).toBe('happyhorse-1.0-i2v');
+        ).toBe('happyhorse-1.1-i2v');
 
         // An r2v canonical id normalizes to the matching legacy id
         // (wan2.6-r2v), which is hidden in the i2v surface — so the
-        // resolver falls back to the current i2v default (happyhorse-1.0-i2v
+        // resolver falls back to the current i2v default (happyhorse-1.1-i2v
         // since the 2026-05-26 catalog meta switch). Previously this
         // assertion expected the resolver to remap r2v into the parent
         // i2v legacy id; that behavior was dropped when r2v ids gained
@@ -164,29 +164,29 @@ describe('model catalog fallbacks', () => {
                 },
                 'global_settings'
             ).i2v_model
-        ).toBe('happyhorse-1.0-i2v');
+        ).toBe('happyhorse-1.1-i2v');
 
         expect(compatI2vModels.map((model) => model.id)).not.toContain('wan2.6-i2v');
         expect(compatI2vModels.some((model) => model.id === 'wan/wan2.6-video#i2v')).toBe(false);
         // R2V selection/route ids follow the catalog meta default
-        // (defaults.model_settings.r2v_model = happyhorse-1.0-r2v) via
+        // (defaults.model_settings.r2v_model = happyhorse-1.1-r2v) via
         // getFallbackVisibleModelId, not raw ui.order. Several R2V models
         // share order=80, so anchoring to the explicit meta default keeps the
         // default route deterministic. Selection and route are unified
         // (R2V_ROUTE_MODEL_ID = R2V_SELECTION_MODEL_ID).
-        expect(compatR2vSelectionModelId).toBe('happyhorse-1.0-r2v');
-        expect(compatR2vRouteModelId).toBe('happyhorse-1.0-r2v');
+        expect(compatR2vSelectionModelId).toBe('happyhorse-1.1-r2v');
+        expect(compatR2vRouteModelId).toBe('happyhorse-1.1-r2v');
     });
 });
 
 describe('model catalog runtime helpers', () => {
     it('derives the current R2V selection and route ids from catalog data', () => {
         // Selection and route both resolve to the catalog meta default R2V
-        // model (defaults.model_settings.r2v_model = happyhorse-1.0-r2v) via
+        // model (defaults.model_settings.r2v_model = happyhorse-1.1-r2v) via
         // getFallbackVisibleModelId — deterministic regardless of the order=80
         // tie among visible R2V models (happyhorse/kling/seedance/wan2.7).
-        expect(R2V_SELECTION_MODEL_ID).toBe('happyhorse-1.0-r2v');
-        expect(R2V_ROUTE_MODEL_ID).toBe('happyhorse-1.0-r2v');
+        expect(R2V_SELECTION_MODEL_ID).toBe('happyhorse-1.1-r2v');
+        expect(R2V_ROUTE_MODEL_ID).toBe('happyhorse-1.1-r2v');
     });
 
     it('reads per-model reference image limits from catalog metadata', () => {
