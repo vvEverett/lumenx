@@ -3,6 +3,7 @@ display_name: "HappyHorse (快乐马)"
 provider: aliyun
 routing_prefixes:
   - happyhorse-1.0-
+  - happyhorse-1.1-
 supported_backends:
   - dashscope
 default_backend: dashscope
@@ -24,7 +25,79 @@ transport:
 docs:
   official_snapshot_ids:
     - aliyun/happyhorse/2026-04-28
+    - aliyun/happyhorse-1.1/2026-07-11
 models:
+  # HappyHorse 1.1: current audio-capable generation line. These models are
+  # exposed in Playground through their capabilities while remaining out of
+  # the Studio workflow pickers until project defaults are migrated.
+  - id: happyhorse-1.1-t2v
+    display_name: HappyHorse 1.1 T2V
+    description: Text-to-video generation with synchronized audio
+    status: hidden
+    release_stage: stable
+    capabilities: [t2v]
+    docs:
+      context_hub_doc_ids: [aliyun/happyhorse-video]
+    ui:
+      selection_group: t2v
+      visible_in: []
+      recommended: true
+      order: 200
+      badges: [recommended, audio]
+    duration: {type: slider, min: 3, max: 15, step: 1, default: 5}
+    params:
+      resolution: {options: [720p, 1080p], default: 1080p}
+      ratio:
+        options: ["16:9", "9:16", "1:1", "4:3", "3:4", "4:5", "5:4", "9:21", "21:9"]
+        default: "16:9"
+      seed: true
+      watermark: true
+  - id: happyhorse-1.1-i2v
+    display_name: HappyHorse 1.1 I2V
+    description: First-frame image-to-video generation with synchronized audio
+    status: hidden
+    release_stage: stable
+    capabilities: [i2v]
+    docs:
+      context_hub_doc_ids: [aliyun/happyhorse-video]
+    ui:
+      selection_group: i2v
+      visible_in: []
+      recommended: true
+      order: 200
+      badges: [recommended, audio]
+    duration: {type: slider, min: 3, max: 15, step: 1, default: 5}
+    params:
+      resolution: {options: [720p, 1080p], default: 1080p}
+      seed: true
+      watermark: true
+    inputs:
+      reference_images: {max: 1}
+  - id: happyhorse-1.1-r2v
+    display_name: HappyHorse 1.1 R2V
+    description: Reference-image-to-video generation with synchronized audio
+    status: hidden
+    release_stage: stable
+    capabilities: [r2v]
+    docs:
+      context_hub_doc_ids: [aliyun/happyhorse-video]
+    ui:
+      selection_group: r2v
+      visible_in: []
+      recommended: true
+      order: 200
+      badges: [recommended, audio]
+    duration: {type: slider, min: 3, max: 15, step: 1, default: 5}
+    params:
+      resolution: {options: [720p, 1080p], default: 1080p}
+      ratio:
+        options: ["16:9", "9:16", "1:1", "4:3", "3:4", "4:5", "5:4", "9:21", "21:9"]
+        default: "16:9"
+      seed: true
+      watermark: true
+    inputs:
+      reference_images: {max: 9}
+
   # Model line: I2V + R2V (paired via modes, like wan/wan2.6-video)
   - id: happyhorse/happyhorse-1.0-video
     display_name: HappyHorse 1.0 Video

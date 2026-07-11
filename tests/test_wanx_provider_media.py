@@ -86,6 +86,231 @@ def _install_fake_uploader(monkeypatch, configured: bool):
 
 
 class TestWanxProviderMediaIntegration:
+    def test_wan27_i2v_uses_unified_media_payload(self, monkeypatch):
+        monkeypatch.setenv("DASHSCOPE_API_KEY", "test-key")
+        _install_fake_uploader(monkeypatch, configured=False)
+        captured = {}
+        _install_fake_requests(monkeypatch, captured)
+
+        WanxModel({"params": {}}).generate(
+            prompt="A character waves",
+            output_path="output/video/wan27_i2v.mp4",
+            model_name="wan2.7-i2v",
+            img_url="https://example.com/first.png",
+            audio_url="https://example.com/voice.mp3",
+            resolution="720p",
+            ratio="9:16",
+            duration=6,
+            prompt_extend=False,
+            watermark=True,
+        )
+
+        assert captured["create_payload"] == {
+            "model": "wan2.7-i2v",
+            "input": {
+                "prompt": "A character waves",
+                "media": [
+                    {"type": "first_frame", "url": "https://example.com/first.png"},
+                    {"type": "driving_audio", "url": "https://example.com/voice.mp3"},
+                ],
+            },
+            "parameters": {
+                "duration": 6,
+                "prompt_extend": False,
+                "watermark": True,
+                "resolution": "720P",
+            },
+        }
+
+    def test_wan27_t2v_uses_documented_payload(self, monkeypatch):
+        monkeypatch.setenv("DASHSCOPE_API_KEY", "test-key")
+        _install_fake_uploader(monkeypatch, configured=False)
+        captured = {}
+        _install_fake_requests(monkeypatch, captured)
+
+        WanxModel({"params": {}}).generate(
+            prompt="A kitten runs in moonlight",
+            output_path="output/video/wan27_t2v.mp4",
+            model_name="wan2.7-t2v",
+            resolution="720p",
+            ratio="16:9",
+            duration=10,
+            prompt_extend=False,
+            negative_prompt="flowers",
+            watermark=True,
+            seed=7,
+        )
+
+        assert captured["create_payload"] == {
+            "model": "wan2.7-t2v",
+            "input": {
+                "prompt": "A kitten runs in moonlight",
+                "negative_prompt": "flowers",
+            },
+            "parameters": {
+                "resolution": "720P",
+                "duration": 10,
+                "watermark": True,
+                "ratio": "16:9",
+                "seed": 7,
+                "prompt_extend": False,
+            },
+        }
+
+    def test_wan27_videoedit_uses_documented_payload(self, monkeypatch):
+        monkeypatch.setenv("DASHSCOPE_API_KEY", "test-key")
+        _install_fake_uploader(monkeypatch, configured=False)
+        captured = {}
+        _install_fake_requests(monkeypatch, captured)
+
+        WanxModel({"params": {}}).generate(
+            prompt="Replace the clothes",
+            output_path="output/video/wan27_edit.mp4",
+            model_name="wan2.7-videoedit",
+            video_url="https://example.com/input.mp4",
+            ref_image_urls=["https://example.com/clothes.png"],
+            resolution="720p",
+            duration=5,
+            prompt_extend=False,
+            watermark=True,
+        )
+
+        assert captured["create_payload"] == {
+            "model": "wan2.7-videoedit",
+            "input": {
+                "prompt": "Replace the clothes",
+                "media": [
+                    {"type": "video", "url": "https://example.com/input.mp4"},
+                    {"type": "reference_image", "url": "https://example.com/clothes.png"},
+                ],
+            },
+            "parameters": {
+                "resolution": "720P",
+                "duration": 5,
+                "watermark": True,
+                "prompt_extend": False,
+            },
+        }
+
+    def test_wan27_r2v_uses_unified_media_payload(self, monkeypatch):
+        monkeypatch.setenv("DASHSCOPE_API_KEY", "test-key")
+        _install_fake_uploader(monkeypatch, configured=False)
+        captured = {}
+        _install_fake_requests(monkeypatch, captured)
+
+        WanxModel({"params": {}}).generate(
+            prompt="[Image 1] enters the scene",
+            output_path="output/video/wan27_r2v.mp4",
+            model_name="wan2.7-r2v",
+            ref_image_urls=["https://example.com/character.png"],
+            resolution="1080p",
+            ratio="9:16",
+            duration=8,
+            prompt_extend=False,
+            watermark=True,
+        )
+
+        assert captured["create_payload"] == {
+            "model": "wan2.7-r2v",
+            "input": {
+                "prompt": "[Image 1] enters the scene",
+                "media": [
+                    {
+                        "type": "reference_image",
+                        "url": "https://example.com/character.png",
+                    }
+                ],
+            },
+            "parameters": {
+                "duration": 8,
+                "resolution": "1080P",
+                "prompt_extend": False,
+                "watermark": True,
+                "ratio": "9:16",
+            },
+        }
+
+    def test_happyhorse_11_t2v_uses_documented_payload(self, monkeypatch):
+        monkeypatch.setenv("DASHSCOPE_API_KEY", "test-key")
+        _install_fake_uploader(monkeypatch, configured=False)
+        captured = {}
+        _install_fake_requests(monkeypatch, captured)
+
+        WanxModel({"params": {}}).generate(
+            prompt="demo",
+            output_path="output/video/happyhorse_11_t2v.mp4",
+            model_name="happyhorse-1.1-t2v",
+            resolution="1080p",
+            duration=12,
+            ratio="21:9",
+            seed=42,
+            watermark=False,
+        )
+
+        assert captured["create_payload"] == {
+            "model": "happyhorse-1.1-t2v",
+            "input": {"prompt": "demo"},
+            "parameters": {
+                "resolution": "1080P",
+                "duration": 12,
+                "watermark": False,
+                "ratio": "21:9",
+                "seed": 42,
+            },
+        }
+
+    def test_happyhorse_11_i2v_uses_first_frame_without_ratio(self, monkeypatch):
+        monkeypatch.setenv("DASHSCOPE_API_KEY", "test-key")
+        _install_fake_uploader(monkeypatch, configured=False)
+        captured = {}
+        _install_fake_requests(monkeypatch, captured)
+        monkeypatch.setattr(
+            "src.models.wanx.WanxModel._create_dashscope_temp_url",
+            lambda self, local_path, model_name: "oss://dashscope-temp/hh-first-frame",
+        )
+        img_path = _write_output_file("uploads/hh_11_i2v.png", base64.b64decode(PNG_1X1_BASE64))
+
+        WanxModel({"params": {}}).generate(
+            prompt="demo",
+            output_path="output/video/happyhorse_11_i2v.mp4",
+            img_path=img_path,
+            model_name="happyhorse-1.1-i2v",
+            ratio="16:9",
+        )
+
+        assert captured["create_payload"]["input"]["media"] == [
+            {"type": "first_frame", "url": "oss://dashscope-temp/hh-first-frame"}
+        ]
+        assert "ratio" not in captured["create_payload"]["parameters"]
+
+    def test_happyhorse_11_r2v_uses_reference_images(self, monkeypatch):
+        monkeypatch.setenv("DASHSCOPE_API_KEY", "test-key")
+        _install_fake_uploader(monkeypatch, configured=False)
+        captured = {}
+        _install_fake_requests(monkeypatch, captured)
+        monkeypatch.setattr(
+            "src.models.wanx.WanxModel._create_dashscope_temp_url",
+            lambda self, local_path, model_name: f"oss://dashscope-temp/{Path(local_path).name}",
+        )
+        refs = [
+            _write_output_file("uploads/hh_11_ref_1.png", base64.b64decode(PNG_1X1_BASE64)),
+            _write_output_file("uploads/hh_11_ref_2.png", base64.b64decode(PNG_1X1_BASE64)),
+        ]
+
+        WanxModel({"params": {}}).generate(
+            prompt="[Image 1] and [Image 2]",
+            output_path="output/video/happyhorse_11_r2v.mp4",
+            model_name="happyhorse-1.1-r2v",
+            ref_image_urls=refs,
+            ratio="9:16",
+        )
+
+        assert captured["create_payload"]["input"]["media"] == [
+            {"type": "reference_image", "url": "oss://dashscope-temp/hh_11_ref_1.png"},
+            {"type": "reference_image", "url": "oss://dashscope-temp/hh_11_ref_2.png"},
+        ]
+        assert captured["create_payload"]["parameters"]["ratio"] == "9:16"
+
     def test_i2v_local_image_without_oss_uses_temp_url_and_header(self, monkeypatch):
         monkeypatch.setenv("DASHSCOPE_API_KEY", "test-key")
         _install_fake_uploader(monkeypatch, configured=False)
